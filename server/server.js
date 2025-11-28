@@ -97,6 +97,11 @@ app.get('/api/status', (req, res) => {
 });
 
 // Démarrage du serveur
-app.listen(port, () => {
-  console.log(`Serveur de génération de PDF démarré sur le port ${port}`);
-});
+// Démarrage du serveur
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Serveur de génération de PDF démarré sur le port ${port}`);
+  });
+}
+
+module.exports = app;
