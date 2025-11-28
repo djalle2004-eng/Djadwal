@@ -100,7 +100,7 @@ app.get('/api/status', (req, res) => {
 app.use(express.static(path.join(__dirname, '../dist')));
 
 // Anything that doesn't match the above, send back index.html
-app.get('*', (req, res) => {
+app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
