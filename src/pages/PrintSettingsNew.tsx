@@ -5,14 +5,14 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Box, 
-  Paper, 
-  Typography, 
-  TextField, 
-  Button, 
-  Grid, 
-  Tabs, 
+import {
+  Box,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  Tabs,
   Tab,
   Select,
   MenuItem,
@@ -27,9 +27,9 @@ import {
   Card,
   CardContent
 } from '@mui/material';
-import { 
-  Save as SaveIcon, 
-  RestartAlt as ResetIcon, 
+import {
+  Save as SaveIcon,
+  RestartAlt as ResetIcon,
   ArrowBack as BackIcon,
   Visibility as PreviewIcon
 } from '@mui/icons-material';
@@ -95,19 +95,21 @@ export default function PrintSettingsNew() {
     }
   };
 
-  const handleLogoUpload = (type: 'university' | 'faculty', event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (type: 'university' | 'faculty', event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target?.result as string;
+      try {
+        const result = await window.dataUtils.uploadLogo(file, type);
         if (type === 'university') {
-          handleChange('universityLogoUrl', dataUrl);
+          handleChange('universityLogoUrl', result.url);
         } else {
-          handleChange('facultyLogoUrl', dataUrl);
+          handleChange('facultyLogoUrl', result.url);
         }
-      };
-      reader.readAsDataURL(file);
+        setSnackbar({ open: true, message: 'تم تحميل الشعار بنجاح', severity: 'success' });
+      } catch (err) {
+        console.error('Logo upload failed:', err);
+        setSnackbar({ open: true, message: 'فشل تحميل الشعار', severity: 'error' });
+      }
     }
   };
 
@@ -307,8 +309,8 @@ export default function PrintSettingsNew() {
                       <Typography variant="h6" gutterBottom>شعار الجامعة</Typography>
                       {localSettings.universityLogoUrl && (
                         <Box sx={{ textAlign: 'center', mb: 2 }}>
-                          <img 
-                            src={localSettings.universityLogoUrl} 
+                          <img
+                            src={localSettings.universityLogoUrl}
                             alt="شعار الجامعة"
                             style={{ maxWidth: '200px', maxHeight: '200px' }}
                           />
@@ -336,8 +338,8 @@ export default function PrintSettingsNew() {
                       <Typography variant="h6" gutterBottom>شعار الكلية</Typography>
                       {localSettings.facultyLogoUrl && (
                         <Box sx={{ textAlign: 'center', mb: 2 }}>
-                          <img 
-                            src={localSettings.facultyLogoUrl} 
+                          <img
+                            src={localSettings.facultyLogoUrl}
                             alt="شعار الكلية"
                             style={{ maxWidth: '200px', maxHeight: '200px' }}
                           />
