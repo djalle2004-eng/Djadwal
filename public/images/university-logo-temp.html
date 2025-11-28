@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Convertisseur d'image</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Convertisseur d'image pour le logo de l'université</h1>
+    <p>Copiez l'image du logo et collez-la dans la zone ci-dessous</p>
+    <canvas id="canvas" width="800" height="800"></canvas>
+    <button id="download">Télécharger l'image</button>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const downloadBtn = document.getElementById('download');
+
+        // Fonction pour dessiner l'image sur le canvas
+        function drawImage(dataUrl) {
+            const img = new Image();
+            img.onload = function() {
+                // Effacer le canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Calculer les dimensions pour maintenir le ratio
+                let width = img.width;
+                let height = img.height;
+                const maxWidth = canvas.width;
+                const maxHeight = canvas.height;
+                
+                if (width > maxWidth) {
+                    const ratio = maxWidth / width;
+                    width = maxWidth;
+                    height = height * ratio;
+                }
+                
+                if (height > maxHeight) {
+                    const ratio = maxHeight / height;
+                    height = maxHeight;
+                    width = width * ratio;
+                }
+                
+                // Centrer l'image
+                const x = (canvas.width - width) / 2;
+                const y = (canvas.height - height) / 2;
+                
+                // Dessiner l'image
+                ctx.drawImage(img, x, y, width, height);
+            };
+            img.src = dataUrl;
+        }
+
+        // Gérer le collage d'image
+        document.addEventListener('paste', function(e) {
+            if (e.clipboardData && e.clipboardData.items) {
+                const items = e.clipboardData.items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const blob = items[i].getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            drawImage(event.target.result);
+                        };
+                        reader.readAsDataURL(blob);
+                        break;
+                    }
+                }
+            }
+        });
+
+        // Gérer le téléchargement
+        downloadBtn.addEventListener('click', function() {
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'university-logo.png';
+            link.href = dataUrl;
+            link.click();
+        });
+    </script>
+</body>
+</html>

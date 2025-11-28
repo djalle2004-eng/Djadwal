@@ -1,0 +1,18 @@
+{
+  "database": {
+    "useNeon": true,
+    "neonConnectionString": "postgresql://username:password@ep-xxx-xxx.region.aws.neon.tech/Djadwal?sslmode=require",
+    "useSQLiteCloud": false,
+    "sqliteCloud": {
+      "username": "your_username",
+      "password": "your_password",
+      "host": "your_host.sqlite.cloud",
+      "port": 8860,
+      "database": "Djadwal"
+    }
+  },
+  "app": {
+    "language": "ar",
+    "theme": "light"
+  }
+}

@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap&text=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Cairo', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-display: swap;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  direction: rtl;
+}
+
+/* تحسين مظهر الجداول */
+.ag-theme-alpine {
+  --ag-font-family: 'Cairo', sans-serif;
+  --ag-font-size: 14px;
+  --ag-header-height: 50px;
+  --ag-header-foreground-color: #1a1a1a;
+  --ag-header-background-color: #f8fafc;
+  --ag-odd-row-background-color: #f8fafc;
+  --ag-header-column-separator-display: none;
+  --ag-row-border-color: #e2e8f0;
+  --ag-header-border-color: #e2e8f0;
+  --ag-row-hover-color: #f1f5f9;
+  --ag-selected-row-background-color: #e0f2fe;
+  --ag-row-border-width: 1px;
+  --ag-header-column-separator-height: 100%;
+  --ag-header-column-separator-width: 1px;
+  --ag-header-column-separator-color: #e2e8f0;
+  --ag-font-display: swap;
+}
+
+/* تصحيح محاذاة العناصر للغة العربية */
+.rtl-align {
+  text-align: right;
+}
+
+/* تحسين عرض النصوص العربية */
+.arabic-text {
+  line-height: 1.6;
+  letter-spacing: -0.5px;
+}
+
+/* دعم الخطوط العربية */
+@font-face {
+  font-family: 'Cairo';
+  src: url('/fonts/Cairo-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* تنسيق إضافي للجداول والعناصر */
+table {
+  width: 100%;
+  direction: rtl;
+}
+
+th, td {
+  text-align: right;
+  padding: 8px;
+}

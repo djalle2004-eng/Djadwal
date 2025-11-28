@@ -1,0 +1,165 @@
+{
+  "name": "djadwal",
+  "private": true,
+  "version": "19.11.25.Turso",
+  "author": "Ali Hussain",
+  "description": "Application de gestion des emplois du temps",
+  "type": "commonjs",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"node server/server.js\"",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "start": "node server/server.js",
+    "electron:dev": "cross-env NODE_ENV=development concurrently \"vite\" \"electron .\"",
+    "electron:build": "vite build && cross-env NODE_ENV=production electron-builder",
+    "electron:preview": "cross-env NODE_ENV=production electron .",
+    "rebuild": "electron-rebuild -f -w better-sqlite3",
+    "postinstall": "electron-builder install-app-deps",
+    "server": "node server/server.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run server\""
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@google/generative-ai": "^0.22.0",
+    "@libsql/client": "^0.14.0",
+    "@mui/icons-material": "^6.5.0",
+    "@mui/material": "^6.5.0",
+    "@mui/x-data-grid": "^7.22.2",
+    "@mui/x-date-pickers": "^7.22.2",
+    "@pdf-lib/fontkit": "^1.1.1",
+    "@react-pdf/renderer": "^4.2.2",
+    "@sqlitecloud/drivers": "^1.0.438",
+    "@types/pdfkit": "^0.13.9",
+    "ag-grid-community": "^34.3.0",
+    "ag-grid-react": "^34.3.0",
+    "axios": "^1.12.2",
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^11.9.1",
+    "blob-stream": "^0.1.3",
+    "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
+    "date-fns": "^2.30.0",
+    "electron-is-dev": "^3.0.1",
+    "electron-store": "^10.0.1",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "file-saver": "^2.0.5",
+    "html2canvas": "^1.4.1",
+    "html2pdf.js": "^0.10.3",
+    "jspdf": "^3.0.0",
+    "jspdf-autotable": "^5.0.2",
+    "lucide-react": "^0.294.0",
+    "multer": "^1.4.5-lts.2",
+    "pdf-lib": "^1.17.1",
+    "pdfkit": "^0.16.0",
+    "pdfkit-table": "^0.1.99",
+    "pdfmake": "^0.2.18",
+    "pg": "^8.16.3",
+    "puppeteer": "^24.4.0",
+    "puppeteer-core": "^24.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-pdf": "^9.2.1",
+    "react-router-dom": "^6.22.3",
+    "sqlite": "^5.1.1",
+    "wait-on": "^8.0.3",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.1",
+    "@tailwindcss/forms": "^0.5.10",
+    "@types/bcrypt": "^6.0.0",
+    "@types/file-saver": "^2.0.7",
+    "@types/pdfmake": "^0.2.11",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^1.3.2",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.2",
+    "dotenv": "^16.4.7",
+    "electron": "^38.4.0",
+    "electron-builder": "^24.13.3",
+    "electron-rebuild": "^3.2.9",
+    "eslint": "^9.9.1",
+    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
+    "eslint-plugin-react-refresh": "^0.4.11",
+    "globals": "^15.9.0",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^8.3.0",
+    "vite": "^5.0.12"
+  },
+  "build": {
+    "appId": "com.djadwal.app",
+    "productName": "Djadwal",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "node_modules/**/*",
+      "public/icon.ico"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**/*",
+      "node_modules/@sqlitecloud/**/*",
+      "node_modules/bcrypt/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "public/fonts",
+        "to": "fonts",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "public/images",
+        "to": "images",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": ".env.production",
+        "to": ".env"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/icon.ico",
+      "signAndEditExecutable": false,
+      "verifyUpdateCodeSignature": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Djadwal",
+      "installerIcon": "public/icon.ico",
+      "uninstallerIcon": "public/icon.ico",
+      "installerHeaderIcon": "public/icon.ico",
+      "menuCategory": true,
+      "perMachine": false,
+      "allowElevation": true
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "public/icon.icns",
+      "category": "public.app-category.education"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "public/icon.png",
+      "category": "Education"
+    }
+  }
+}

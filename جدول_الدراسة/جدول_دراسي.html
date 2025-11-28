@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جدول دراسي - السنة أولى ماستر اقتصاد كمي</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #9EB6D1;
+            text-align: center;
+            padding: 10px;
+            position: relative;
+        }
+        .university-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .logos {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .left-logo, .right-logo {
+            width: 80px;
+            height: 80px;
+            background-color: #f0f0f0;
+            border-radius: 50%;
+        }
+        .date-box {
+            background-color: #FFBF00;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .faculty-box {
+            background-color: #9EB6D1;
+            padding: 10px;
+            text-align: center;
+        }
+        .schedule-title {
+            background-color: #9EB6D1;
+            text-align: center;
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .schedule-table th, .schedule-table td {
+            border: 1px solid #354259;
+            padding: 8px;
+            text-align: center;
+        }
+        .schedule-table th {
+            background-color: #9EB6D1;
+        }
+        .schedule-table td {
+            background-color: #9EB6D1;
+            height: 60px;
+            vertical-align: top;
+        }
+        .course {
+            font-weight: bold;
+        }
+        .professor {
+            font-size: 0.9em;
+        }
+        .room {
+            font-size: 0.8em;
+            color: #333;
+        }
+        .red-text {
+            color: red;
+        }
+        .vertical-text {
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+            text-align: center;
+            white-space: nowrap;
+        }
+        .day-col {
+            width: 30px;
+        }
+        .time-slot {
+            min-width: 120px;
+        }
+        .settings-panel {
+            background-color: #f0f0f0;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logos">
+                <div class="right-logo"></div>
+                <div class="university-name">جامعة الشهيد حمة لخضر بالوادي</div>
+                <div class="left-logo"></div>
+            </div>
+        </header>
+        
+        <div style="display: flex; justify-content: space-between;">
+            <div class="date-box" style="flex: 1;">
+                تاريخ النشر: <span id="publication-date">15/10/2024</span>
+            </div>
+            <div class="faculty-box" style="flex: 2;">
+                <span id="faculty-name">كلية العلوم الاقتصادية و التجارية وعلوم التسيير</span><br>
+                نائب العميد المكلف بالدراسات و المسائل المرتبطة بالطلبة<br>
+                مصلحة التدريس
+            </div>
+        </div>
+        
+        <div class="settings-panel">
+            <h3>إعدادات الجدول الزمني</h3>
+            <div class="form-group">
+                <label for="specialization">التخصص:</label>
+                <select id="specialization" class="form-control">
+                    <option value="اقتصاد كمي">اقتصاد كمي</option>
+                    <option value="إدارة أعمال">إدارة أعمال</option>
+                    <option value="محاسبة ومالية">محاسبة ومالية</option>
+                    <option value="تسويق">تسويق</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="academic-year">السنة الدراسية:</label>
+                <select id="academic-year" class="form-control">
+                    <option value="2024">2024-2025</option>
+                    <option value="2023">2023-2024</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="semester">الفصل الدراسي:</label>
+                <select id="semester" class="form-control">
+                    <option value="1">الفصل الأول</option>
+                    <option value="2">الفصل الثاني</option>
+                </select>
+            </div>
+            <button id="generate-schedule" class="btn">توليد الجدول الزمني</button>
+            <button id="export-pdf" class="btn" style="margin-right: 10px; background-color: #f44336;">تصدير PDF</button>
+        </div>
+        
+        <div id="error-message" class="error" style="display: none;"></div>
+        <div id="loading-message" class="loading" style="display: none;">جاري تحميل البيانات...</div>
+        
+        <div class="schedule-title">
+            التوزيع الزمني الدراسي للسنة <span id="schedule-level">أولى ماستر</span> <span id="schedule-specialization">اقتصاد كمي</span> (السداسي <span id="schedule-semester">الأول</span>)
+        </div>
+        
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" class="day-col">اليوم</th>
+                    <th rowspan="2" class="day-col">الفوج</th>
+                    <th class="time-slot">08.00-09.30</th>
+                    <th class="time-slot">09.30-11.00</th>
+                    <th class="time-slot">11.00-12.30</th>
+                    <th class="time-slot">12.30-14.00</th>
+                    <th class="time-slot">14.00-15.30</th>
+                    <th class="time-slot">15.30-17.00</th>
+                </tr>
+            </thead>
+            <tbody id="schedule-body">
+                <!-- سيتم توليد محتوى الجدول ديناميكياً -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // توقيتات المحاضرات
+        const LECTURE_TIMES = [
+            '08.00-09.30',
+            '09.30-11.00',
+            '11.00-12.30',
+            '12.30-14.00',
+            '14.00-15.30',
+            '15.30-17.00'
+        ];
+
+        // الأيام التي سيتم عرضها في الجدول
+        const DAYS = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+
+        // تحويل أسماء الأيام من العربية للإنجليزية - معكوس دالة convertDay في Sessions.tsx
+        const convertDayToEnglish = (arabicDay) => {
+            const dayMap = {
+                'السبت': 'saturday',
+                'الأحد': 'sunday',
+                'الاثنين': 'monday',
+                'الثلاثاء': 'tuesday',
+                'الأربعاء': 'wednesday',
+                'الخميس': 'thursday',
+                'الجمعة': 'friday'
+            };
+            return dayMap[arabicDay] || arabicDay;
+        };
+
+        // دالة استدعاء API لجلب البيانات
+        async function fetchSessionsData() {
+            // عرض رسالة التحميل
+            const loadingMessage = document.getElementById('loading-message');
+            const errorMessage = document.getElementById('error-message');
+            loadingMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+
+            try {
+                // بالنسبة للديمو سنستخدم بيانات ثابتة بدلاً من الاتصال بقاعدة البيانات
+                // في التطبيق الحقيقي، هنا سيتم جلب البيانات من Firebase كما في Sessions.tsx
+                const response = await fetchMockData();
+                return response;
+            } catch (error) {
+                console.error('خطأ في جلب البيانات:', error);
+                errorMessage.textContent = 'حدث خطأ أثناء جلب البيانات: ' + error.message;
+                errorMessage.style.display = 'block';
+                throw error;
+            } finally {
+                loadingMessage.style.display = 'none';
+            }
+        }
+
+        // دالة تقليد البيانات للعرض التوضيحي (محاكاة بيانات Sessions.tsx)
+        async function fetchMockData() {
+            // تأخير مصطنع لمحاكاة طلب الشبكة
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            const assignments = [
+                // الأحد - الفوج 1
+                { 
+                    id: '1', 
+                    professor_id: 'p1', 
+                    professorName: 'د. عبد اللاوي عقبة',
+                    course_id: 'c1', 
+                    courseName: 'الاقتصاد الكلي المعمق',
+                    group_id: 'g1', 
+                    groupName: 'الفوج 1',
+                    groupSpecialization: 'اقتصاد كمي',
+                    room_id: 'r1', 
+                    roomName: 'ق23',
+                    academic_year: '2024',
+                    semester: '1',
+                    assignment_day: 'sunday',
+                    dayName: 'الأحد',
+                    lecture_time: '08.00-09.30'
+                },
+                { 
+                    id: '2', 
+                    professor_id: 'p2', 
+                    professorName: 'د. حميداتو الناصر',
+                    course_id: 'c2', 
+                    courseName: 'إقتصاد قياسي ديناميكي',
+                    group_id: 'g1', 
+                    groupName: 'الفوج 1',
+                    groupSpecialization: 'اقتصاد كمي',
+                    room_id: 'r2', 
+                    roomName: 'ق16',
+                    academic_year: '2024',
+                    semester: '1',
+                    assignment_day: 'sunday',
+                    dayName: 'الأحد',
+                    lecture_time: '09.30-11.00'
+                },
+                { 
+                    id: '3', 
+                    professor_id: 'p3', 
+                    professorName: 'د. مجهول',
+                    course_id: 'c3', 
+                    courseName: 'تقنيات الاستقصاء',
+                    group_id: 'g1', 
+                    groupName: 'الفوج 1',
+                    groupSpecialization: 'اقتصاد كمي',
+                    room_id: 'r2', 
+                    roomName: 'ق16',
+                    academic_year: '2024',
+                    semester: '1',
+                    assignment_day: 'sunday',
+                    dayName: 'الأحد',
+                    lecture_time: '11.00-12.30'
+                },
+                { 
+                    id: '4', 
+                    professor_id: 'p4', 
+                    professorName: 'د. كدودة عادل',
+                    course_id: 'c4', 
+                    courseName: 'الاقتصاد الجزئي المعمق',
+                    group_id: 'g1', 
+                    groupName: 'الفوج 1',
+                    groupSpecialization: 'اقتصاد كمي',
+                    room_id: 'r2', 
+                    roomName: 'ق16',
+                    academic_year: '2024',
+                    semester: '1',
+                    assignment_day: 'sunday',
+                    dayName: 'الأحد',
+                    lecture_time: '14.00-15.30'
+                },
+                { 
+                    id: '5', 
+                    professor_id: 'p5', 
+                    professorName: 'د. عبداللاوي مفيد',
+                    course_id: 'c5', 
+                    courseName: 'الاتصال والتحرير الإداري',
+                    group_id: 'g1', 
+                    groupName: 'الفوج 1',
+                    groupSpecialization: 'اقتصاد كمي',
+                    room_id: 'r2', 
+                    roomName: 'ق16',
+                    academic_year: '2024',
+                    semester: '1',
+                    assignment_day: 'sunday',
+                    dayName: 'الأحد',
+                    lecture_time: '15.30-17.00'
+                },
+                
+                // الأحد - الفوج 2
+                { 
+                    id: '6', 
+                    professor_id: 'p2', 
+                    professorName: 'د. حميداتو الناصر',
+                    course_id: 'c2', 
+                    courseName: 'إقتصاد قياسي ديناميكي',
+                    group_id: 'g2', 
+                    groupName: 'الفوج 2',
+                    groupSpecialization: 'اقتصاد كمي',
+                    room_id: 'r3', 
+                    roomName: 'ق05',
+                    academic_year: '2024',
+                    semester: '1',
+                    assignment_day: 'sunday',
+                    dayName: 'الأحد',
+                    lecture_time: '08.00-09.30'
+                },
+                
+                // الاثنين - الفوج 1
+                { 
+                    id: '7', 
+                    professor_id: 'p6', 
+                    professorName: 'د. بن خيرة سامي',
+                    course_id: 'c7', 
+                    courseName: 'نظرية اتخاذ القرار',
+                    group_id: 'g1', 
+                    groupName: 'الفوج 1',
+                    groupSpecialization: 'اقتصاد كمي',
+                    room_id: 'r4', 
+                    roomName: 'ق13',
+                    academic_year: '2024',
+                    semester: '1',
+                    assignment_day: 'monday',
+                    dayName: 'الاثنين',
+                    lecture_time: '14.00-15.30'
+                },
+                
+                // الثلاثاء - الفوج 2
+                { 
+                    id: '8', 
+                    professor_id: 'p7', 
+                    professorName: 'د. لمحينط عائشة',
+                    course_id: 'c8', 
+                    courseName: 'إنجليزية',
+                    group_id: 'g2', 
+                    groupName: 'الفوج 2',
+                    groupSpecialization: 'اقتصاد كمي',
+                    room_id: 'r5', 
+                    roomName: 'المدرج ع',
+                    academic_year: '2024',
+                    semester: '1',
+                    assignment_day: 'tuesday',
+                    dayName: 'الثلاثاء',
+                    lecture_time: '14.00-15.30'
+                }
+            ];
+            
+            return assignments;
+        }
+
+        // دالة لتنظيم البيانات حسب اليوم والفوج والفترة الزمنية
+        function organizeSessionsByDayGroupTime(sessions, specialization, academicYear, semester) {
+            // تصفية الجلسات حسب التخصص والسنة الدراسية والفصل
+            const filteredSessions = sessions.filter(session => 
+                session.groupSpecialization === specialization &&
+                session.academic_year === academicYear &&
+                session.semester === semester
+            );
+            
+            // تنظيم البيانات في هيكل مناسب للجدول
+            const organized = {};
+            
+            // تهيئة هيكل البيانات
+            DAYS.forEach(day => {
+                organized[day] = {
+                    1: Array(6).fill(null),
+                    2: Array(6).fill(null)
+                };
+            });
+            
+            // ملء البيانات
+            filteredSessions.forEach(session => {
+                const dayName = session.dayName;
+                const groupNum = session.groupName === 'الفوج 1' ? 1 : 2;
+                const timeIndex = LECTURE_TIMES.indexOf(session.lecture_time);
+                
+                if (dayName && timeIndex !== -1 && organized[dayName] && organized[dayName][groupNum]) {
+                    organized[dayName][groupNum][timeIndex] = session;
+                }
+            });
+            
+            return organized;
+        }
+
+        // دالة لتوليد خلية جدول فارغة
+        function createEmptyCell() {
+            return document.createElement('td');
+        }
+
+        // دالة لتوليد خلية تحتوي على معلومات المقرر
+        function createCourseCell(session) {
+            const cell = document.createElement('td');
+            
+            if (session) {
+                const courseDiv = document.createElement('div');
+                courseDiv.className = 'course';
+                courseDiv.textContent = session.courseName.split('(')[0].trim(); // اسم المقرر فقط بدون الكود
+                cell.appendChild(courseDiv);
+                
+                const professorDiv = document.createElement('div');
+                professorDiv.className = 'professor';
+                professorDiv.textContent = `(${session.professorName})`;
+                cell.appendChild(professorDiv);
+                
+                const roomDiv = document.createElement('div');
+                roomDiv.className = 'room';
+                // تحديد إذا كان يجب استخدام اللون الأحمر
+                const useRedColor = session.roomName === 'ق05' || 
+                                     session.roomName === 'ق06' || 
+                                     session.roomName === 'ق09' || 
+                                     session.roomName === 'ق23';
+                if (useRedColor) {
+                    roomDiv.classList.add('red-text');
+                }
+                roomDiv.textContent = `(${session.roomName})`;
+                cell.appendChild(roomDiv);
+            }
+            
+            return cell;
+        }
+
+        // دالة لتوليد صف في الجدول لفوج معين في يوم معين
+        function createDayRow(day, groupNum, dayData) {
+            const row = document.createElement('tr');
+            
+            // إضافة خلية اليوم إذا كان هذا هو الفوج الأول
+            if (groupNum === 1) {
+                const dayCell = document.createElement('td');
+                dayCell.rowSpan = 2;
+                dayCell.className = 'vertical-text';
+                dayCell.textContent = day;
+                row.appendChild(dayCell);
+            }
+            
+            // إضافة خلية رقم الفوج
+            const groupCell = document.createElement('td');
+            groupCell.textContent = groupNum;
+            row.appendChild(groupCell);
+            
+            // إضافة الفترات الزمنية (6 فترات)
+            for (let i = 0; i < 6; i++) {
+                const session = dayData[groupNum][i];
+                if (session) {
+                    row.appendChild(createCourseCell(session));
+                } else {
+                    row.appendChild(createEmptyCell());
+                }
+            }
+            
+            return row;
+        }
+
+        // دالة لتوليد الجدول الزمني كاملاً
+        async function generateSchedule() {
+            try {
+                const specialization = document.getElementById('specialization').value;
+                const academicYear = document.getElementById('academic-year').value;
+                const semester = document.getElementById('semester').value;
+                
+                // تحديث عناوين الجدول
+                document.getElementById('schedule-specialization').textContent = specialization;
+                document.getElementById('schedule-semester').textContent = 
+                    semester === "1" ? "الأول" : "الثاني";
+                
+                // جلب البيانات
+                const sessions = await fetchSessionsData();
+                
+                // تنظيم البيانات
+                const organizedData = organizeSessionsByDayGroupTime(
+                    sessions, 
+                    specialization,
+                    academicYear,
+                    semester
+                );
+                
+                const scheduleBody = document.getElementById('schedule-body');
+                scheduleBody.innerHTML = '';
+                
+                // إنشاء صفوف الجدول لكل يوم ولكل فوج
+                DAYS.forEach(day => {
+                    if (organizedData[day]) {
+                        // إنشاء صف للفوج الأول
+                        scheduleBody.appendChild(createDayRow(day, 1, organizedData[day]));
+                        // إنشاء صف للفوج الثاني
+                        scheduleBody.appendChild(createDayRow(day, 2, organizedData[day]));
+                    }
+                });
+            } catch (error) {
+                console.error('خطأ في إنشاء الجدول:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = 'حدث خطأ أثناء إنشاء الجدول: ' + error.message;
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        // تصدير الجدول كملف PDF
+        function exportToPDF() {
+            // هنا يمكن إضافة كود لتصدير الجدول كملف PDF
+            // هذه الدالة يمكن استخدامها مع مكتبة jsPDF كما في ملف Sessions.tsx
+            alert('ستتم إضافة ميزة تصدير PDF قريباً');
+        }
+
+        // تهيئة الصفحة وإضافة مستمعي الأحداث
+        document.addEventListener('DOMContentLoaded', function() {
+            // توليد الجدول الزمني عند تحميل الصفحة
+            generateSchedule();
+            
+            // إضافة مستمع الحدث لزر توليد الجدول
+            document.getElementById('generate-schedule').addEventListener('click', generateSchedule);
+            
+            // إضافة مستمع الحدث لزر تصدير PDF
+            document.getElementById('export-pdf').addEventListener('click', exportToPDF);
+        });
+    </script>
+</body>
+</html>
