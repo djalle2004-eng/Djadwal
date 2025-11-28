@@ -680,67 +680,9 @@ router.get('/time-slots', async (req, res) => {
     }
 });
 
-// --- Logo Upload & Print Settings ---
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-
-// Configure multer for logo uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, 'uploads', 'logos');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const timestamp = Date.now();
-        const ext = path.extname(file.originalname);
-        const type = req.body.type || 'logo';
-        cb(null, `${type}_${timestamp}${ext}`);
-    }
-});
-
-const upload = multer({
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
-    fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|svg|ico/;
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = allowedTypes.test(file.mimetype);
-
-        if (extname && mimetype) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only image files (JPEG, PNG, SVG, ICO) are allowed'));
-        }
-    }
-});
-
-// Ensure print_settings table exists
-const ensurePrintSettingsTable = async () => {
-    try {
-        await executeQuery(`
-            CREATE TABLE IF NOT EXISTS print_settings (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                setting_key TEXT UNIQUE NOT NULL,
-                setting_value TEXT,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_by INTEGER
-            )
-        `);
-        console.log('✅ Verified print_settings table exists');
-    } catch (error) {
-        console.error('❌ Failed to verify print_settings table:', error);
-    }
-};
-ensurePrintSettingsTable();
-
 // Ensure permissions column exists in users table
 const ensurePermissionsColumn = async () => {
     try {
-        // Try to select permissions column to see if it exists
         await executeQuery('SELECT permissions FROM users LIMIT 1');
         console.log('✅ Verified permissions column exists in users table');
     } catch (error) {
@@ -756,6 +698,30 @@ const ensurePermissionsColumn = async () => {
 };
 ensurePermissionsColumn();
 
+// --- Logo Upload & Print Settings ---
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configure multer for logo uploads (Memory Storage for Database Persistence)
+const storage = multer.memoryStorage();
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB max
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|svg|ico/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+
+        if (extname && mimetype) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files (JPEG, PNG, SVG, ICO) are allowed'));
+        }
+    }
+});
+
 // Upload logo endpoint
 router.post('/upload-logo', upload.single('file'), async (req, res) => {
     try {
@@ -764,7 +730,10 @@ router.post('/upload-logo', upload.single('file'), async (req, res) => {
         }
 
         const { type } = req.body; // 'university' or 'faculty'
-        const logoUrl = `/uploads/logos/${req.file.filename}`;
+
+        // Convert buffer to Base64 Data URI
+        const b64 = Buffer.from(req.file.buffer).toString('base64');
+        const dataURI = `data:${req.file.mimetype};base64,${b64}`;
 
         // Save to database
         const settingKey = type === 'university' ? 'university_logo_url' : 'faculty_logo_url';
@@ -774,10 +743,10 @@ router.post('/upload-logo', upload.single('file'), async (req, res) => {
              VALUES ($1, $2, CURRENT_TIMESTAMP) 
              ON CONFLICT(setting_key) 
              DO UPDATE SET setting_value = $3, updated_at = CURRENT_TIMESTAMP`,
-            [settingKey, logoUrl, logoUrl]
+            [settingKey, dataURI, dataURI]
         );
 
-        res.json({ url: logoUrl, message: 'Logo uploaded successfully' });
+        res.json({ url: dataURI, message: 'Logo uploaded successfully' });
     } catch (error) {
         console.error('Error uploading logo:', error);
         res.status(500).json({ error: error.message });
