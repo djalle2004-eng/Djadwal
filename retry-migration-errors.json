@@ -1,0 +1,17 @@
+[
+  {
+    "table": "users",
+    "row": 1,
+    "error": "invalid input syntax for type numeric: \"2025-10-23 16:24:54\""
+  },
+  {
+    "table": "users",
+    "row": 2,
+    "error": "invalid input syntax for type numeric: \"2025-10-22 22:17:45\""
+  },
+  {
+    "table": "users",
+    "row": 3,
+    "error": "invalid input syntax for type numeric: \"2025-10-23 10:45:14\""
+  }
+]

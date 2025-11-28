@@ -1,0 +1,55 @@
+Connexion à: sqlitecloud://admin@example.com:admin123@cjh4w9vank.g4.sqlite.cloud:8860/Djadwal
+
+--- VARIABLES D'ENVIRONNEMENT ---
+SQLITECLOUD_HOST: cjh4w9vank.g4.sqlite.cloud
+SQLITECLOUD_PORT: 8860
+SQLITECLOUD_USERNAME: admin@example.com
+SQLITECLOUD_DATABASE: Djadwal
+
+--- TABLES DANS LA BASE DE DONNÉES ---
+Nombre de tables: 10
+- academic_years
+- assignments
+- courses
+- departments
+- extra_sessions
+- groups
+- professors
+- rooms
+- semesters
+- sqlite_sequence
+
+--- STRUCTURE DE LA TABLE SEMESTERS ---
+- id (INTEGER)
+- academic_year_id (INTEGER)
+- semester_name (TEXT)
+- start_date (TEXT)
+- end_date (TEXT)
+- is_current (INTEGER)
+- created_at (DATETIME)
+
+--- COMPTAGE DES ENREGISTREMENTS ---
+academic_years: 2 enregistrements
+semesters: 4 enregistrements
+departments: 5 enregistrements
+groups: 119 enregistrements
+courses: 105 enregistrements
+professors: 194 enregistrements
+rooms: 32 enregistrements
+assignments: 164 enregistrements
+
+--- CONTENU DE LA TABLE ACADEMIC_YEARS ---
+- ID: 1, Nom: 2024-2025, Est actif: 0
+- ID: 2, Nom: 2025-2026, Est actif: 0
+
+--- CONTENU DE LA TABLE SEMESTERS ---
+- ID: 15, Année académique: 1, Nom: السداسي الأول, Est actif: 1
+- ID: 16, Année académique: 1, Nom: السداسي الثاني, Est actif: 0
+- ID: 17, Année académique: 2, Nom: السداسي الأول, Est actif: 1
+- ID: 18, Année académique: 2, Nom: السداسي الثاني, Est actif: 0
+
+--- TEST DE LA REQUÊTE getSemesters ---
+Test pour année ID=1 (2024-2025):
+  Résultat: 0 semestres trouvés
+Test pour année ID=2 (2025-2026):
+  Résultat: 0 semestres trouvés

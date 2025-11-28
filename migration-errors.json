@@ -1,0 +1,4612 @@
+[
+  {
+    "table": "professors",
+    "row": 7,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 8,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 9,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 10,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 11,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 12,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 13,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 14,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 15,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 16,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 17,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 18,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 19,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 20,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 21,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 22,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 23,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 24,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 25,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 26,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 27,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 28,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 29,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 30,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 31,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 32,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 33,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 34,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 35,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 36,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 37,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 38,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 39,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 40,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 41,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 42,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 43,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 44,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 45,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 46,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 47,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 48,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 49,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 50,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 51,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 52,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 53,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 54,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 55,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 56,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 57,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 58,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 59,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 60,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 61,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 62,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 63,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 64,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 65,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 66,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 67,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 68,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 69,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 70,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 71,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 72,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 73,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 74,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 75,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 76,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 77,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 78,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 79,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 80,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 81,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 82,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 83,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 84,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 85,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 86,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 87,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 88,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 89,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 90,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 91,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 92,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 93,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 94,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 95,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 96,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 97,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 98,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 99,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 100,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 101,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 102,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 103,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 104,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 105,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 106,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 107,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 108,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 109,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 110,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 111,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 112,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 113,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 114,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 115,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 116,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 117,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 118,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 119,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 120,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 121,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 122,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 123,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 124,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 125,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 126,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 127,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 128,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 130,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 131,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 132,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 133,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 134,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 135,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 136,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 137,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 138,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 139,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 140,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 141,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 142,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 143,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 144,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 145,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 146,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 147,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 148,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 149,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 150,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 151,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 152,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 153,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 154,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 155,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 156,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 157,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 158,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 159,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 160,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 161,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 162,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 163,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 164,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 165,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 166,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 167,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 168,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 169,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 170,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 171,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 172,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 173,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 174,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 175,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 176,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 177,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 179,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 180,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 181,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 182,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 183,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 184,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 185,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 186,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 187,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 189,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 190,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 191,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 192,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 193,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 194,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 195,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 196,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 197,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 198,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 199,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 200,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 201,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 202,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 203,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 204,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 205,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 206,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 207,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 208,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 209,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 210,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 211,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 212,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 213,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 214,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 215,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 216,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 217,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 218,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 219,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 220,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 221,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 222,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 223,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 224,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 225,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 226,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 227,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 228,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 229,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 230,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 231,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 232,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 233,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 234,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 235,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 236,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 237,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 238,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 239,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 240,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 241,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 242,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 243,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 244,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 245,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 246,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 247,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 248,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 249,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 250,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 251,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 252,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 253,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 254,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 255,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 256,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 257,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 258,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 259,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 260,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 261,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 262,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 263,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 264,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 265,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 266,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "professors",
+    "row": 267,
+    "error": "column \"phone\" of relation \"professors\" does not exist"
+  },
+  {
+    "table": "assignments",
+    "row": 2600,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2601,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2602,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2603,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 2604,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 2607,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2608,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2609,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2610,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2611,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2612,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2614,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2615,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2616,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2617,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2619,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2620,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2621,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2623,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2624,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2625,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2626,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2627,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2629,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2630,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2631,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2633,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2635,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2636,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2637,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2639,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2640,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2641,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2643,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2646,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2647,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2649,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2650,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2652,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2653,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 2655,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة موارد بشرية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2656,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة موارد بشرية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2659,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة موارد بشرية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2660,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة موارد بشرية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2661,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة موارد بشرية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2662,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة موارد بشرية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2663,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة موارد بشرية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2664,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة موارد بشرية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2665,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة موارد بشرية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2666,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة موارد بشرية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2667,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة موارد بشرية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2668,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة موارد بشرية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2669,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة موارد بشرية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2670,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2671,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2672,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2673,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2674,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2675,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2677,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2678,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2679,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2680,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2681,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2684,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2685,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2686,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2687,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2688,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2689,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2690,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2691,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2692,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2693,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2694,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2695,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2696,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2697,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2699,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2700,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2701,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2702,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2703,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2704,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2705,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2706,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2707,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2708,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2709,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2711,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2713,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2714,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2715,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2716,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2717,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2718,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2719,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2720,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2721,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2722,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2724,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2725,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2727,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2728,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2729,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2730,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2731,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2732,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2733,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2734,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2735,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2736,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2737,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2738,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2739,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2741,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2742,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2743,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2744,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2745,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2746,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2747,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2748,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2749,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2750,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2751,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2753,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2754,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2755,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2757,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2758,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2759,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2760,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2761,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2762,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2764,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2766,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2768,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2769,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 2772,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2773,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2774,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2775,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2776,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2778,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2779,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2780,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2783,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2784,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2785,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2787,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2788,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2791,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2792,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2793,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2795,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2797,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2798,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2799,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2800,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2801,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2803,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2804,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2805,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2806,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2807,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2808,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2809,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2810,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2811,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2812,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2815,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2817,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2818,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2819,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2820,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2821,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2823,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2824,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2825,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2826,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2827,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2828,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2829,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2832,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2833,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2834,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2835,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2838,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2839,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2840,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2841,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 2842,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2843,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2844,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2845,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2846,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2847,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2849,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2850,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2852,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2853,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2854,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2859,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2861,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2862,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2863,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2864,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2865,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2868,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2869,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2870,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2871,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2874,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2875,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2876,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2877,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2880,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2883,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 2888,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2889,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2890,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2893,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2894,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2895,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2896,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2898,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2899,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2901,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2902,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2903,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2904,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2908,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2910,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2912,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2913,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2914,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2915,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2916,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2918,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2919,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2921,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2922,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2924,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2925,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2927,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2929,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2930,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2931,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2933,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2934,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2935,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2936,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2937,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2938,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2939,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2940,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2942,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2943,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2947,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2948,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2949,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2950,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2951,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2952,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2953,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2954,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2955,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم مالية ومحاسبية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2956,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2958,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2959,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2964,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2965,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2966,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2967,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2974,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2975,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2977,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2978,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2980,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2981,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2982,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2984,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2986,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2987,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2988,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2990,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2991,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2992,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2993,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2994,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2995,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2996,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2998,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 2999,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3000,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3001,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3002,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3003,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3004,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3005,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3007,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3008,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3009,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3010,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3011,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3012,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3013,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3014,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3015,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3016,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3017,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3019,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3020,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3021,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3022,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3024,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3025,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3026,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3027,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3028,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3029,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3030,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3031,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3032,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3033,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3035,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3036,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3037,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3038,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم تجارية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3040,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3041,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3042,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3043,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3044,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3045,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3046,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3048,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3049,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3050,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3051,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3052,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3053,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3054,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3056,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3057,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3060,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3061,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3062,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3063,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3064,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3065,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3066,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3067,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3069,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة تسويق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3071,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة تسويق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3073,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة تسويق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3074,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة تسويق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3075,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة تسويق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3076,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة تسويق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3078,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة تسويق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3079,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة تسويق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3080,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة تسويق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3081,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة تسويق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3082,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة تسويق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3083,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3084,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3086,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3087,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3088,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3091,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3092,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3093,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3094,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3095,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3096,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3097,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3098,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3099,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3100,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3101,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3102,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3103,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3104,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3105,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3106,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3108,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3109,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3111,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3112,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3113,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3114,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3115,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3116,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3119,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3120,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3121,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3122,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3123,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3125,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3126,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3127,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3128,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3130,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3132,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3133,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3134,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3136,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3138,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3139,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3141,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3142,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3145,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3150,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3151,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3153,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3154,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3156,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3157,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3158,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3159,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3161,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3162,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3163,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3165,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3166,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3168,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3169,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3170,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3171,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3172,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3174,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3175,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3176,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3178,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3179,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3180,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3182,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3183,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3185,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3186,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3187,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3188,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3189,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3191,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3192,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3194,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3196,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3197,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3198,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3200,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3202,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3203,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3205,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3208,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3210,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3211,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3213,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3214,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3217,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3218,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3219,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3220,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3222,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3223,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3224,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3225,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3226,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3228,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3229,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3230,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3231,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3233,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3234,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3235,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3236,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3237,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3239,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3240,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3241,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3242,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3243,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3246,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3247,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3248,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3249,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3250,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3252,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3253,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3254,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3255,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3256,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3257,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3258,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3259,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3260,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3261,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3262,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3263,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3264,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3265,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3266,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3267,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3268,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3269,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3270,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3271,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3272,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3273,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3274,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3275,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3276,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3277,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم اقتصادية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3278,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3279,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3280,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3281,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3282,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3283,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3284,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3285,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3286,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3287,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3290,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3291,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3293,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3294,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3296,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3299,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3300,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3301,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3303,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3304,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3305,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3310,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3313,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3314,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3315,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3316,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3317,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3319,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3320,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3321,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3322,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3323,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3324,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3328,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3331,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3332,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3333,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3335,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3336,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3340,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3343,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3344,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3345,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3346,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3347,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3348,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3349,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3351,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3352,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3356,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3357,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3358,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3359,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3360,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3361,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3362,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3365,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3366,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3367,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3368,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3369,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3370,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3371,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3372,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3373,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3374,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3375,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3376,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3377,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3378,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3379,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3380,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3381,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3382,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3383,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3384,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3385,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3386,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3387,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3388,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3389,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3390,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3392,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3393,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 اقتصاد كمّي وإحصاء\""
+  },
+  {
+    "table": "assignments",
+    "row": 3395,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3398,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3399,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3400,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3401,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3402,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3403,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3404,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3405,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3406,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3407,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3408,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3409,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3410,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3411,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3412,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3413,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3414,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3415,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد كمي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3422,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 3423,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3424,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3425,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3426,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3427,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 3428,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 3429,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 محاسبة وتدقيق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3430,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3431,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3433,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3442,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3443,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3444,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 3445,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 3446,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 3447,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية المؤسسة\""
+  },
+  {
+    "table": "assignments",
+    "row": 3448,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 3449,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 3450,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 3451,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3452,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة B\""
+  },
+  {
+    "table": "assignments",
+    "row": 3453,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3454,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3463,
+    "error": "invalid input syntax for type timestamp: \"سنة ثانية ج.م علوم التسيير\""
+  },
+  {
+    "table": "assignments",
+    "row": 3473,
+    "error": "invalid input syntax for type timestamp: \"سنة أولى ج.م دفعة A\""
+  },
+  {
+    "table": "assignments",
+    "row": 3476,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3477,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3478,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 اقتصاد كمّي وإحصاء\""
+  },
+  {
+    "table": "assignments",
+    "row": 3479,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 اقتصاد كمّي وإحصاء\""
+  },
+  {
+    "table": "assignments",
+    "row": 3480,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 اقتصاد كمّي وإحصاء\""
+  },
+  {
+    "table": "assignments",
+    "row": 3481,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 إقتصاد وتسيير المؤسسات\""
+  },
+  {
+    "table": "assignments",
+    "row": 3482,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إقتصاد نقدي ومالي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3496,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3497,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3498,
+    "error": "invalid input syntax for type timestamp: \"ماستر 1 تسويق فندقي وسياحي\""
+  },
+  {
+    "table": "assignments",
+    "row": 3500,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3501,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة محاسبة\""
+  },
+  {
+    "table": "assignments",
+    "row": 3503,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة إدارة أعمال\""
+  },
+  {
+    "table": "assignments",
+    "row": 3504,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة تسويق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3506,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة تسويق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3508,
+    "error": "invalid input syntax for type timestamp: \"ماستر 2 مالية وتجارة دولية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3510,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة تسويق\""
+  },
+  {
+    "table": "assignments",
+    "row": 3511,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "assignments",
+    "row": 3512,
+    "error": "invalid input syntax for type timestamp: \"سنة ثالثة مالية\""
+  },
+  {
+    "table": "users",
+    "row": 1,
+    "error": "column \"last_login\" of relation \"users\" does not exist"
+  },
+  {
+    "table": "users",
+    "row": 2,
+    "error": "column \"last_login\" of relation \"users\" does not exist"
+  },
+  {
+    "table": "users",
+    "row": 3,
+    "error": "column \"last_login\" of relation \"users\" does not exist"
+  }
+]

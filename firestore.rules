@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Base function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Function to check if user is modifying their own data
+    function isUserAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Professors collection rules
+    match /professors/{professorId} {
+      // Anyone can read professors
+      allow read: if true;
+      
+      // Only authenticated admin users can write
+      allow write: if isUserAdmin();
+      
+      // Validate professor data
+      allow create: if isUserAdmin() && 
+        request.resource.data.keys().hasAll(['first_name', 'last_name', 'academic_title', 'email']) &&
+        request.resource.data.email.matches('^[^@]+@[^@]+\\.[^@]+$') &&
+        request.resource.data.weekly_hours is number;
+    }
+  }
+}

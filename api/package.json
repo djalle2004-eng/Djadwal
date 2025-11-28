@@ -1,0 +1,9 @@
+{
+  "name": "djadwal-api",
+  "version": "1.0.0",
+  "description": "SQLiteCloud API Middleware",
+  "main": "query.js",
+  "dependencies": {
+    "@sqlitecloud/drivers": "^1.0.438"
+  }
+}
