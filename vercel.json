@@ -1,19 +1,12 @@
 {
-  "version": 2,
-  "buildCommand": "cd api && npm install",
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/query.js",
-      "use": "@vercel/node",
-      "config": {
-        "maxDuration": 30
-      }
-    }
-  ],
-  "routes": [
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
     {
-      "src": "/api/query",
-      "dest": "/api/query.js"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
