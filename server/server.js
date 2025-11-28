@@ -96,6 +96,14 @@ app.get('/api/status', (req, res) => {
   res.json({ status: 'Le serveur de génération de PDF est en ligne' });
 });
 
+// Serve static files from the React frontend app
+app.use(express.static(path.join(__dirname, '../dist')));
+
+// Anything that doesn't match the above, send back index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
 // Démarrage du serveur
 // Démarrage du serveur
 if (require.main === module) {
