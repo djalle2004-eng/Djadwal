@@ -16,7 +16,7 @@ export const generatePDFFromHTML = async (htmlContent: string, options: any) => 
     let pdfOptions = options;
     if (typeof options === 'string') {
       // Si options est une chaîne, c'est le nom du fichier
-      pdfOptions = { 
+      pdfOptions = {
         filename: options,
         format: 'A4',
         landscape: true,
@@ -29,34 +29,34 @@ export const generatePDFFromHTML = async (htmlContent: string, options: any) => 
         printBackground: true
       };
     }
-    
+
     // Utiliser la fonction IPC exposée par Electron
     const result = await window.dataUtils.generatePDF(htmlContent, pdfOptions);
-    
+
     if (!result.success) {
       throw new Error(`Erreur lors de la génération du PDF: ${result.error}`);
     }
-    
+
     // Convertir le buffer en blob
     const buffer = result.buffer;
     let blob;
-    
+
     if (buffer) {
       blob = new Blob([new Uint8Array(buffer)], { type: 'application/pdf' });
     } else {
       throw new Error('Le buffer PDF est vide');
     }
-    
+
     // Créer un URL pour le blob
     const url = window.URL.createObjectURL(blob);
-    
+
     // Créer un lien pour télécharger le PDF
     const a = document.createElement('a');
     a.href = url;
     a.download = pdfOptions.filename || result.filename;
     document.body.appendChild(a);
     a.click();
-    
+
     // Nettoyage
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
@@ -274,7 +274,7 @@ export const createImageTemplate = (title: string, subtitle: string, imageDataUr
  * @param data Données du tableau (jours, heures, cours, etc.)
  * @returns Le contenu HTML
  */
-export const createScheduleTemplate = async (title: string, subtitle: string, data: any[][], days: string[], timeSlots: {start: string, end: string}[]) => {
+export const createScheduleTemplate = async (title: string, subtitle: string, data: any[][], days: string[], timeSlots: { start: string, end: string }[]) => {
   return `
     <!DOCTYPE html>
     <html dir="rtl">
@@ -371,18 +371,18 @@ export const createScheduleTemplate = async (title: string, subtitle: string, da
             <tr>
               <td class="time-slot">${timeSlot.start} - ${timeSlot.end}</td>
               ${days.map((day, dayIndex) => {
-                const cellData = data[dayIndex][timeIndex];
-                if (!cellData || cellData.length === 0) {
-                  return '<td></td>';
-                }
-                return `<td>
+    const cellData = data[dayIndex][timeIndex];
+    if (!cellData || cellData.length === 0) {
+      return '<td></td>';
+    }
+    return `<td>
                   ${cellData.map((assignment: any, index: number) => `
                     <div class="course-info">${assignment.course_name} (${assignment.group_name})</div>
                     <div class="professor-info">${assignment.professor_name} (${assignment.room_name})</div>
                     ${index < cellData.length - 1 ? '<div class="separator"></div>' : ''}
                   `).join('')}
                 </td>`;
-              }).join('')}
+  }).join('')}
             </tr>
           `).join('')}
         </tbody>
@@ -403,7 +403,7 @@ export const generateCombinedPDFFromHTML = async (htmlContents: string[], filena
     if (!htmlContents || htmlContents.length === 0) {
       throw new Error('Aucun contenu HTML fourni pour la génération du PDF');
     }
-    
+
     // Créer un contenu HTML combiné avec des sauts de page entre chaque document
     const combinedHTML = `
       <!DOCTYPE html>
@@ -431,9 +431,9 @@ export const generateCombinedPDFFromHTML = async (htmlContents: string[], filena
       </body>
       </html>
     `;
-    
+
     // Configurer les options du PDF
-    const pdfOptions = { 
+    const pdfOptions = {
       filename: filename,
       format: 'A4',
       landscape: false,
@@ -445,38 +445,38 @@ export const generateCombinedPDFFromHTML = async (htmlContents: string[], filena
       },
       printBackground: true
     };
-    
+
     // Générer le PDF combiné
     const result = await window.dataUtils.generatePDF(combinedHTML, pdfOptions);
-    
+
     if (!result.success) {
       throw new Error(`Erreur lors de la génération du PDF combiné: ${result.error}`);
     }
-    
+
     // Convertir le buffer en blob
     const buffer = result.buffer;
     let blob;
-    
+
     if (buffer) {
       blob = new Blob([new Uint8Array(buffer)], { type: 'application/pdf' });
     } else {
       throw new Error('Le buffer PDF est vide');
     }
-    
+
     // Créer un URL pour le blob
     const url = window.URL.createObjectURL(blob);
-    
+
     // Créer un lien pour télécharger le PDF
     const a = document.createElement('a');
     a.href = url;
     a.download = pdfOptions.filename;
     document.body.appendChild(a);
     a.click();
-    
+
     // Nettoyage
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
-    
+
     return true;
   } catch (error) {
     console.error('Erreur lors de la génération du PDF combiné:', error);

@@ -735,8 +735,8 @@ router.post('/upload-logo', upload.single('file'), async (req, res) => {
         const b64 = Buffer.from(req.file.buffer).toString('base64');
         const dataURI = `data:${req.file.mimetype};base64,${b64}`;
 
-        // Save to database
-        const settingKey = type === 'university' ? 'university_logo_url' : 'faculty_logo_url';
+        // Save to database (using camelCase keys to match frontend)
+        const settingKey = type === 'university' ? 'universityLogoUrl' : 'facultyLogoUrl';
 
         await executeQuery(
             `INSERT INTO print_settings (setting_key, setting_value, updated_at) 
@@ -753,29 +753,35 @@ router.post('/upload-logo', upload.single('file'), async (req, res) => {
     }
 });
 
-
-
 // Get print settings
 router.get('/print-settings', async (req, res) => {
     try {
         const settings = await executeQuery('SELECT setting_key, setting_value FROM print_settings');
 
-        const result = {
-            universityLogoUrl: '',
-            facultyLogoUrl: '',
-            universityName: 'جامعة الشهيد حمه لخضر - الوادي',
-            facultyName: 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'
-        };
+        const result = {};
 
         settings.forEach(setting => {
-            if (setting.setting_key === 'university_logo_url') {
-                result.universityLogoUrl = setting.setting_value || '';
-            } else if (setting.setting_key === 'faculty_logo_url') {
-                result.facultyLogoUrl = setting.setting_value || '';
-            } else if (setting.setting_key === 'university_name') {
-                result.universityName = setting.setting_value || result.universityName;
-            } else if (setting.setting_key === 'faculty_name') {
-                result.facultyName = setting.setting_value || result.facultyName;
+            let key = setting.setting_key;
+            let val = setting.setting_value;
+
+            // Map legacy snake_case to camelCase for frontend compatibility
+            if (key === 'university_logo_url') key = 'universityLogoUrl';
+            if (key === 'faculty_logo_url') key = 'facultyLogoUrl';
+            if (key === 'university_name') key = 'universityName';
+            if (key === 'faculty_name') key = 'facultyName';
+
+            // Convert number strings back to numbers if possible
+            const numVal = Number(val);
+
+            if (!isNaN(numVal) && val !== '' && val !== null && !key.includes('Url') && !key.includes('Name') && !key.includes('Text')) {
+                // Only parse as number if it's not a name/url/text field (safety check)
+                result[key] = numVal;
+            } else if (val === 'true') {
+                result[key] = true;
+            } else if (val === 'false') {
+                result[key] = false;
+            } else {
+                result[key] = val;
             }
         });
 
@@ -786,28 +792,26 @@ router.get('/print-settings', async (req, res) => {
     }
 });
 
-// Update print settings (names only, logos via upload)
+// Update print settings
 router.put('/print-settings', async (req, res) => {
     try {
-        const { universityName, facultyName } = req.body;
+        const settings = req.body;
+        const keys = Object.keys(settings);
 
-        if (universityName) {
+        for (const key of keys) {
+            let value = settings[key];
+
+            // Convert boolean/numbers to string for storage
+            if (typeof value !== 'string') {
+                value = String(value);
+            }
+
             await executeQuery(
                 `INSERT INTO print_settings (setting_key, setting_value, updated_at) 
                  VALUES ($1, $2, CURRENT_TIMESTAMP) 
                  ON CONFLICT(setting_key) 
                  DO UPDATE SET setting_value = $3, updated_at = CURRENT_TIMESTAMP`,
-                ['university_name', universityName, universityName]
-            );
-        }
-
-        if (facultyName) {
-            await executeQuery(
-                `INSERT INTO print_settings (setting_key, setting_value, updated_at) 
-                 VALUES ($1, $2, CURRENT_TIMESTAMP) 
-                 ON CONFLICT(setting_key) 
-                 DO UPDATE SET setting_value = $3, updated_at = CURRENT_TIMESTAMP`,
-                ['faculty_name', facultyName, facultyName]
+                [key, value, value]
             );
         }
 

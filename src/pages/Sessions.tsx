@@ -109,7 +109,7 @@ const SessionsContent = () => {
   const academicContext = useContext(AcademicYearContext);
   const currentYear = academicContext?.currentYear;
   const currentSemester = academicContext?.currentSemester;
-  
+
   // قائمة توقيتات المحاضرات مرتبة
   const lectureTimes = [
     '8.00 - 9.30',
@@ -146,22 +146,22 @@ const SessionsContent = () => {
   const fetchData = async () => {
     try {
       console.log('جاري جلب البيانات...');
-      
+
       // Récupérer les données avec le contexte ou directement
       let assignmentsData;
-      
+
       try {
         // الحصول على السنة الأكاديمية والفصل الدراسي الحاليين
         const yearName = currentYear ? currentYear.year_name : null;
         const semesterName = currentSemester ? currentSemester.semester_name : null;
-        
+
         console.log('Sessions - Current context values:', {
           currentYear: currentYear,
           currentSemester: currentSemester,
           yearName,
           semesterName
         });
-        
+
         // Utiliser le contexte pour la cohérence des données مع الفلترة
         assignmentsData = await assignmentContext.getAssignments(yearName, semesterName);
         console.log(`تم العثور على ${assignmentsData.length} تكليف من السياق (مفلتر)`);
@@ -173,59 +173,59 @@ const SessionsContent = () => {
         assignmentsData = await window.db.getAssignments(yearName, semesterName);
         console.log(`تم العثور على ${assignmentsData.length} تكليف (طريقة بديلة - مفلتر)`);
       }
-      
+
       // Fetch related collections for data enrichment
       console.log('جاري جلب البيانات المرتبطة...');
-      
+
       try {
         // Use double casting through unknown to avoid TypeScript errors
         const professorsData = await window.db.getProfessors() as unknown as Professor[];
         const coursesData = await window.db.getCourses() as unknown as Course[];
         const groupsData = await window.db.getGroups() as unknown as Group[];
         const roomsData = await window.db.getRooms() as unknown as Room[];
-        
+
         console.log(`تم جلب: ${professorsData.length} أستاذ, ${coursesData.length} مقرر, ${groupsData.length} مجموعة, ${roomsData.length} قاعة`);
-        
+
         // Combine data for display
         const assignmentsWithDetails: AssignmentWithDetails[] = assignmentsData
           .filter(assignment => {
             // Vérifier que tous les champs requis sont présents
             return assignment.id &&
-                   assignment.professor_id &&
-                   assignment.course_id &&
-                   assignment.group_id &&
-                   assignment.room_id &&
-                   assignment.day_of_week !== undefined &&
-                   assignment.start_time &&
-                   assignment.end_time;
+              assignment.professor_id &&
+              assignment.course_id &&
+              assignment.group_id &&
+              assignment.room_id &&
+              assignment.day_of_week !== undefined &&
+              assignment.start_time &&
+              assignment.end_time;
           })
           .map(assignment => {
-          const professor = professorsData.find(p => p.id === assignment.professor_id);
-          const course = coursesData.find(c => c.id === assignment.course_id);
-          const group = groupsData.find(g => g.id === assignment.group_id);
-          const room = roomsData.find(r => r.id === assignment.room_id);
-          
+            const professor = professorsData.find(p => p.id === assignment.professor_id);
+            const course = coursesData.find(c => c.id === assignment.course_id);
+            const group = groupsData.find(g => g.id === assignment.group_id);
+            const room = roomsData.find(r => r.id === assignment.room_id);
+
             // Vérifier que tous les objets associés existent
             if (!professor || !course || !group || !room) {
               console.warn('Données manquantes pour l\'affectation:', assignment);
               return null;
             }
 
-          return {
-            ...assignment,
-            professorName: professor.name || `${professor.first_name || ''} ${professor.last_name || ''}`.trim(),
-            courseName: course.name,
-            groupName: group.name,
-            groupSpecialization: group.specialization || '',
-            roomName: room.name,
-            lecture_time: `${assignment.start_time} - ${assignment.end_time}`,
-            dayName: convertDay(assignment.day_of_week)
-          };
-        })
-        .filter((assignment): assignment is AssignmentWithDetails => assignment !== null);
-        
+            return {
+              ...assignment,
+              professorName: professor.name || `${professor.first_name || ''} ${professor.last_name || ''}`.trim(),
+              courseName: course.name,
+              groupName: group.name,
+              groupSpecialization: group.specialization || '',
+              roomName: room.name,
+              lecture_time: `${assignment.start_time} - ${assignment.end_time}`,
+              dayName: convertDay(assignment.day_of_week)
+            };
+          })
+          .filter((assignment): assignment is AssignmentWithDetails => assignment !== null);
+
         console.log(`تم معالجة ${assignmentsWithDetails.length} جلسة بنجاح`);
-        
+
         setSessions(assignmentsWithDetails);
         setFilteredSessions(assignmentsWithDetails);
         console.log('تم تحميل البيانات بنجاح');
@@ -247,9 +247,9 @@ const SessionsContent = () => {
       applyFilters();
     }
   }, [
-    sessions, 
-    filterDay, 
-    filterRoom, 
+    sessions,
+    filterDay,
+    filterRoom,
     filterGroupSpecialization,
     currentYear,
     currentSemester
@@ -261,14 +261,14 @@ const SessionsContent = () => {
 
     // Filter by day
     if (filterDay) {
-      result = result.filter(session => 
+      result = result.filter(session =>
         session.dayName === filterDay
       );
     }
 
     // Filter by room
     if (filterRoom) {
-      result = result.filter(session => 
+      result = result.filter(session =>
         session.roomName === filterRoom
       );
     }
@@ -286,8 +286,8 @@ const SessionsContent = () => {
 
     // Filter by academic year and semester
     if (currentYear && currentSemester) {
-      result = result.filter(session => 
-        session.academic_year === currentYear.year_name && 
+      result = result.filter(session =>
+        session.academic_year === currentYear.year_name &&
         session.semester === currentSemester.semester_name
       );
     }
@@ -295,9 +295,9 @@ const SessionsContent = () => {
     // Filter by professor name (including partial search)
     // استخدام professorFilter إذا تم تمريره، وإلا استخدام filterProfessor
     const currentProfessorFilter = professorFilter !== undefined ? professorFilter : filterProfessor;
-    
+
     if (currentProfessorFilter) {
-      result = result.filter(session => 
+      result = result.filter(session =>
         session.professorName?.includes(currentProfessorFilter)
       );
     }
@@ -305,7 +305,7 @@ const SessionsContent = () => {
     // Additional search for professors - نستخدم هذا فقط إذا لم يكن هناك فلترة للأستاذ
     if (searchTerm && !currentProfessorFilter) {
       const searchTermLower = searchTerm.toLowerCase();
-      result = result.filter(session => 
+      result = result.filter(session =>
         session.professorName?.toLowerCase().includes(searchTermLower)
       );
     }
@@ -325,7 +325,7 @@ const SessionsContent = () => {
 
         // Special handling for professor name
         if (sortColumn === 'professorName') {
-          return sortDirection === 'asc' 
+          return sortDirection === 'asc'
             ? arabicCompare(String(valueA || ''), String(valueB || ''))
             : arabicCompare(String(valueB || ''), String(valueA || ''));
         }
@@ -334,7 +334,7 @@ const SessionsContent = () => {
         if (sortColumn === 'lecture_time') {
           const indexA = lectureTimes.indexOf(String(valueA || ''));
           const indexB = lectureTimes.indexOf(String(valueB || ''));
-          
+
           return sortDirection === 'asc'
             ? indexA - indexB
             : indexB - indexA;
@@ -356,12 +356,12 @@ const SessionsContent = () => {
   }, [filteredSessions, sortColumn, sortDirection, lectureTimes]);
 
   // Sortable header component
-  const SortableHeader = ({ 
-    column, 
-    children 
-  }: { 
-    column: keyof AssignmentWithDetails, 
-    children: React.ReactNode 
+  const SortableHeader = ({
+    column,
+    children
+  }: {
+    column: keyof AssignmentWithDetails,
+    children: React.ReactNode
   }) => {
     const isSorted = sortColumn === column;
     const isAscending = isSorted && sortDirection === 'asc';
@@ -378,8 +378,8 @@ const SessionsContent = () => {
     };
 
     return (
-      <th 
-        scope="col" 
+      <th
+        scope="col"
         className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
         onClick={handleSort}
       >
@@ -417,11 +417,11 @@ const SessionsContent = () => {
     // إذا كان هناك بحث، قم بتصفية الأساتذة
     if (searchTerm) {
       const searchTermLower = searchTerm.toLowerCase();
-      return allProfessors.filter(prof => 
+      return allProfessors.filter(prof =>
         prof.toLowerCase().includes(searchTermLower)
       );
     }
-    
+
     return allProfessors;
   }, [sessions, searchTerm]);
 
@@ -439,7 +439,7 @@ const SessionsContent = () => {
     setFilterProfessor(professor);
     setSearchTerm(professor);
     setIsDropdownOpen(false);
-    
+
     // تطبيق الفلترة مباشرة بعد اختيار الأستاذ
     applyFilters(professor);
   };
@@ -449,7 +449,7 @@ const SessionsContent = () => {
     setFilterProfessor('');
     setSearchTerm('');
     setIsDropdownOpen(false);
-    
+
     // تطبيق الفلترة بدون أستاذ محدد
     applyFilters('');
   };
@@ -457,13 +457,13 @@ const SessionsContent = () => {
   const handleDeleteAssignment = async (assignment: AssignmentWithDetails) => {
     try {
       // Vérifier si c'est une affectation unique
-      const isUnique = sessions.filter(s => 
-        s.professor_id === assignment.professor_id && 
-        s.course_id === assignment.course_id && 
-        s.group_id === assignment.group_id && 
-        s.room_id === assignment.room_id && 
-        s.day_of_week === assignment.day_of_week && 
-        s.start_time === assignment.start_time && 
+      const isUnique = sessions.filter(s =>
+        s.professor_id === assignment.professor_id &&
+        s.course_id === assignment.course_id &&
+        s.group_id === assignment.group_id &&
+        s.room_id === assignment.room_id &&
+        s.day_of_week === assignment.day_of_week &&
+        s.start_time === assignment.start_time &&
         s.end_time === assignment.end_time
       ).length === 1;
 
@@ -484,10 +484,10 @@ const SessionsContent = () => {
 
       // Supprimer l'affectation
       await window.db.deleteAssignment(assignment.id);
-      
+
       // Rafraîchir les données
       await fetchData();
-      
+
       // Afficher un message de succès
       alert('تم حذف المحاضرة بنجاح');
     } catch (error) {
@@ -517,7 +517,7 @@ const SessionsContent = () => {
     try {
       // إعداد بيانات الجدول للتصدير
       const tableData: string[][] = [];
-      
+
       // إضافة بيانات الجلسات إلى الجدول
       sortedAndFilteredSessions.forEach(session => {
         tableData.push([
@@ -529,7 +529,7 @@ const SessionsContent = () => {
           session.roomName
         ]);
       });
-      
+
       // إنشاء عنوان ومعلومات الجدول
       const title = 'جدول المحاضرات';
       const today = new Date();
@@ -539,13 +539,13 @@ const SessionsContent = () => {
         day: 'numeric'
       });
       const subtitle = `${filterGroupSpecialization ? `التخصص: ${filterGroupSpecialization}` : 'جميع التخصصات'} - ${formattedDate}`;
-      
+
       // إنشاء رأس الجدول
       const headers = ['اليوم', 'الوقت', 'المجموعة', 'المقرر', 'الأستاذ', 'القاعة'];
-      
+
       // إنشاء قالب HTML للجدول
       const htmlContent = await createTableTemplate(title, subtitle, headers, tableData);
-      
+
       try {
         // إنشاء ملف PDF من قالب HTML
         await generatePDFFromHTML(htmlContent, {
@@ -592,13 +592,13 @@ const SessionsContent = () => {
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="flex space-x-2 mb-4">
-        <button 
+        <button
           onClick={() => exportToScheduleExcel(sortedAndFilteredSessions)}
           className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
         >
           تصدير Excel
         </button>
-        <button 
+        <button
           onClick={exportToPDF}
           className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
         >
@@ -608,8 +608,8 @@ const SessionsContent = () => {
 
       <div className="mb-4 grid grid-cols-2 md:grid-cols-5 gap-4">
         {/* Day Filter */}
-        <select 
-          value={filterDay} 
+        <select
+          value={filterDay}
           onChange={(e) => setFilterDay(e.target.value)}
           className="px-2 py-1 border rounded"
         >
@@ -620,8 +620,8 @@ const SessionsContent = () => {
         </select>
 
         {/* Room Filter */}
-        <select 
-          value={filterRoom} 
+        <select
+          value={filterRoom}
           onChange={(e) => setFilterRoom(e.target.value)}
           className="px-2 py-1 border rounded"
         >
@@ -632,8 +632,8 @@ const SessionsContent = () => {
         </select>
 
         {/* Group Specialization Filter */}
-        <select 
-          value={filterGroupSpecialization} 
+        <select
+          value={filterGroupSpecialization}
           onChange={(e) => setFilterGroupSpecialization(e.target.value)}
           className="px-2 py-1 border rounded"
         >
@@ -645,14 +645,14 @@ const SessionsContent = () => {
 
         {/* Professor Search and Filter */}
         <div className="relative">
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="البحث عن أستاذ"
             value={searchTerm}
             onChange={(e) => {
               const value = e.target.value;
               setSearchTerm(value);
-              
+
               // إذا تم محو الحقل، قم بإلغاء الفلترة
               if (value === '') {
                 clearProfessorFilter();
@@ -663,7 +663,7 @@ const SessionsContent = () => {
             onFocus={() => setIsDropdownOpen(true)}
             className="w-full px-2 py-1 border rounded"
           />
-          
+
           {isDropdownOpen && searchTerm && (
             <div className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-y-auto">
               {uniqueProfessors.length > 0 ? (
@@ -671,11 +671,10 @@ const SessionsContent = () => {
                   <div
                     key={professor}
                     {...professorNavigation.getItemProps(professor, index)}
-                    className={`px-4 py-2 cursor-pointer ${
-                      index === professorNavigation.selectedIndex 
-                        ? 'bg-blue-100' 
+                    className={`px-4 py-2 cursor-pointer ${index === professorNavigation.selectedIndex
+                        ? 'bg-blue-100'
                         : 'hover:bg-gray-100'
-                    }`}
+                      }`}
                   >
                     {professor}
                   </div>
@@ -691,9 +690,9 @@ const SessionsContent = () => {
       {/* عرض رسالة الخطأ إذا كان هناك خطأ */}
       {error && (
         <div className="mt-6">
-          <DatabaseErrorAlert 
-            error={error} 
-            onClose={() => setError(null)} 
+          <DatabaseErrorAlert
+            error={error}
+            onClose={() => setError(null)}
           />
         </div>
       )}
