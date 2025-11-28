@@ -31,7 +31,6 @@
     "@mui/x-date-pickers": "^7.22.2",
     "@pdf-lib/fontkit": "^1.1.1",
     "@react-pdf/renderer": "^4.2.2",
-    "@sqlitecloud/drivers": "^1.0.438",
     "@types/pdfkit": "^0.13.9",
     "ag-grid-community": "^34.3.0",
     "ag-grid-react": "^34.3.0",
