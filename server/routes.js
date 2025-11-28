@@ -690,6 +690,25 @@ const upload = multer({
     }
 });
 
+// Ensure print_settings table exists
+const ensurePrintSettingsTable = async () => {
+    try {
+        await executeQuery(`
+            CREATE TABLE IF NOT EXISTS print_settings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                setting_key TEXT UNIQUE NOT NULL,
+                setting_value TEXT,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_by INTEGER
+            )
+        `);
+        console.log('✅ Verified print_settings table exists');
+    } catch (error) {
+        console.error('❌ Failed to verify print_settings table:', error);
+    }
+};
+ensurePrintSettingsTable();
+
 // Upload logo endpoint
 router.post('/upload-logo', upload.single('file'), async (req, res) => {
     try {
@@ -707,8 +726,8 @@ router.post('/upload-logo', upload.single('file'), async (req, res) => {
             `INSERT INTO print_settings (setting_key, setting_value, updated_at) 
              VALUES ($1, $2, CURRENT_TIMESTAMP) 
              ON CONFLICT(setting_key) 
-             DO UPDATE SET setting_value = $2, updated_at = CURRENT_TIMESTAMP`,
-            [settingKey, logoUrl]
+             DO UPDATE SET setting_value = $3, updated_at = CURRENT_TIMESTAMP`,
+            [settingKey, logoUrl, logoUrl]
         );
 
         res.json({ url: logoUrl, message: 'Logo uploaded successfully' });
@@ -717,6 +736,8 @@ router.post('/upload-logo', upload.single('file'), async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+
 
 // Get print settings
 router.get('/print-settings', async (req, res) => {
@@ -759,8 +780,8 @@ router.put('/print-settings', async (req, res) => {
                 `INSERT INTO print_settings (setting_key, setting_value, updated_at) 
                  VALUES ($1, $2, CURRENT_TIMESTAMP) 
                  ON CONFLICT(setting_key) 
-                 DO UPDATE SET setting_value = $2, updated_at = CURRENT_TIMESTAMP`,
-                ['university_name', universityName]
+                 DO UPDATE SET setting_value = $3, updated_at = CURRENT_TIMESTAMP`,
+                ['university_name', universityName, universityName]
             );
         }
 
@@ -769,8 +790,8 @@ router.put('/print-settings', async (req, res) => {
                 `INSERT INTO print_settings (setting_key, setting_value, updated_at) 
                  VALUES ($1, $2, CURRENT_TIMESTAMP) 
                  ON CONFLICT(setting_key) 
-                 DO UPDATE SET setting_value = $2, updated_at = CURRENT_TIMESTAMP`,
-                ['faculty_name', facultyName]
+                 DO UPDATE SET setting_value = $3, updated_at = CURRENT_TIMESTAMP`,
+                ['faculty_name', facultyName, facultyName]
             );
         }
 
