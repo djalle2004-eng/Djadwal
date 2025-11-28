@@ -1,7 +1,7 @@
 {
   "name": "djadwal",
   "private": true,
-  "version": "19.11.25.Turso",
+  "version": "28.11.25.Turso",
   "author": "Ali Hussain",
   "description": "Application de gestion des emplois du temps",
   "type": "commonjs",

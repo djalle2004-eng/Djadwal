@@ -615,6 +615,34 @@ router.delete('/users/:id', async (req, res) => {
     }
 });
 
+router.get('/users/:id/permissions', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await executeQuery('SELECT permissions FROM users WHERE id = $1', [id]);
+        if (result.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        // Return parsed JSON or empty object
+        const permissions = result[0].permissions ? JSON.parse(result[0].permissions) : {};
+        res.json(permissions);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.put('/users/:id/permissions', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { permissions } = req.body; // Expecting JSON object
+        const permissionsJson = JSON.stringify(permissions);
+
+        await executeQuery('UPDATE users SET permissions = $1 WHERE id = $2', [permissionsJson, id]);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // --- Audit Logs ---
 router.get('/audit-logs', async (req, res) => {
     try {
@@ -708,6 +736,25 @@ const ensurePrintSettingsTable = async () => {
     }
 };
 ensurePrintSettingsTable();
+
+// Ensure permissions column exists in users table
+const ensurePermissionsColumn = async () => {
+    try {
+        // Try to select permissions column to see if it exists
+        await executeQuery('SELECT permissions FROM users LIMIT 1');
+        console.log('✅ Verified permissions column exists in users table');
+    } catch (error) {
+        // If error (likely "no such column"), add it
+        console.log('⚠️ Permissions column missing, adding it...');
+        try {
+            await executeQuery('ALTER TABLE users ADD COLUMN permissions TEXT');
+            console.log('✅ Added permissions column to users table');
+        } catch (alterError) {
+            console.error('❌ Failed to add permissions column:', alterError);
+        }
+    }
+};
+ensurePermissionsColumn();
 
 // Upload logo endpoint
 router.post('/upload-logo', upload.single('file'), async (req, res) => {

@@ -4,7 +4,7 @@
 
 ## Version actuelle
 
-19.11.2025.Turso
+28.11.25.Turso
 
 ## 🚀 Fonctionnalités Principales
 
@@ -44,6 +44,7 @@
 
 - Interface de calendrier intuitive avec localisation arabe
 - **NOUVEAU** : Type de session "فرض محروس" (exam) avec règles de conflit dédiées
+- **NOUVEAU** : Option "Ignorer les conflits" pour forcer la planification des sessions supplémentaires
 - Recherche avancée avec navigation clavier
 - **AMÉLIORÉ** : Gestion des conflits automatique renforcée
 - Emploi du temps visuel interactif
@@ -64,32 +65,31 @@
 ### 🖨️ Exportation et Impression
 
 - Export PDF des emplois du temps et annonces aux étudiants
+- **NOUVEAU** : Gestion centralisée des logos et paramètres d'impression
 - **NOUVEAU** : Notes automatiques pour les séances d'examen (absence = note zéro)
 - Export Excel des données
 - Paramètres d'impression personnalisables
 
-## 🆕 Nouveautés Version 19.11.2025.Turso
+## 🆕 Nouveautés Version 28.11.25.Turso
 
-### 🚀 Infrastructure Turso + SQLite Cloud
+### 🚀 Infrastructure & Base de Données
 
-- **Base de données principale** : Turso (libSQL) avec reconnexion et retry automatiques
-- **Sauvegarde** : SQLite Cloud pour continuité de service
-- **Migration transparente** : Scripts dédiés Turso ↔️ SQLite Cloud
+- **Auto-Migration** : Création automatique des tables et colonnes manquantes (`print_settings`, `permissions`) au démarrage
+- **Stabilité** : Correction des problèmes de connexion et de requêtes SQL sur Render
 
-### 📌 Sessions supplémentaires / Examens
+### 🎨 Personnalisation & Impression
 
-- **Type "فرض محروس"** : disponibilité des salles adaptée + tolérance de conflits contrôlée
-- **Notes automatiques** : Mention spéciale dans les annonces PDF
+- **Gestion Centralisée des Logos** : Upload et stockage des logos (Université/Faculté) sur le serveur
+- **Paramètres d'Impression** : Configuration globale des noms et logos pour tous les documents PDF
 
-### 🛠️ Gestion des Professeurs (Backend)
+### 🛡️ Sécurité & Permissions
 
-- **Nettoyage automatique** des champs nom/téléphone/titres
-- **Validation renforcée** côté backend (évite contraintes NOT NULL)
+- **Gestion des Permissions** : Système de permissions par utilisateur (lecture/écriture)
+- **API Sécurisée** : Nouveaux endpoints pour la gestion des utilisateurs et leurs droits
 
-### 📱 Roadmap Mobile (Preview)
+### 📅 Planification Avancée
 
-- **Objectif** : maintenir l'application desktop Electron et ajouter une interface mobile dédiée
-- **Planification** : étude UX mobile + API partagée + composants responsives
+- **Forçage de Planification** : Nouvelle option pour ignorer les conflits lors de la création de sessions supplémentaires (utile pour les examens ou cas exceptionnels)
 
 ## 🏗️ Architecture Technique
 
