@@ -157,8 +157,8 @@ export default function ProfessorWorkload() {
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   // إعدادات الطباعة
   const [printSettings, setPrintSettings] = useState({
-    universityName: 'الجمهورية الجزائرية الديمقراطية الشعبية',
-    facultyName: 'جـامـعـة عمار ثليجي الأغواط',
+    universityName: 'جامعة الشهيد حمه لخضر - الوادي',
+    facultyName: 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير',
     universityLogoUrl: '',
     facultyLogoUrl: ''
   });
@@ -220,8 +220,8 @@ export default function ProfessorWorkload() {
       const savedSettings = await window.dataUtils.getPrintSettings();
       if (savedSettings) {
         setPrintSettings({
-          universityName: savedSettings.universityName || 'الجمهورية الجزائرية الديمقراطية الشعبية',
-          facultyName: savedSettings.facultyName || 'جـامـعـة عمار ثليجي الأغواط',
+          universityName: savedSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي',
+          facultyName: savedSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير',
           universityLogoUrl: savedSettings.universityLogoUrl || '',
           facultyLogoUrl: savedSettings.facultyLogoUrl || ''
         });
@@ -795,9 +795,9 @@ export default function ProfessorWorkload() {
               ${printSettings.universityLogoUrl ? `<img src="${printSettings.universityLogoUrl}" alt="Logo" class="logo">` : ''}
               ${printSettings.facultyLogoUrl ? `<img src="${printSettings.facultyLogoUrl}" alt="Logo" class="faculty-logo">` : ''}
               <div class="header-text">
-                <p>${printSettings.universityName || 'الجمهورية الجزائرية الديمقراطية الشعبية'}</p>
+                <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
                 <p>وزارة التعليم العالي و البحث العلمي</p>
-                <p>${printSettings.facultyName || 'جـامـعـة عمار ثليجي الأغواط'}</p>
+                <p>${printSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'}</p>
                 <p>نيابة العمادة للدراسات والمسائل المرتبطة بالطلبة</p>
                 <p>مصلحة التدريس</p>
                 <p>الـرقم:................../ ك. ع. إ. ت. ع. ت/ ن. ع. م. د/ م. ت/ ${currentYear.year_name}</p>
@@ -1093,9 +1093,9 @@ export default function ProfessorWorkload() {
               <div class="header">
                 ${printSettings.universityLogoUrl ? `<img src="${printSettings.universityLogoUrl}" alt="Logo" class="logo">` : ''}
                 <div class="header-text">
-                  <p>${printSettings.universityName || 'الجمهورية الجزائرية الديمقراطية الشعبية'}</p>
+                  <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
                   <p>وزارة التعليم العالي و البحث العلمي</p>
-                  <p>${printSettings.facultyName || 'جـامـعـة عمار ثليجي الأغواط'}</p>
+                  <p>${printSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'}</p>
                   <p>نيابة العمادة للدراسات والمسائل المرتبطة بالطلبة</p>
                   <p>مصلحة التدريس</p>
                   <p>الـرقم:................../ ك. ع. إ. ت. ع. ت/ ن. ع. م. د/ م. ت/ ${currentYear.year_name}</p>
@@ -1316,9 +1316,9 @@ export default function ProfessorWorkload() {
           <div class="header">
             ${printSettings.universityLogoUrl ? `<img src="${printSettings.universityLogoUrl}" alt="Logo" class="logo">` : ''}
             <div class="header-text">
-              <p>${printSettings.universityName || 'الجمهورية الجزائرية الديمقراطية الشعبية'}</p>
+              <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
               <p>وزارة التعليم العالي و البحث العلمي</p>
-              <p>${printSettings.facultyName || 'جـامـعـة عمار ثليجي الأغواط'}</p>
+              <p>${printSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'}</p>
               <p>نيابة العمادة للدراسات والمسائل المرتبطة بالطلبة</p>
             </div>
             ${printSettings.facultyLogoUrl ? `<img src="${printSettings.facultyLogoUrl}" alt="Logo" class="faculty-logo">` : ''}
@@ -1475,9 +1475,9 @@ export default function ProfessorWorkload() {
           <div class="header">
             ${printSettings.universityLogoUrl ? `<img src="${printSettings.universityLogoUrl}" alt="Logo" class="logo">` : ''}
             <div class="header-text">
-              <p>${printSettings.universityName || 'الجمهورية الجزائرية الديمقراطية الشعبية'}</p>
+              <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
               <p>وزارة التعليم العالي و البحث العلمي</p>
-              <p>${printSettings.facultyName || 'جـامـعـة عمار ثليجي الأغواط'}</p>
+              <p>${printSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'}</p>
               <p>نيابة العمادة للدراسات والمسائل المرتبطة بالطلبة</p>
             </div>
             ${printSettings.facultyLogoUrl ? `<img src="${printSettings.facultyLogoUrl}" alt="Logo" class="faculty-logo">` : ''}
@@ -1606,9 +1606,9 @@ export default function ProfessorWorkload() {
             <div class="header">
               ${printSettings.universityLogoUrl ? `<img src="${printSettings.universityLogoUrl}" alt="Logo" class="logo">` : ''}
               <div class="header-text">
-                <p>${printSettings.universityName || 'الجمهورية الجزائرية الديمقراطية الشعبية'}</p>
+                <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
                 <p>وزارة التعليم العالي و البحث العلمي</p>
-                <p>${printSettings.facultyName || 'جـامـعـة عمار ثليجي الأغواط'}</p>
+                <p>${printSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'}</p>
                 <p>نيابة العمادة للدراسات والمسائل المرتبطة بالطلبة</p>
               </div>
               ${printSettings.facultyLogoUrl ? `<img src="${printSettings.facultyLogoUrl}" alt="Faculty Logo" class="faculty-logo">` : ''}
@@ -1966,9 +1966,9 @@ export default function ProfessorWorkload() {
           <div class="header">
             ${printSettings.universityLogoUrl ? `<img src="${printSettings.universityLogoUrl}" alt="Logo" class="logo">` : ''}
             <div class="header-text">
-              <p>${printSettings.universityName || 'الجمهورية الجزائرية الديمقراطية الشعبية'}</p>
+              <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
               <p>وزارة التعليم العالي و البحث العلمي</p>
-              <p>${printSettings.facultyName || 'جـامـعـة عمار ثليجي الأغواط'}</p>
+              <p>${printSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'}</p>
               <p>نيابة العمادة للدراسات والمسائل المرتبطة بالطلبة</p>
             </div>
             ${printSettings.facultyLogoUrl ? `<img src="${printSettings.facultyLogoUrl}" alt="Faculty Logo" class="faculty-logo">` : ''}
@@ -2096,9 +2096,9 @@ export default function ProfessorWorkload() {
             <div class="header">
               ${printSettings.universityLogoUrl ? `<img src="${printSettings.universityLogoUrl}" alt="Logo" class="logo">` : ''}
               <div class="header-text">
-                <p>${printSettings.universityName || 'الجمهورية الجزائرية الديمقراطية الشعبية'}</p>
+                <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
                 <p>وزارة التعليم العالي و البحث العلمي</p>
-                <p>${printSettings.facultyName || 'جـامـعـة عمار ثليجي الأغواط'}</p>
+                <p>${printSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'}</p>
                 <p>نيابة العمادة للدراسات والمسائل المرتبطة بالطلبة</p>
               </div>
               ${printSettings.facultyLogoUrl ? `<img src="${printSettings.facultyLogoUrl}" alt="Faculty Logo" class="faculty-logo">` : ''}

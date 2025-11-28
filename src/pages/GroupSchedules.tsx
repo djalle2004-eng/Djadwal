@@ -77,25 +77,25 @@ const DAYS = [
 export default function GroupSchedules() {
   // الصلاحيات
   const { can } = usePermissions();
-  
+
   // الحالة الأساسية
   const { currentYear, currentSemester } = useAcademicYear();
   const { assignments, refreshAssignments } = useAssignments();
-  
+
   const [groups, setGroups] = useState<Group[]>([]);
   const [professors, setProfessors] = useState<Professor[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
-  
+
   // فلاتر التخصص والمجموعة
   const [selectedSpecialization, setSelectedSpecialization] = useState<string>('');
   const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  
+
   // حالة التحرير
-  const [editingCell, setEditingCell] = useState<{day: number, timeSlot: number} | null>(null);
+  const [editingCell, setEditingCell] = useState<{ day: number, timeSlot: number } | null>(null);
   const [editForm, setEditForm] = useState<Partial<Assignment>>({});
   const [isAddingNew, setIsAddingNew] = useState(false);
 
@@ -109,8 +109,8 @@ export default function GroupSchedules() {
 
   // إعدادات الطباعة
   const [printSettings, setPrintSettings] = useState({
-    universityName: 'الجمهورية الجزائرية الديمقراطية الشعبية',
-    facultyName: 'جـامـعـة عمار ثليجي الأغواط',
+    universityName: 'جامعة الشهيد حمه لخضر - الوادي',
+    facultyName: 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير',
     universityLogoUrl: '',
     facultyLogoUrl: '',
     logoSize: 80,
@@ -126,7 +126,7 @@ export default function GroupSchedules() {
   const handleCourseSearch = (searchTerm: string) => {
     setCourseSearchTerm(searchTerm);
     if (searchTerm.trim()) {
-      const filtered = courses.filter(course => 
+      const filtered = courses.filter(course =>
         course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         course.code.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -141,7 +141,7 @@ export default function GroupSchedules() {
   const handleProfessorSearch = (searchTerm: string) => {
     setProfessorSearchTerm(searchTerm);
     if (searchTerm.trim()) {
-      const filtered = professors.filter(professor => 
+      const filtered = professors.filter(professor =>
         professor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (professor.email && professor.email.toLowerCase().includes(searchTerm.toLowerCase()))
       );
@@ -154,13 +154,13 @@ export default function GroupSchedules() {
   };
 
   const selectCourse = (course: Course) => {
-    setEditForm({...editForm, course_id: course.id});
+    setEditForm({ ...editForm, course_id: course.id });
     setCourseSearchTerm(course.name);
     setIsCourseDropdownOpen(false);
   };
 
   const selectProfessor = (professor: Professor) => {
-    setEditForm({...editForm, professor_id: professor.id});
+    setEditForm({ ...editForm, professor_id: professor.id });
     setProfessorSearchTerm(professor.name);
     setIsProfessorDropdownOpen(false);
   };
@@ -216,8 +216,8 @@ export default function GroupSchedules() {
       const savedSettings = await window.dataUtils.getPrintSettings();
       if (savedSettings) {
         setPrintSettings({
-          universityName: savedSettings.universityName || 'الجمهورية الجزائرية الديمقراطية الشعبية',
-          facultyName: savedSettings.facultyName || 'جـامـعـة عمار ثليجي الأغواط',
+          universityName: savedSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي',
+          facultyName: savedSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير',
           universityLogoUrl: savedSettings.universityLogoUrl || '',
           facultyLogoUrl: savedSettings.facultyLogoUrl || '',
           logoSize: savedSettings.logoSize || 80,
@@ -237,7 +237,7 @@ export default function GroupSchedules() {
     setLoading(true);
     try {
       const db = (window as any).db;
-      
+
       const [groupsData, professorsData, coursesData, roomsData, timeSlotsData] = await Promise.all([
         db.getGroups(),
         db.getProfessors(),
@@ -245,7 +245,7 @@ export default function GroupSchedules() {
         db.getRooms(),
         db.getTimeSlots()
       ]);
-      
+
       setGroups(groupsData || []);
       setProfessors(professorsData || []);
       setCourses(coursesData || []);
@@ -268,27 +268,27 @@ export default function GroupSchedules() {
   // تصفية التكليفات للمجموعة المختارة
   const groupAssignments = useMemo(() => {
     if (!selectedGroup) return [];
-    
+
     const filtered = assignments.filter(assignment => {
       const matches = assignment.group_id === selectedGroup &&
-                     assignment.academic_year === currentYear?.year_name &&
-                     assignment.semester === currentSemester?.semester_name;
+        assignment.academic_year === currentYear?.year_name &&
+        assignment.semester === currentSemester?.semester_name;
       return matches;
     });
-    
+
     console.log('GroupSchedules - Selected Group:', selectedGroup);
     console.log('GroupSchedules - Current Year:', currentYear?.year_name);
     console.log('GroupSchedules - Current Semester:', currentSemester?.semester_name);
     console.log('GroupSchedules - All assignments:', assignments.length);
     console.log('GroupSchedules - Filtered assignments:', filtered.length);
     console.log('GroupSchedules - Filtered assignments data:', filtered);
-    
+
     return filtered;
   }, [assignments, selectedGroup, currentYear, currentSemester]);
 
   // ✅ تصفية الأيام - إظهار فقط الأيام التي تحتوي على تكليفات
   const activeDays = useMemo(() => {
-    return DAYS.filter(day => 
+    return DAYS.filter(day =>
       groupAssignments.some(assignment => assignment.day_of_week === day.id)
     );
   }, [groupAssignments]);
@@ -296,7 +296,7 @@ export default function GroupSchedules() {
   // إنشاء جدول الحصص
   const scheduleGrid = useMemo(() => {
     const grid: { [key: string]: ScheduleCell } = {};
-    
+
     timeSlots.forEach(timeSlot => {
       DAYS.forEach(day => {
         const key = `${day.id}-${timeSlot.id}`;
@@ -307,14 +307,14 @@ export default function GroupSchedules() {
             return dayMatches && timeMatches;
           }
         );
-        
+
         grid[key] = {
           assignment: cellAssignments[0],
           conflicts: cellAssignments.length > 1 ? cellAssignments.slice(1) : undefined
         };
       });
     });
-    
+
     console.log('GroupSchedules - Schedule grid:', grid);
     return grid;
   }, [groupAssignments, timeSlots]);
@@ -328,7 +328,7 @@ export default function GroupSchedules() {
 
     try {
       const db = (window as any).db;
-      
+
       const assignmentData = {
         ...editForm,
         group_id: selectedGroup,
@@ -357,7 +357,7 @@ export default function GroupSchedules() {
   // حذف التكليف
   const deleteAssignment = async (assignmentId: number) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا التكليف؟')) return;
-    
+
     try {
       const db = (window as any).db;
       await db.deleteAssignment(assignmentId);
@@ -470,7 +470,7 @@ export default function GroupSchedules() {
             {/* اختيار القاعة */}
             <select
               value={editForm.room_id || ''}
-              onChange={(e) => setEditForm({...editForm, room_id: parseInt(e.target.value)})}
+              onChange={(e) => setEditForm({ ...editForm, room_id: parseInt(e.target.value) })}
               className="w-full text-xs border rounded px-2 py-1"
             >
               <option value="">اختر القاعة</option>
@@ -504,10 +504,9 @@ export default function GroupSchedules() {
     }
 
     return (
-      <div 
-        className={`p-2 min-h-[120px] border border-gray-200 hover:bg-gray-50 cursor-pointer relative group ${
-          cell.conflicts ? 'bg-red-50 border-red-300' : cell.assignment ? 'bg-green-50' : 'bg-white'
-        }`}
+      <div
+        className={`p-2 min-h-[120px] border border-gray-200 hover:bg-gray-50 cursor-pointer relative group ${cell.conflicts ? 'bg-red-50 border-red-300' : cell.assignment ? 'bg-green-50' : 'bg-white'
+          }`}
         onClick={() => can('update', 'sessions') && startEditing(day, timeSlot.id, cell.assignment)}
       >
         {cell.assignment ? (
@@ -524,7 +523,7 @@ export default function GroupSchedules() {
               <MapPin size={10} />
               {cell.assignment.room_name}
             </div>
-            
+
             {/* أزرار التحرير والحذف */}
             <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
               {can('update', 'sessions') && (
@@ -590,7 +589,7 @@ export default function GroupSchedules() {
     try {
       const groupData = groups.find(g => g.id === selectedGroup);
       if (!groupData) return;
-      
+
       // ✅ بناء معلومات المجموعة
       const groupInfo = `
         <div style="
@@ -612,18 +611,18 @@ export default function GroupSchedules() {
           </p>
         </div>
       `;
-      
+
       // ✅ بناء جدول الحصص - الوقت في الصفوف والأيام في الأعمدة (إظهار الأيام النشطة فقط)
       const daysToShow = activeDays.length > 0 ? activeDays : DAYS;
-      
+
       const tableHTML = `
         <table style="width: 100%; border-collapse: collapse; margin: 5px auto; font-size: 7pt;">
           <thead>
             <tr style="background-color: #d0d0d0;">
               <th style="border: 2px solid #333; padding: 3px; text-align: center; font-weight: bold; width: 60px; background-color: #f5f5f5; font-size: 7pt;">الوقت</th>
-              ${daysToShow.map(day => 
-                `<th style="border: 2px solid #333; padding: 3px; text-align: center; font-weight: bold; background-color: #d0d0d0; font-size: 7pt;">${day.name}</th>`
-              ).join('')}
+              ${daysToShow.map(day =>
+        `<th style="border: 2px solid #333; padding: 3px; text-align: center; font-weight: bold; background-color: #d0d0d0; font-size: 7pt;">${day.name}</th>`
+      ).join('')}
             </tr>
           </thead>
           <tbody>
@@ -633,33 +632,33 @@ export default function GroupSchedules() {
                   ${timeSlot.start}<br>${timeSlot.end}
                 </td>
                 ${daysToShow.map(day => {
-                  const assignment = groupAssignments.find(a => 
-                    a.day_of_week === day.id && 
-                    a.start_time === timeSlot.start
-                  );
-                  
-                  if (!assignment) {
-                    return '<td style="border: 1px solid #666; padding: 2px; text-align: center; background-color: #f9f9f9; color: #999; font-size: 6pt;">-</td>';
-                  }
-                  
-                  const course = courses.find(c => c.id === assignment.course_id);
-                  const professor = professors.find(p => p.id === assignment.professor_id);
-                  const room = rooms.find(r => r.id === assignment.room_id);
-                  
-                  return `
+        const assignment = groupAssignments.find(a =>
+          a.day_of_week === day.id &&
+          a.start_time === timeSlot.start
+        );
+
+        if (!assignment) {
+          return '<td style="border: 1px solid #666; padding: 2px; text-align: center; background-color: #f9f9f9; color: #999; font-size: 6pt;">-</td>';
+        }
+
+        const course = courses.find(c => c.id === assignment.course_id);
+        const professor = professors.find(p => p.id === assignment.professor_id);
+        const room = rooms.find(r => r.id === assignment.room_id);
+
+        return `
                     <td style="border: 1px solid #666; padding: 2px; text-align: center; background-color: #e8f4fd;">
                       <div style="font-weight: bold; color: #1e40af; font-size: 7pt; margin-bottom: 1px;">${course?.name || 'غير محدد'}</div>
                       <div style="color: #1e40af; font-size: 6pt; margin-bottom: 1px;">${professor?.name || 'غير محدد'}</div>
                       <div style="color: #1e40af; font-size: 5pt;">${room?.name || 'غير محددة'}</div>
                     </td>
                   `;
-                }).join('')}
+      }).join('')}
               </tr>
             `).join('')}
           </tbody>
         </table>
       `;
-      
+
       // ✅ إنشاء المستند الكامل
       const content = generateFullDocument(
         'الجدول الزمني للفوج',
@@ -677,7 +676,7 @@ export default function GroupSchedules() {
           tableCellAlignment: (printSettings as any).tableCellAlignment || 'center'
         }
       );
-      
+
       // ✅ حفظ كـ PDF أو طباعة عادية
       printContent(content, {
         title: `جدول_زمني_${groupData.name}_${currentYear.year_name}`,
@@ -685,7 +684,7 @@ export default function GroupSchedules() {
         fontSize: '10pt',
         asPDF: asPDF
       });
-      
+
     } catch (error) {
       console.error('خطأ في تصدير الجدول:', error);
       alert('حدث خطأ أثناء تصدير الجدول');
@@ -716,7 +715,7 @@ export default function GroupSchedules() {
       {/* فلاتر التخصص والمجموعة */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">اختيار التخصص والفوج</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* فلتر التخصص */}
           <div>
@@ -772,7 +771,7 @@ export default function GroupSchedules() {
             </p>
           </div>
         )}
-        
+
         {/* أزرار الطباعة */}
         {selectedGroup && can('view', 'reports') && (
           <div className="mt-4 flex gap-3 justify-end">

@@ -83,8 +83,8 @@ export default function GroupTimetables() {
 
   // إعدادات الطباعة
   const [printSettings, setPrintSettings] = useState({
-    universityName: 'الجمهورية الجزائرية الديمقراطية الشعبية',
-    facultyName: 'جـامـعـة عمار ثليجي الأغواط',
+    universityName: 'جامعة الشهيد حمه لخضر - الوادي',
+    facultyName: 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير',
     universityLogoUrl: '',
     facultyLogoUrl: '',
     logoSize: 80,
@@ -125,8 +125,8 @@ export default function GroupTimetables() {
       const savedSettings = await window.dataUtils.getPrintSettings();
       if (savedSettings) {
         setPrintSettings({
-          universityName: savedSettings.universityName || 'الجمهورية الجزائرية الديمقراطية الشعبية',
-          facultyName: savedSettings.facultyName || 'جـامـعـة عمار ثليجي الأغواط',
+          universityName: savedSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي',
+          facultyName: savedSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير',
           universityLogoUrl: savedSettings.universityLogoUrl || '',
           facultyLogoUrl: savedSettings.facultyLogoUrl || '',
           logoSize: savedSettings.logoSize || 80,
@@ -156,7 +156,7 @@ export default function GroupTimetables() {
         db.getCourses(),
         db.getRooms()
       ]);
-      
+
       setGroups(groupsData);
       setProfessors(professorsData);
       setCourses(coursesData);
@@ -178,32 +178,32 @@ export default function GroupTimetables() {
   }, []);
 
   // تصفية المجموعات حسب البحث
-  const filteredGroups = groups.filter(group => 
+  const filteredGroups = groups.filter(group =>
     group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (group.specialization && group.specialization.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // الحصول على المجموعة المختارة
-  const selectedGroupData = selectedGroup 
-    ? groups.find(g => g.id === selectedGroup) 
+  const selectedGroupData = selectedGroup
+    ? groups.find(g => g.id === selectedGroup)
     : null;
 
   // الحصول على تكليفات المجموعة المختارة
-  const groupAssignments = selectedGroup 
+  const groupAssignments = selectedGroup
     ? assignments.filter(a => a.group_id === selectedGroup)
     : [];
 
   // ✅ تصفية الأيام - إظهار فقط الأيام التي تحتوي على تكليفات
-  const activeDays = days.filter(day => 
+  const activeDays = days.filter(day =>
     groupAssignments.some(assignment => assignment.day_of_week === day.id)
   );
 
   // دالة لتحديد المستوى الأكاديمي من السنة
   const getAcademicLevel = (year: string): string => {
     if (!year) return '-';
-    
+
     const yearUpper = year.toUpperCase();
-    
+
     if (yearUpper === 'L1') {
       return 'جذع مشترك';
     } else if (yearUpper === 'L2' || yearUpper === 'L3') {
@@ -211,14 +211,14 @@ export default function GroupTimetables() {
     } else if (yearUpper === 'M1' || yearUpper === 'M2') {
       return 'ماستر';
     }
-    
+
     return year;
   };
 
   // دالة عرض خلية الجدول الزمني
   const renderScheduleCell = (dayId: number, timeSlot: TimeSlot) => {
-    const assignment = groupAssignments.find(a => 
-      a.day_of_week === dayId && 
+    const assignment = groupAssignments.find(a =>
+      a.day_of_week === dayId &&
       a.start_time === timeSlot.start_time
     );
 
@@ -254,7 +254,7 @@ export default function GroupTimetables() {
 
     try {
       await refreshCurrentSemester();
-      
+
       // ✅ بناء معلومات المجموعة
       const groupInfo = `
         <div style="
@@ -276,18 +276,18 @@ export default function GroupTimetables() {
           </p>
         </div>
       `;
-      
+
       // ✅ بناء جدول الحصص - الوقت في الصفوف والأيام في الأعمدة (إظهار الأيام النشطة فقط)
       const daysToShow = activeDays.length > 0 ? activeDays : days;
-      
+
       const tableHTML = `
         <table style="width: 100%; border-collapse: collapse; margin: 5px auto; font-size: ${printSettings.cellContentFontSize}pt;">
           <thead>
             <tr style="background-color: #d0d0d0;">
               <th style="border: 2px solid #333; padding: ${printSettings.cellPadding}px; text-align: ${printSettings.tableCellAlignment}; font-weight: bold; width: 60px; background-color: #f5f5f5; font-size: ${printSettings.cellContentFontSize}pt;">الوقت</th>
-              ${daysToShow.map(day => 
-                `<th style="border: 2px solid #333; padding: ${printSettings.cellPadding}px; text-align: ${printSettings.tableCellAlignment}; font-weight: bold; background-color: #d0d0d0; font-size: ${printSettings.cellContentFontSize}pt;">${day.name}</th>`
-              ).join('')}
+              ${daysToShow.map(day =>
+        `<th style="border: 2px solid #333; padding: ${printSettings.cellPadding}px; text-align: ${printSettings.tableCellAlignment}; font-weight: bold; background-color: #d0d0d0; font-size: ${printSettings.cellContentFontSize}pt;">${day.name}</th>`
+      ).join('')}
             </tr>
           </thead>
           <tbody>
@@ -297,33 +297,33 @@ export default function GroupTimetables() {
                   ${timeSlot.start_time}<br>${timeSlot.end_time}
                 </td>
                 ${daysToShow.map(day => {
-                  const assignment = groupAssignments.find(a => 
-                    a.day_of_week === day.id && 
-                    a.start_time === timeSlot.start_time
-                  );
-                  
-                  if (!assignment) {
-                    return `<td style="border: 1px solid #666; padding: ${printSettings.cellPadding}px; text-align: ${printSettings.tableCellAlignment} !important; background-color: #f9f9f9; color: #999; font-size: ${printSettings.cellContentFontSize}pt;">-</td>`;
-                  }
-                  
-                  const course = courses.find(c => c.id === assignment.course_id);
-                  const professor = professors.find(p => p.id === assignment.professor_id);
-                  const room = rooms.find(r => r.id === assignment.room_id);
-                  
-                  return `
+        const assignment = groupAssignments.find(a =>
+          a.day_of_week === day.id &&
+          a.start_time === timeSlot.start_time
+        );
+
+        if (!assignment) {
+          return `<td style="border: 1px solid #666; padding: ${printSettings.cellPadding}px; text-align: ${printSettings.tableCellAlignment} !important; background-color: #f9f9f9; color: #999; font-size: ${printSettings.cellContentFontSize}pt;">-</td>`;
+        }
+
+        const course = courses.find(c => c.id === assignment.course_id);
+        const professor = professors.find(p => p.id === assignment.professor_id);
+        const room = rooms.find(r => r.id === assignment.room_id);
+
+        return `
                     <td style="border: 1px solid #666; padding: ${printSettings.cellPadding}px; text-align: ${printSettings.tableCellAlignment} !important; background-color: #cce5ff; font-size: ${printSettings.cellContentFontSize}pt; vertical-align: middle; line-height: ${printSettings.lineHeight};">
                       <div style="color: #b91c1c; font-weight: bold; font-size: ${Math.max(printSettings.cellContentFontSize + 1, 7)}pt; margin-bottom: ${printSettings.marginBetweenLines}px; line-height: ${printSettings.lineHeight}; text-align: ${printSettings.tableCellAlignment} !important; width: 100%; display: block;">${course?.name || 'غير محدد'}</div>
                       <div style="color: #1e40af; font-size: ${printSettings.cellContentFontSize}pt; margin-bottom: ${printSettings.marginBetweenLines}px; line-height: ${printSettings.lineHeight}; text-align: ${printSettings.tableCellAlignment} !important; width: 100%; display: block;">${professor?.name || 'غير محدد'}</div>
                       <div style="color: #1e40af; font-size: ${Math.max(printSettings.cellContentFontSize - 1, 5)}pt; line-height: ${printSettings.lineHeight}; text-align: ${printSettings.tableCellAlignment} !important; width: 100%; display: block;">${room?.name || 'غير محددة'}</div>
                     </td>
                   `;
-                }).join('')}
+      }).join('')}
               </tr>
             `).join('')}
           </tbody>
         </table>
       `;
-      
+
       // ✅ إنشاء المستند الكامل
       const content = generateFullDocument(
         'الجدول الزمني للفوج',
@@ -341,7 +341,7 @@ export default function GroupTimetables() {
           tableCellAlignment: printSettings.tableCellAlignment
         }
       );
-      
+
       // ✅ حفظ كـ PDF أو طباعة عادية
       printContent(content, {
         title: `جدول_زمني_${selectedGroupData.name}_${currentYear.year_name}`,
@@ -349,7 +349,7 @@ export default function GroupTimetables() {
         fontSize: '10pt',
         asPDF: asPDF // ✅ استخدام المعامل
       });
-      
+
     } catch (error) {
       console.error('خطأ في تصدير PDF:', error);
       alert('حدث خطأ أثناء تصدير ملف PDF');
@@ -368,9 +368,9 @@ export default function GroupTimetables() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4 text-center">الجداول الزمنية للأفواج</h1>
-      
+
       {error && <DatabaseErrorAlert error={error} />}
-      
+
       {/* شريط البحث واختيار المجموعة */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow">
         <div className="flex flex-col md:flex-row gap-4">
@@ -386,7 +386,7 @@ export default function GroupTimetables() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          
+
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               اختيار الفوج
@@ -405,7 +405,7 @@ export default function GroupTimetables() {
             </select>
           </div>
         </div>
-        
+
         {/* أزرار الطباعة */}
         {selectedGroup && (
           <div className="mt-4 flex gap-3 justify-end">
@@ -436,7 +436,7 @@ export default function GroupTimetables() {
               {getAcademicLevel(selectedGroupData.year || '')} - {selectedGroupData.specialization || 'غير محدد'}
             </p>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -464,7 +464,7 @@ export default function GroupTimetables() {
           </div>
         </div>
       )}
-      
+
       {!selectedGroupData && (
         <div className="text-center py-12">
           <div className="text-gray-500 text-lg">يرجى اختيار فوج لعرض الجدول الزمني</div>
