@@ -16,7 +16,7 @@
     "electron:build": "vite build && cross-env NODE_ENV=production electron-builder",
     "electron:preview": "cross-env NODE_ENV=production electron .",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
-    "postinstall": "electron-builder install-app-deps",
+    "electron:postinstall": "electron-builder install-app-deps",
     "server": "node server/server.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\""
   },
