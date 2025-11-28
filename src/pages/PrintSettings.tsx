@@ -98,31 +98,31 @@ export default function PrintSettings() {
     }
   };
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'university' | 'faculty') => {
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'university' | 'faculty') => {
     const files = e.target.files;
     if (files && files.length > 0) {
       const file = files[0];
-      const reader = new FileReader();
-      
-      reader.onload = (event) => {
-        if (event.target && event.target.result) {
-          const dataUrl = event.target.result as string;
-          
-          if (type === 'university') {
-            setSettings(prev => ({
-              ...prev,
-              universityLogoUrl: dataUrl
-            }));
-          } else {
-            setSettings(prev => ({
-              ...prev,
-              facultyLogoUrl: dataUrl
-            }));
-          }
+      try {
+        setIsLoading(true);
+        const result = await window.dataUtils.uploadLogo(file, type);
+
+        if (type === 'university') {
+          setSettings(prev => ({
+            ...prev,
+            universityLogoUrl: result.url
+          }));
+        } else {
+          setSettings(prev => ({
+            ...prev,
+            facultyLogoUrl: result.url
+          }));
         }
-      };
-      
-      reader.readAsDataURL(file);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Logo upload failed:', err);
+        setError(err instanceof Error ? err : new Error('Logo upload failed'));
+        setIsLoading(false);
+      }
     }
   };
 
@@ -188,11 +188,11 @@ export default function PrintSettings() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6 text-center">إعدادات الطباعة</h1>
-      
+
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           <p>حدث خطأ: {error.message}</p>
-          <button 
+          <button
             className="mt-2 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
             onClick={() => setError(null)}
           >
@@ -200,16 +200,16 @@ export default function PrintSettings() {
           </button>
         </div>
       )}
-      
+
       <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-4">معلومات المؤسسة</h2>
-          
+
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="universityName">
               اسم الجامعة
             </label>
-            <input 
+            <input
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="universityName"
               name="universityName"
@@ -219,12 +219,12 @@ export default function PrintSettings() {
               onChange={handleInputChange}
             />
           </div>
-          
+
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="facultyName">
               اسم الكلية
             </label>
-            <input 
+            <input
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="facultyName"
               name="facultyName"
@@ -235,10 +235,10 @@ export default function PrintSettings() {
             />
           </div>
         </div>
-        
+
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-4">الشعارات</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="universityLogo">
@@ -247,21 +247,21 @@ export default function PrintSettings() {
               <div className="flex flex-col items-center">
                 {settings.universityLogoUrl && (
                   <div className="mb-2">
-                    <img 
-                      src={settings.universityLogoUrl} 
-                      alt="شعار الجامعة" 
+                    <img
+                      src={settings.universityLogoUrl}
+                      alt="شعار الجامعة"
                       className="max-w-xs max-h-32 object-contain"
                     />
                   </div>
                 )}
-                <input 
+                <input
                   className="hidden"
                   id="universityLogo"
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleLogoChange(e, 'university')}
                 />
-                <label 
+                <label
                   htmlFor="universityLogo"
                   className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer"
                 >
@@ -269,7 +269,7 @@ export default function PrintSettings() {
                 </label>
               </div>
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="facultyLogo">
                 شعار الكلية
@@ -277,21 +277,21 @@ export default function PrintSettings() {
               <div className="flex flex-col items-center">
                 {settings.facultyLogoUrl && (
                   <div className="mb-2">
-                    <img 
-                      src={settings.facultyLogoUrl} 
-                      alt="شعار الكلية" 
+                    <img
+                      src={settings.facultyLogoUrl}
+                      alt="شعار الكلية"
                       className="max-w-xs max-h-32 object-contain"
                     />
                   </div>
                 )}
-                <input 
+                <input
                   className="hidden"
                   id="facultyLogo"
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleLogoChange(e, 'faculty')}
                 />
-                <label 
+                <label
                   htmlFor="facultyLogo"
                   className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer"
                 >
@@ -300,13 +300,13 @@ export default function PrintSettings() {
               </div>
             </div>
           </div>
-          
+
           <div className="mb-4 mt-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="logoSize">
               حجم الشعارات (بالبكسل)
             </label>
             <div className="flex items-center">
-              <input 
+              <input
                 className="shadow appearance-none border rounded w-24 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 id="logoSize"
                 name="logoSize"
@@ -321,17 +321,17 @@ export default function PrintSettings() {
             <p className="text-sm text-gray-500 mt-1">القيمة المستحسنة: 80 بكسل</p>
           </div>
         </div>
-        
+
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-4">أحجام الخطوط</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="headerFontSize">
                 حجم خط العنوان الرئيسي (اسم الجامعة/الكلية)
               </label>
               <div className="flex items-center">
-                <input 
+                <input
                   className="shadow appearance-none border rounded w-24 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   id="headerFontSize"
                   name="headerFontSize"
@@ -345,13 +345,13 @@ export default function PrintSettings() {
               </div>
               <p className="text-sm text-gray-500 mt-1">القيمة المستحسنة: 16 بكسل</p>
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="titleFontSize">
                 حجم خط العنوان (عنوان الجدول)
               </label>
               <div className="flex items-center">
-                <input 
+                <input
                   className="shadow appearance-none border rounded w-24 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   id="titleFontSize"
                   name="titleFontSize"
@@ -365,13 +365,13 @@ export default function PrintSettings() {
               </div>
               <p className="text-sm text-gray-500 mt-1">القيمة المستحسنة: 16 بكسل</p>
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="subtitleFontSize">
                 حجم خط العنوان الفرعي (تفاصيل الجدول)
               </label>
               <div className="flex items-center">
-                <input 
+                <input
                   className="shadow appearance-none border rounded w-24 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   id="subtitleFontSize"
                   name="subtitleFontSize"
@@ -385,13 +385,13 @@ export default function PrintSettings() {
               </div>
               <p className="text-sm text-gray-500 mt-1">القيمة المستحسنة: 14 بكسل</p>
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="cellContentFontSize">
                 حجم خط محتوى الخلايا (داخل الجدول)
               </label>
               <div className="flex items-center">
-                <input 
+                <input
                   className="shadow appearance-none border rounded w-24 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   id="cellContentFontSize"
                   name="cellContentFontSize"
@@ -406,7 +406,7 @@ export default function PrintSettings() {
               <p className="text-sm text-gray-500 mt-1">القيمة المستحسنة: 10 بكسل</p>
             </div>
           </div>
-          
+
           <div className="mt-6 bg-gray-100 p-4 rounded">
             <h3 className="text-lg font-bold mb-2">معاينة أحجام الخطوط</h3>
             <div className="border border-gray-300 bg-white p-4 rounded">
@@ -427,17 +427,17 @@ export default function PrintSettings() {
             </div>
           </div>
         </div>
-        
+
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-4">إعدادات تنسيق الجداول</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="cellPadding">
                 المسافة الداخلية للخلايا (بكسل)
               </label>
               <div className="flex items-center">
-                <input 
+                <input
                   className="shadow appearance-none border rounded w-24 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   id="cellPadding"
                   name="cellPadding"
@@ -452,13 +452,13 @@ export default function PrintSettings() {
               </div>
               <p className="text-sm text-gray-500 mt-1">القيمة المستحسنة: 3 بكسل</p>
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="lineHeight">
                 ارتفاع السطر (line-height)
               </label>
               <div className="flex items-center">
-                <input 
+                <input
                   className="shadow appearance-none border rounded w-24 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   id="lineHeight"
                   name="lineHeight"
@@ -477,13 +477,13 @@ export default function PrintSettings() {
               </div>
               <p className="text-sm text-gray-500 mt-1">القيمة المستحسنة: 1.2 (1 = ضيق، 2 = واسع)</p>
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="marginBetweenLines">
                 المسافة بين الأسطر داخل الخلية (بكسل)
               </label>
               <div className="flex items-center">
-                <input 
+                <input
                   className="shadow appearance-none border rounded w-24 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   id="marginBetweenLines"
                   name="marginBetweenLines"
@@ -497,12 +497,12 @@ export default function PrintSettings() {
               </div>
               <p className="text-sm text-gray-500 mt-1">القيمة المستحسنة: 2 بكسل</p>
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="tableCellAlignment">
                 محاذاة محتوى الخلايا
               </label>
-              <select 
+              <select
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 id="tableCellAlignment"
                 name="tableCellAlignment"
@@ -516,7 +516,7 @@ export default function PrintSettings() {
               <p className="text-sm text-gray-500 mt-1">القيمة المستحسنة: وسط</p>
             </div>
           </div>
-          
+
           <div className="mt-4">
             <h3 className="text-lg font-semibold mb-3">هوامش الصفحة (مم)</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -524,7 +524,7 @@ export default function PrintSettings() {
                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="pageMarginTop">
                   الأعلى
                 </label>
-                <input 
+                <input
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   id="pageMarginTop"
                   name="pageMarginTop"
@@ -535,12 +535,12 @@ export default function PrintSettings() {
                   onChange={handleNumberChange}
                 />
               </div>
-              
+
               <div>
                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="pageMarginBottom">
                   الأسفل
                 </label>
-                <input 
+                <input
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   id="pageMarginBottom"
                   name="pageMarginBottom"
@@ -551,12 +551,12 @@ export default function PrintSettings() {
                   onChange={handleNumberChange}
                 />
               </div>
-              
+
               <div>
                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="pageMarginLeft">
                   اليسار
                 </label>
-                <input 
+                <input
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   id="pageMarginLeft"
                   name="pageMarginLeft"
@@ -567,12 +567,12 @@ export default function PrintSettings() {
                   onChange={handleNumberChange}
                 />
               </div>
-              
+
               <div>
                 <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="pageMarginRight">
                   اليمين
                 </label>
-                <input 
+                <input
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   id="pageMarginRight"
                   name="pageMarginRight"
@@ -587,10 +587,10 @@ export default function PrintSettings() {
             <p className="text-sm text-gray-500 mt-2">القيم المستحسنة: 5 مم لجميع الجوانب</p>
           </div>
         </div>
-        
+
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex gap-2">
-            <button 
+            <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
               type="button"
               onClick={saveSettings}
@@ -598,7 +598,7 @@ export default function PrintSettings() {
             >
               {isLoading ? 'جاري الحفظ...' : '💾 حفظ الإعدادات'}
             </button>
-            <button 
+            <button
               className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
               type="button"
               onClick={resetToDefaults}
@@ -607,7 +607,7 @@ export default function PrintSettings() {
               🔄 استعادة الافتراضي
             </button>
           </div>
-          <button 
+          <button
             className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             type="button"
             onClick={() => navigate(-1)}

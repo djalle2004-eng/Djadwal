@@ -20,6 +20,9 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // API Routes
 app.use('/api', apiRoutes);
 
+// Serve uploaded files (logos)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Dossier pour stocker temporairement les PDF
 const tempDir = path.join(__dirname, 'temp');
 if (!fs.existsSync(tempDir)) {

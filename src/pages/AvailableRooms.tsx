@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box } from '@mui/material';
+import { Box, Checkbox, FormControlLabel } from '@mui/material';
 import { format, parseISO, isValid } from 'date-fns';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
@@ -164,21 +164,21 @@ export default function AvailableRooms() {
   const [archivedSessions, setArchivedSessions] = useState<ExtraSession[]>([]); // الحصص المؤرشفة
   const [showArchived, setShowArchived] = useState(false); // إظهار/إخفاء الأرشيف
   const [regularAssignments, setRegularAssignments] = useState<RegularAssignment[]>([]);
-  
+
   // États pour le chargement et les erreurs
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  
+
   // États pour la recherche de salles disponibles
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [minCapacity, setMinCapacity] = useState<number>(0);
   const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
-  
+
   // États pour la gestion des onglets
   const [tabValue, setTabValue] = useState(0);
-  
+
   // États pour le formulaire d'ajout/modification de séance
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -196,6 +196,7 @@ export default function AvailableRooms() {
   const [useCustomTime, setUseCustomTime] = useState<boolean>(false);
   const [customStartTime, setCustomStartTime] = useState<string>('');
   const [customEndTime, setCustomEndTime] = useState<string>('');
+  const [ignoreConflicts, setIgnoreConflicts] = useState<boolean>(false);
 
   // États pour les notifications
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
@@ -211,12 +212,12 @@ export default function AvailableRooms() {
   const [printSessionType, setPrintSessionType] = useState<'extra' | 'makeup' | 'exam' | 'all'>('all');
 
   // Éتات للفترة الزمنية للطباعة
-  const [roomAvailabilityStatus, setRoomAvailabilityStatus] = useState<{[key: string]: boolean}>({});
+  const [roomAvailabilityStatus, setRoomAvailabilityStatus] = useState<{ [key: string]: boolean }>({});
   const [conflictWarnings, setConflictWarnings] = useState<string[]>([]);
-  
+
   // Récupération du contexte d'année académique
   const { currentYear, currentSemester } = useAcademicYear();
-  
+
   // États pour la recherche de professeurs et cours
   const [professorSearchTerm, setProfessorSearchTerm] = useState('');
   const [courseSearchTerm, setCourseSearchTerm] = useState('');
@@ -224,23 +225,23 @@ export default function AvailableRooms() {
   const [isCourseDropdownOpen, setIsCourseDropdownOpen] = useState(false);
   const [filteredProfessors, setFilteredProfessors] = useState<Professor[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
-  
+
   // حالات لتصفية البيانات حسب الأستاذ المختار
   const [professorCourses, setProfessorCourses] = useState<Course[]>([]);
-  const [professorDepartments, setProfessorDepartments] = useState<{id: number, name: string}[]>([]);
-  const [professorSpecializations, setProfessorSpecializations] = useState<{id: number, name: string}[]>([]);
+  const [professorDepartments, setProfessorDepartments] = useState<{ id: number, name: string }[]>([]);
+  const [professorSpecializations, setProfessorSpecializations] = useState<{ id: number, name: string }[]>([]);
   const [professorGroups, setProfessorGroups] = useState<Group[]>([]);
-  
+
   // Éتات للفترة الزمنية للطباعة
-  const [departments, setDepartments] = useState<{id: number, name: string}[]>([]);
+  const [departments, setDepartments] = useState<{ id: number, name: string }[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<number | ''>('');
-  const [specializations, setSpecializations] = useState<{id: number, name: string}[]>([]);
+  const [specializations, setSpecializations] = useState<{ id: number, name: string }[]>([]);
   const [selectedSpecialization, setSelectedSpecialization] = useState<number | ''>('');
   const [filteredGroups, setFilteredGroups] = useState<Group[]>([]);
-  
+
   // État pour les jours avec des séances supplémentaires
   const [extraSessionDates, setExtraSessionDates] = useState<Set<string>>(new Set());
-  
+
   // حالة إعلان الطلبة
   const [announcementDialogOpen, setAnnouncementDialogOpen] = useState(false);
   const [announcementDepartment, setAnnouncementDepartment] = useState<number | ''>('');
@@ -250,7 +251,7 @@ export default function AvailableRooms() {
   const [announcementProfessor, setAnnouncementProfessor] = useState<number | ''>('');
   const [announcementStartDate, setAnnouncementStartDate] = useState<Date | null>(null);
   const [announcementEndDate, setAnnouncementEndDate] = useState<Date | null>(null);
-  const [announcementSpecializations, setAnnouncementSpecializations] = useState<{id: number, name: string}[]>([]);
+  const [announcementSpecializations, setAnnouncementSpecializations] = useState<{ id: number, name: string }[]>([]);
   const [announcementGroups, setAnnouncementGroups] = useState<Group[]>([]);
   const [announcementProfessors, setAnnouncementProfessors] = useState<Professor[]>([]);
 
@@ -259,24 +260,24 @@ export default function AvailableRooms() {
     const loadInitialData = async () => {
       try {
         console.log('Loading initial data...');
-        
+
         const roomsData = await window.db.getRooms();
         const professorsData = await window.db.getProfessors();
         const coursesData = await window.db.getCourses();
         const groupsData = await window.db.getGroups();
-        
+
         setRooms(roomsData);
         setProfessors(professorsData);
         setCourses(coursesData);
         setGroups(groupsData);
-        
+
         console.log('Loaded data:', {
           rooms: roomsData.length,
           professors: professorsData.length,
           courses: coursesData.length,
           groups: groupsData.length
         });
-        
+
       } catch (error) {
         console.error('Error loading initial data:', error);
         setSnackbar({
@@ -314,13 +315,13 @@ export default function AvailableRooms() {
       try {
         console.log('🔍 loadAllData - currentYear:', currentYear);
         console.log('🔍 loadAllData - currentSemester:', currentSemester);
-        
+
         // Refresh all data when component mounts or academic year changes
         if (currentYear && currentSemester) {
           console.log('Loading assignments for current year/semester...');
           console.log(`🔍 السنة الأكاديمية: ${currentYear.year_name}`);
           console.log(`🔍 الفصل الدراسي: ${currentSemester.semester_name}`);
-          
+
           // Load regular assignments
           await fetchRegularAssignments();
           await fetchExtraSessions();
@@ -340,13 +341,13 @@ export default function AvailableRooms() {
     try {
       const sessions = await window.db.getExtraSessions();
       console.log('📚 Loaded extra sessions:', sessions.length);
-      
+
       // فصل الحصص إلى قادمة ومؤرشفة
       const upcoming = sessions.filter((s: ExtraSession) => !s.is_archived || s.is_archived === 0);
       const archived = sessions.filter((s: ExtraSession) => s.is_archived === 1);
-      
+
       console.log(`✅ Upcoming sessions: ${upcoming.length}, Archived: ${archived.length}`);
-      
+
       setExtraSessions(upcoming); // فقط الحصص القادمة
       setArchivedSessions(archived); // الحصص المؤرشفة
     } catch (error) {
@@ -363,7 +364,7 @@ export default function AvailableRooms() {
   const manualArchivePastSessions = async () => {
     try {
       const result = await window.db.archivePastSessions();
-      
+
       if (result.error) {
         setSnackbar({
           open: true,
@@ -373,7 +374,7 @@ export default function AvailableRooms() {
       } else {
         // إعادة تحميل الحصص بعد الأرشفة
         await fetchExtraSessions();
-        
+
         setSnackbar({
           open: true,
           message: `تم أرشفة ${result.archived} حصة منتهية بنجاح`,
@@ -430,22 +431,22 @@ export default function AvailableRooms() {
     if (printStartDate && printEndDate) {
       const startDateStr = format(printStartDate, 'yyyy-MM-dd');
       const endDateStr = format(printEndDate, 'yyyy-MM-dd');
-      
+
       filteredSessions = filteredSessions.filter(session => {
         return session.session_date >= startDateStr && session.session_date <= endDateStr;
       });
     }
 
     const content = generateSessionsListContent(filteredSessions, printSessionType);
-    const title = printSessionType === 'extra' 
-      ? 'قائمة الحصص الإضافية' 
-      : printSessionType === 'makeup' 
+    const title = printSessionType === 'extra'
+      ? 'قائمة الحصص الإضافية'
+      : printSessionType === 'makeup'
         ? 'قائمة حصص التعويض'
         : printSessionType === 'exam'
           ? 'قائمة إمتحانات الأعمال الموجهة'
           : 'قائمة الحصص الإضافية وحصص التعويض وإمتحانات الأعمال الموجهة';
-    
-    const dateRangeText = (printStartDate && printEndDate) 
+
+    const dateRangeText = (printStartDate && printEndDate)
       ? ` (من ${format(printStartDate, 'dd/MM/yyyy')} إلى ${format(printEndDate, 'dd/MM/yyyy')})`
       : '';
 
@@ -467,7 +468,7 @@ export default function AvailableRooms() {
     const content = generateIndividualSessionContent(session, departmentHead);
     const sessionType = session.session_type === 'extra' ? 'حصة إضافية' : 'حصة تعويض';
     const title = `شهادة ${sessionType} - ${session.professor_name}`;
-    
+
     printContent(content, {
       title,
       orientation: 'portrait',
@@ -523,7 +524,7 @@ export default function AvailableRooms() {
     const loadAnnouncementProfessors = () => {
       // استخراج الأساتذة الفريدين من الحصص الإضافية
       const uniqueProfessors = new Map<number, Professor>();
-      
+
       extraSessions.forEach(session => {
         if (session.professor_id && !uniqueProfessors.has(session.professor_id)) {
           uniqueProfessors.set(session.professor_id, {
@@ -532,11 +533,11 @@ export default function AvailableRooms() {
           });
         }
       });
-      
+
       const professorsArray = Array.from(uniqueProfessors.values());
       setAnnouncementProfessors(professorsArray);
     };
-    
+
     loadAnnouncementProfessors();
   }, [extraSessions]);
 
@@ -551,7 +552,7 @@ export default function AvailableRooms() {
         specialization: announcementSpecialization,
         group: announcementGroup
       });
-      
+
       // فلترة الحصص حسب المعايير المختارة
       let filteredSessions = extraSessions;
       console.log('1. بدء بعدد:', filteredSessions.length);
@@ -588,12 +589,12 @@ export default function AvailableRooms() {
         const selectedSpec = announcementSpecializations.find(s => s.id === announcementSpecialization);
         const specName = selectedSpec?.name;
         console.log(`4. التخصص المختار: ID=${announcementSpecialization}, Name="${specName}"`);
-        
+
         // فلترة الأفواج حسب اسم التخصص
         const specGroups = groups.filter(g => g.specialization === specName);
         const specGroupIds = specGroups.map(g => g.id);
         console.log(`   أفواج التخصص "${specName}":`, specGroupIds.length, specGroupIds);
-        
+
         filteredSessions = filteredSessions.filter(s => specGroupIds.includes(s.group_id));
         console.log('   بعد فلترة التخصص:', filteredSessions.length);
       }
@@ -623,7 +624,7 @@ export default function AvailableRooms() {
         filteredSessions = filteredSessions.filter(s => s.session_date <= endDateStr);
         console.log(`8. بعد فلترة تاريخ النهاية (${endDateStr}):`, filteredSessions.length);
       }
-      
+
       console.log('🎯 النتيجة النهائية:', filteredSessions.length, 'حصص');
       if (filteredSessions.length > 0) {
         console.log('عينة من الحصص:', filteredSessions.slice(0, 2));
@@ -642,7 +643,7 @@ export default function AvailableRooms() {
       const printSettings = await window.dataUtils.getPrintSettings();
 
       // الحصول على أسماء القسم والتخصص والأستاذ
-      const departmentName = announcementDepartment 
+      const departmentName = announcementDepartment
         ? departments.find(d => d.id === announcementDepartment)?.name || ''
         : '';
       const specializationName = announcementSpecialization
@@ -664,7 +665,7 @@ export default function AvailableRooms() {
       // عنوان للطباعة مع تفاصيل الفلترة
       let title = 'إعلان للطلبة';
       const titleParts = [];
-      
+
       if (departmentName) titleParts.push(departmentName);
       if (specializationName) titleParts.push(specializationName);
       if (professorName) titleParts.push(`أ. ${professorName}`);
@@ -676,7 +677,7 @@ export default function AvailableRooms() {
             : `حتى ${format(announcementEndDate!, 'dd/MM/yyyy')}`;
         titleParts.push(dateRange);
       }
-      
+
       if (titleParts.length > 0) {
         title += ' - ' + titleParts.join(' | ');
       }
@@ -706,10 +707,10 @@ export default function AvailableRooms() {
     try {
       // Get print settings for branding
       const printSettings = await window.dataUtils.getPrintSettings();
-      
+
       // Force load all necessary data first
       console.log('=== Loading all necessary data for room availability matrix ===');
-      
+
       // Load rooms if empty
       let currentRooms = rooms;
       if (currentRooms.length === 0) {
@@ -722,7 +723,7 @@ export default function AvailableRooms() {
           currentRooms = [];
         }
       }
-      
+
       // Load professors if empty
       let currentProfessors = professors;
       if (currentProfessors.length === 0) {
@@ -735,7 +736,7 @@ export default function AvailableRooms() {
           currentProfessors = [];
         }
       }
-      
+
       // Load courses if empty
       let currentCourses = courses;
       if (currentCourses.length === 0) {
@@ -748,7 +749,7 @@ export default function AvailableRooms() {
           currentCourses = [];
         }
       }
-      
+
       // Load groups if empty
       let currentGroups = groups;
       if (currentGroups.length === 0) {
@@ -761,13 +762,13 @@ export default function AvailableRooms() {
           currentGroups = [];
         }
       }
-      
+
       // Days excluding Friday (id: 6)
       const workingDays = days.filter(day => day.id !== 6);
-      
+
       // Create room availability matrix
       const roomAvailabilityData: { [roomId: number]: { [timeSlot: string]: { [dayId: number]: { available: boolean; occupiedBy?: string } } } } = {};
-      
+
       // Initialize matrix for all rooms
       currentRooms.forEach(room => {
         roomAvailabilityData[room.id] = {};
@@ -778,7 +779,7 @@ export default function AvailableRooms() {
           });
         });
       });
-      
+
       // Mark occupied slots based on regular assignments
       regularAssignments.forEach(assignment => {
         if (assignment.day_of_week !== 6) { // Exclude Friday
@@ -788,12 +789,12 @@ export default function AvailableRooms() {
             const group = currentGroups.find(g => g.id === assignment.group_id);
             const professor = currentProfessors.find(p => p.id === assignment.professor_id);
             const course = currentCourses.find(c => c.id === assignment.course_id);
-            
+
             const groupName = group?.name || 'مجموعة غير معروفة';
             const professorName = professor?.name || 'أستاذ غير معروف';
             const courseName = course?.name || 'مقياس غير معروف';
             const specialization = assignment.specialization || group?.specialization || 'تخصص غير محدد';
-            
+
             roomAvailabilityData[assignment.room_id][timeSlot][assignment.day_of_week] = {
               available: false,
               occupiedBy: `${professorName} - ${courseName} - ${groupName} - ${specialization}`
@@ -801,7 +802,7 @@ export default function AvailableRooms() {
           }
         }
       });
-      
+
       // Generate HTML content for the matrix
       let htmlContent = `
         <!DOCTYPE html>
@@ -896,11 +897,11 @@ export default function AvailableRooms() {
                     <tr>
                       <td style="background-color: #e0e0e0; font-weight: bold;">${timeSlot}</td>
                       ${workingDays.map(day => {
-                        const cellData = roomAvailabilityData[room.id][timeSlot][day.id];
-                        const cellClass = cellData.available ? 'available-cell' : 'occupied-cell';
-                        const cellContent = cellData.available ? 'متاح' : cellData.occupiedBy;
-                        return `<td class="${cellClass}">${cellContent}</td>`;
-                      }).join('')}
+        const cellData = roomAvailabilityData[room.id][timeSlot][day.id];
+        const cellClass = cellData.available ? 'available-cell' : 'occupied-cell';
+        const cellContent = cellData.available ? 'متاح' : cellData.occupiedBy;
+        return `<td class="${cellClass}">${cellContent}</td>`;
+      }).join('')}
                     </tr>
                   `).join('')}
                 </tbody>
@@ -916,13 +917,13 @@ export default function AvailableRooms() {
         </body>
         </html>
       `;
-      
+
       // Create and open print window
       const printWindow = window.open('', '_blank');
       if (printWindow) {
         printWindow.document.write(htmlContent);
         printWindow.document.close();
-        
+
         // Wait for content to load then print
         printWindow.onload = () => {
           setTimeout(() => {
@@ -930,7 +931,7 @@ export default function AvailableRooms() {
           }, 500);
         };
       }
-      
+
     } catch (error) {
       console.error('خطأ في تصدير مصفوفة توفر القاعات:', error);
       setSnackbar({
@@ -949,7 +950,7 @@ export default function AvailableRooms() {
       console.log('selectedDay value:', selectedDay);
       console.log('selectedDay type:', typeof selectedDay);
       console.log('Available days:', days);
-      
+
       // Check if a day is selected
       if (!selectedDay && selectedDay !== 0) {
         setSnackbar({
@@ -959,14 +960,14 @@ export default function AvailableRooms() {
         });
         return;
       }
-      
+
       // Get the selected day name - handle both string and number types
       const dayId = typeof selectedDay === 'string' ? parseInt(selectedDay) : selectedDay;
       const selectedDayObj = days.find(day => day.id === dayId);
-      
+
       console.log('Parsed dayId:', dayId);
       console.log('Found selectedDayObj:', selectedDayObj);
-      
+
       if (!selectedDayObj) {
         console.log('Available day IDs:', days.map(d => d.id));
         setSnackbar({
@@ -976,13 +977,13 @@ export default function AvailableRooms() {
         });
         return;
       }
-      
+
       // Get print settings for branding
       const printSettings = await window.dataUtils.getPrintSettings();
-      
+
       // Force load all necessary data first
       console.log('=== Loading all necessary data for matrix report ===');
-      
+
       // Load rooms if empty
       let currentRooms = rooms;
       if (currentRooms.length === 0) {
@@ -995,7 +996,7 @@ export default function AvailableRooms() {
           currentRooms = [];
         }
       }
-      
+
       // Load professors if empty
       let currentProfessors = professors;
       if (currentProfessors.length === 0) {
@@ -1008,7 +1009,7 @@ export default function AvailableRooms() {
           currentProfessors = [];
         }
       }
-      
+
       // Load courses if empty
       let currentCourses = courses;
       if (currentCourses.length === 0) {
@@ -1021,7 +1022,7 @@ export default function AvailableRooms() {
           currentCourses = [];
         }
       }
-      
+
       // Load groups if empty
       let currentGroups = groups;
       if (currentGroups.length === 0) {
@@ -1034,11 +1035,11 @@ export default function AvailableRooms() {
           currentGroups = [];
         }
       }
-      
+
       // Load regular assignments for current year/semester
       let currentRegularAssignments = regularAssignments;
       console.log('Initial regular assignments:', currentRegularAssignments.length);
-      
+
       // Force reload assignments if empty or if we need fresh data
       if (currentRegularAssignments.length === 0 || !currentYear || !currentSemester) {
         console.log('Loading fresh regular assignments...');
@@ -1056,7 +1057,7 @@ export default function AvailableRooms() {
           currentRegularAssignments = [];
         }
       }
-      
+
       // Debug: Check data availability after loading
       console.log('=== DEBUG: Daily Matrix Report Data ===');
       console.log('Selected Day:', dayId, selectedDayObj.name);
@@ -1067,7 +1068,7 @@ export default function AvailableRooms() {
       console.log('Regular Assignments:', currentRegularAssignments.length, currentRegularAssignments);
       console.log('Current Year:', currentYear);
       console.log('Current Semester:', currentSemester);
-      
+
       // Check if we have necessary data
       if (currentRooms.length === 0) {
         setSnackbar({
@@ -1077,7 +1078,7 @@ export default function AvailableRooms() {
         });
         return;
       }
-      
+
       if (currentRegularAssignments.length === 0) {
         setSnackbar({
           open: true,
@@ -1086,10 +1087,10 @@ export default function AvailableRooms() {
         });
         return;
       }
-      
+
       // Create room matrix data for the selected day only
       const roomMatrixData: { [roomId: number]: { [timeSlot: string]: string } } = {};
-      
+
       // Initialize matrix for all rooms
       currentRooms.forEach(room => {
         roomMatrixData[room.id] = {};
@@ -1097,12 +1098,12 @@ export default function AvailableRooms() {
           roomMatrixData[room.id][timeSlot] = 'فارغ'; // فارغ في البداية
         });
       });
-      
+
       // Fill data from regular assignments for the selected day only
       let assignmentsProcessed = 0;
       currentRegularAssignments.forEach(assignment => {
         console.log('Processing assignment:', assignment);
-        
+
         // Only process assignments for the selected day
         if (assignment.day_of_week === dayId) {
           const timeSlot = `${assignment.start_time} - ${assignment.end_time}`;
@@ -1111,27 +1112,27 @@ export default function AvailableRooms() {
           console.log('Time slot without spaces:', timeSlotNoSpaces);
           console.log('Room ID:', assignment.room_id);
           console.log('Available lecture times:', lectureTimes);
-          
+
           if (roomMatrixData[assignment.room_id] && (lectureTimes.includes(timeSlot) || lectureTimes.includes(timeSlotNoSpaces))) {
             // Get professor, course, and group details
             const professor = currentProfessors.find(p => p.id === assignment.professor_id);
             const course = currentCourses.find(c => c.id === assignment.course_id);
             const group = currentGroups.find(g => g.id === assignment.group_id);
-            
+
             console.log('Found professor:', professor);
             console.log('Found course:', course);
             console.log('Found group:', group);
-            
+
             const professorName = professor?.name || `أستاذ ${assignment.professor_id}`;
             const courseName = course?.name || `مقياس ${assignment.course_id}`;
             const groupName = group?.name || `مجموعة ${assignment.group_id}`;
             const specialization = assignment.specialization || group?.specialization || 'تخصص غير محدد';
-            
+
             // Use the correct time slot format that exists in lectureTimes
             const matrixTimeSlot = lectureTimes.includes(timeSlot) ? timeSlot : (lectureTimes.find(lt => lt.replace(' - ', '-') === timeSlotNoSpaces) || timeSlot);
             roomMatrixData[assignment.room_id][matrixTimeSlot] = `${professorName}<br/>${courseName}<br/>${groupName}<br/>${specialization}`;
             assignmentsProcessed++;
-            
+
             console.log('Matrix time slot used:', matrixTimeSlot);
             console.log('Cell content set:', roomMatrixData[assignment.room_id][matrixTimeSlot]);
           } else {
@@ -1139,10 +1140,10 @@ export default function AvailableRooms() {
           }
         }
       });
-      
+
       console.log(`Processed ${assignmentsProcessed} assignments for ${selectedDayObj.name}`);
       console.log('Final matrix data:', roomMatrixData);
-      
+
       // Generate HTML content for the matrix
       let htmlContent = `
         <!DOCTYPE html>
@@ -1263,10 +1264,10 @@ export default function AvailableRooms() {
                 <tr>
                   <td class="room-header">قاعة ${room.name}</td>
                   ${lectureTimes.map(timeSlot => {
-                    const cellContent = roomMatrixData[room.id][timeSlot];
-                    const isEmpty = cellContent === 'فارغ';
-                    return `<td class="${isEmpty ? 'empty-cell' : 'occupied-cell'}">${cellContent}</td>`;
-                  }).join('')}
+        const cellContent = roomMatrixData[room.id][timeSlot];
+        const isEmpty = cellContent === 'فارغ';
+        return `<td class="${isEmpty ? 'empty-cell' : 'occupied-cell'}">${cellContent}</td>`;
+      }).join('')}
                 </tr>
               `).join('')}
             </tbody>
@@ -1283,13 +1284,13 @@ export default function AvailableRooms() {
         </body>
         </html>
       `;
-      
+
       // Create and open print window
       const printWindow = window.open('', '_blank');
       if (printWindow) {
         printWindow.document.write(htmlContent);
         printWindow.document.close();
-        
+
         // Wait for content to load then print
         printWindow.onload = () => {
           setTimeout(() => {
@@ -1297,7 +1298,7 @@ export default function AvailableRooms() {
           }, 500);
         };
       }
-      
+
     } catch (error) {
       console.error('خطأ في تصدير التقرير المصفوفي اليومي:', error);
       setSnackbar({
@@ -1321,78 +1322,78 @@ export default function AvailableRooms() {
 
     // Extraction des heures de début et de fin du créneau sélectionné
     const [selectedStartTime, selectedEndTime] = selectedTime.split(' - ');
-    
+
     // Conversion en minutes pour faciliter la comparaison
     const selectedStartMinutes = timeToMinutes(selectedStartTime);
     const selectedEndMinutes = timeToMinutes(selectedEndTime);
-    
+
     // Conversion du jour sélectionné en indice numérique
     const selectedDayIndex = parseInt(selectedDay, 10);
-    
+
     // Filtrage des salles déjà occupées par des cours réguliers
     const usedRoomIdsRegular: number[] = [];
-    
+
     // Vérification des assignations régulières
     const conflictingRegularAssignments = regularAssignments.filter(assignment => {
       // Vérifier si c'est le même jour de la semaine
       if (assignment.day_of_week !== selectedDayIndex) {
         return false;
       }
-      
+
       // ✅ تصفية حسب السنة الدراسية والفصل الحالي
       if (currentYear && currentSemester) {
-        if (assignment.academic_year !== currentYear.year_name || 
-            assignment.semester !== currentSemester.semester_name) {
+        if (assignment.academic_year !== currentYear.year_name ||
+          assignment.semester !== currentSemester.semester_name) {
           return false;
         }
       }
-      
+
       // Vérifier si les horaires se chevauchent
       const assignmentStartMinutes = timeToMinutes(assignment.start_time);
       const assignmentEndMinutes = timeToMinutes(assignment.end_time);
-      
+
       return (selectedStartMinutes < assignmentEndMinutes && selectedEndMinutes > assignmentStartMinutes);
     });
-    
+
     conflictingRegularAssignments.forEach(assignment => {
       usedRoomIdsRegular.push(assignment.room_id);
     });
-    
+
     // Si on a sélectionné une date spécifique, on vérifie aussi les séances exceptionnelles
     const usedRoomIdsExtra: number[] = [];
-    
+
     if (selectedDate) {
       const formattedSelectedDate = format(selectedDate, 'yyyy-MM-dd');
-      
+
       const conflictingExtraSessions = extraSessions.filter(session => {
         // Vérification de la date
         if (session.session_date !== formattedSelectedDate) {
           return false;
         }
-        
+
         // Vérification du chevauchement d'horaires
         const sessionStartMinutes = timeToMinutes(session.start_time);
         const sessionEndMinutes = timeToMinutes(session.end_time);
-        
+
         return (selectedStartMinutes < sessionEndMinutes && selectedEndMinutes > sessionStartMinutes);
       });
-      
+
       conflictingExtraSessions.forEach(session => {
         usedRoomIdsExtra.push(session.room_id);
       });
     }
-    
+
     // Combinaison des deux listes de salles occupées
     const usedRoomIds = [...new Set([...usedRoomIdsRegular, ...usedRoomIdsExtra])];
-    
+
     // Filtrage des salles disponibles selon les critères
     const available = rooms.filter(room => {
       const isNotUsed = !usedRoomIds.includes(room.id);
       const meetsCapacity = (minCapacity === 0 || (room.capacity || 0) >= minCapacity);
-      
+
       return isNotUsed && meetsCapacity;
     });
-    
+
     console.log(`${available.length} salles disponibles trouvées sur ${rooms.length} salles totales`);
     setAvailableRooms(available);
   };
@@ -1411,12 +1412,12 @@ export default function AvailableRooms() {
     // Conversion en minutes pour comparaison
     const newStartMinutes = timeToMinutes(startTime);
     const newEndMinutes = timeToMinutes(endTime);
-    
+
     // Convertir la date de session en jour de la semaine
     // ✅ استخدام parseISO لتجنب مشاكل timezone
     const sessionDateObj = parseISO(sessionDate);
     const dayOfWeek = sessionDateObj.getDay(); // 0 = Dimanche, 1 = Lundi, etc.
-    
+
     // Convertir au format utilisé dans le système
     // System: 0=السبت, 1=الأحد, 2=الاثنين, 3=الثلاثاء, 4=الأربعاء, 5=الخميس, 6=الجمعة
     // JS:     0=الأحد, 1=الاثنين, 2=الثلاثاء, 3=الأربعاء, 4=الخميس, 5=الجمعة, 6=السبت
@@ -1428,14 +1429,14 @@ export default function AvailableRooms() {
     } else { // Monday-Friday (1-5) في JS
       systemDayOfWeek = dayOfWeek + 1; // (2-6) في النظام
     }
-    
+
     const conflictMessages: string[] = [];
-    
+
     console.log(`🔍 checkForConflicts - regularAssignments.length: ${regularAssignments.length}`);
     console.log(`🔍 checkForConflicts - systemDayOfWeek: ${systemDayOfWeek}`);
-    
+
     // تسجيل تفاصيل التكليفات العادية في اليوم المحدد
-    const dayAssignments = regularAssignments.filter(assignment => 
+    const dayAssignments = regularAssignments.filter(assignment =>
       assignment.day_of_week === systemDayOfWeek
     );
     console.log(`🔍 التكليفات العادية في اليوم ${systemDayOfWeek}: ${dayAssignments.length}`);
@@ -1449,43 +1450,43 @@ export default function AvailableRooms() {
         console.log('');
       });
     }
-    
+
     // Vérification des conflits avec les assignations régulières
     const conflictingRegularAssignments = regularAssignments.filter(assignment => {
       // Vérifier si c'est le même jour de la semaine
       if (assignment.day_of_week !== systemDayOfWeek) {
         return false;
       }
-      
+
       // ✅ تصفية حسب السنة الدراسية والفصل الحالي
       if (currentYear && currentSemester) {
-        if (assignment.academic_year !== currentYear.year_name || 
-            assignment.semester !== currentSemester.semester_name) {
+        if (assignment.academic_year !== currentYear.year_name ||
+          assignment.semester !== currentSemester.semester_name) {
           return false;
         }
       }
-      
+
       // Vérifier le chevauchement d'horaires
       const assignmentStartMinutes = timeToMinutes(assignment.start_time);
       const assignmentEndMinutes = timeToMinutes(assignment.end_time);
-      
+
       return (newStartMinutes < assignmentEndMinutes && newEndMinutes > assignmentStartMinutes);
     });
-    
+
     console.log(`🔍 checkForConflicts - conflictingRegularAssignments.length: ${conflictingRegularAssignments.length}`);
-    
+
     // Analyser les conflits avec les assignations régulières
     conflictingRegularAssignments.forEach(assignment => {
       // ✅ منطق خاص للفروض المحروسة: السماح بنفس الأستاذ والفوج والقاعة
       if (sessionType === 'exam') {
-        if (assignment.professor_id === professorId && 
-            assignment.group_id === groupId && 
-            roomId && assignment.room_id === roomId) {
+        if (assignment.professor_id === professorId &&
+          assignment.group_id === groupId &&
+          roomId && assignment.room_id === roomId) {
           // إمتحان الأعمال الموجهة لنفس الأستاذ والفوج والقاعة = لا تعارض
           return;
         }
       }
-      
+
       if (assignment.professor_id === professorId) {
         // ✅ السماح لنفس الأستاذ بتدريس أكثر من فوج في نفس القاعة
         if (roomId && assignment.room_id === roomId) {
@@ -1496,33 +1497,33 @@ export default function AvailableRooms() {
         const groupName = groups.find(g => g.id === assignment.group_id)?.name || 'مجموعة غير معروفة';
         conflictMessages.push(`الأستاذ ${professorName} يدرس بالفعل المجموعة ${groupName} في هذا التوقيت (جدولة منتظمة)`);
       }
-      
+
       if (assignment.group_id === groupId) {
         const groupName = groups.find(g => g.id === groupId)?.name || 'مجموعة غير معروفة';
         const professorName = professors.find(p => p.id === assignment.professor_id)?.name || 'أستاذ غير معروف';
         conflictMessages.push(`المجموعة ${groupName} لديها حصة بالفعل مع الأستاذ ${professorName} في هذا التوقيت (جدولة منتظمة)`);
       }
     });
-    
+
     // Vérification des conflits avec les séances supplémentaires existantes
     const conflictingSessions = extraSessions.filter(session => {
       // Ne pas comparer avec la session en cours de modification
       if (currentSessionId && session.id === currentSessionId) {
         return false;
       }
-      
+
       // Vérification de la date
       if (session.session_date !== sessionDate) {
         return false;
       }
-      
+
       // Vérification du chevauchement d'horaires
       const sessionStartMinutes = timeToMinutes(session.start_time);
       const sessionEndMinutes = timeToMinutes(session.end_time);
-      
+
       return newStartMinutes < sessionEndMinutes && newEndMinutes > sessionStartMinutes;
     });
-    
+
     // Analyser les conflits avec les séances supplémentaires
     conflictingSessions.forEach(session => {
       if (session.professor_id === professorId) {
@@ -1535,21 +1536,21 @@ export default function AvailableRooms() {
         const groupName = groups.find(g => g.id === session.group_id)?.name || 'مجموعة غير معروفة';
         conflictMessages.push(`الأستاذ ${professorName} لديه حصة إضافية بالفعل مع المجموعة ${groupName} في هذا التوقيت`);
       }
-      
+
       if (session.group_id === groupId) {
         const groupName = groups.find(g => g.id === groupId)?.name || 'مجموعة غير معروفة';
         const professorName = professors.find(p => p.id === session.professor_id)?.name || 'أستاذ غير معروف';
         conflictMessages.push(`المجموعة ${groupName} لديها حصة إضافية بالفعل مع الأستاذ ${professorName} في هذا التوقيت`);
       }
     });
-    
+
     if (conflictMessages.length > 0) {
-      return { 
-        hasConflict: true, 
+      return {
+        hasConflict: true,
         conflictMessage: conflictMessages.join('\n')
       };
     }
-    
+
     return { hasConflict: false, conflictMessage: '' };
   };
 
@@ -1565,41 +1566,41 @@ export default function AvailableRooms() {
     // Conversion en minutes pour comparaison
     const newStartMinutes = timeToMinutes(startTime);
     const newEndMinutes = timeToMinutes(endTime);
-    
+
     // Vérification des conflits avec les séances supplémentaires existantes
     const conflictingSessions = extraSessions.filter(session => {
       // Ne pas comparer avec la session en cours de modification
       if (currentSessionId && session.id === currentSessionId) {
         return false;
       }
-      
+
       // Vérification de la date et de la salle
       if (session.session_date !== sessionDate || session.room_id !== roomId) {
         return false;
       }
-      
+
       // ✅ السماح لنفس الأستاذ باستخدام نفس القاعة في نفس الوقت
       if (professorId && session.professor_id === professorId) {
         return false; // لا تعارض
       }
-      
+
       // Vérification du chevauchement d'horaires
       const sessionStartMinutes = timeToMinutes(session.start_time);
       const sessionEndMinutes = timeToMinutes(session.end_time);
-      
+
       return newStartMinutes < sessionEndMinutes && newEndMinutes > sessionStartMinutes;
     });
-    
+
     if (conflictingSessions.length > 0) {
       return false;
     }
-    
+
     // Vérification des conflits avec les assignations régulières
     // Convertir la date de session en jour de la semaine
     // ✅ استخدام parseISO لتجنب مشاكل timezone
     const sessionDateObj = parseISO(sessionDate);
     const dayOfWeek = sessionDateObj.getDay(); // 0 = Dimanche, 1 = Lundi, etc.
-    
+
     // Convertir au format utilisé dans le système
     // System: 0=السبت, 1=الأحد, 2=الاثنين, 3=الثلاثاء, 4=الأربعاء, 5=الخميس, 6=الجمعة
     // JS:     0=الأحد, 1=الاثنين, 2=الثلاثاء, 3=الأربعاء, 4=الخميس, 5=الجمعة, 6=السبت
@@ -1611,17 +1612,17 @@ export default function AvailableRooms() {
     } else { // Monday-Friday (1-5) في JS
       systemDayOfWeek = dayOfWeek + 1; // (2-6) في النظام
     }
-    
+
     console.log(`📅 Date: ${sessionDate}, JS dayOfWeek: ${dayOfWeek}, System dayOfWeek: ${systemDayOfWeek}`);
     console.log(`📅 التاريخ الكامل: ${sessionDateObj.toString()}`);
     console.log(`📅 اليوم بالعربي: ${days.find(d => d.id === systemDayOfWeek)?.name || 'غير معروف'}`);
-    
+
     console.log(`🔍 isRoomAvailable - regularAssignments.length: ${regularAssignments.length}`);
     console.log(`🔍 isRoomAvailable - systemDayOfWeek: ${systemDayOfWeek}, roomId: ${roomId}`);
     console.log(`🔍 currentYear: ${currentYear?.year_name}, currentSemester: ${currentSemester?.semester_name}`);
-    
+
     // تسجيل تفاصيل التكليفات العادية للقاعة المحددة في اليوم المحدد
-    const roomDayAssignments = regularAssignments.filter(assignment => 
+    const roomDayAssignments = regularAssignments.filter(assignment =>
       assignment.room_id === roomId && assignment.day_of_week === systemDayOfWeek
     );
     console.log(`🔍 التكليفات العادية للقاعة ${roomId} في اليوم ${systemDayOfWeek}: ${roomDayAssignments.length}`);
@@ -1634,40 +1635,40 @@ export default function AvailableRooms() {
         console.log('');
       });
     }
-    
+
     const conflictingRegularAssignments = regularAssignments.filter(assignment => {
       // Vérifier si c'est le même jour de la semaine et la même salle
       if (assignment.day_of_week !== systemDayOfWeek || assignment.room_id !== roomId) {
         return false;
       }
-      
+
       // ✅ السماح لنفس الأستاذ باستخدام نفس القاعة في نفس الوقت
       if (professorId && assignment.professor_id === professorId) {
         return false; // لا تعارض
       }
-      
+
       // ✅ تصفية حسب السنة الدراسية والفصل الحالي
       if (currentYear && currentSemester) {
-        if (assignment.academic_year !== currentYear.year_name || 
-            assignment.semester !== currentSemester.semester_name) {
+        if (assignment.academic_year !== currentYear.year_name ||
+          assignment.semester !== currentSemester.semester_name) {
           return false;
         }
       }
-      
+
       // Vérifier le chevauchement d'horaires
       const assignmentStartMinutes = timeToMinutes(assignment.start_time);
       const assignmentEndMinutes = timeToMinutes(assignment.end_time);
-      
+
       return newStartMinutes < assignmentEndMinutes && newEndMinutes > assignmentStartMinutes;
     });
-    
+
     console.log(`🔍 isRoomAvailable - conflictingRegularAssignments.length: ${conflictingRegularAssignments.length}`);
-    
+
     if (conflictingRegularAssignments.length > 0) {
       console.log('Conflit détecté avec assignation régulière:', conflictingRegularAssignments);
       return false;
     }
-    
+
     return true;
   };
 
@@ -1676,15 +1677,15 @@ export default function AvailableRooms() {
     console.log('🔍 checkRealTimeAvailability - regularAssignments.length:', regularAssignments.length);
     console.log('🔍 checkRealTimeAvailability - currentYear:', currentYear);
     console.log('🔍 checkRealTimeAvailability - currentSemester:', currentSemester);
-    
+
     if (!selectedRoom || !sessionDate || (!startTime && !customStartTime) || (!endTime && !customEndTime)) {
       setRoomAvailabilityStatus({});
       setConflictWarnings([]);
       return;
     }
-    
+
     // تسجيل تفاصيل التكليفات العادية للقاعة المحددة
-    const roomAssignments = regularAssignments.filter(assignment => 
+    const roomAssignments = regularAssignments.filter(assignment =>
       assignment.room_id === selectedRoom
     );
     console.log(`🔍 التكليفات العادية للقاعة ${selectedRoom}: ${roomAssignments.length}`);
@@ -1702,7 +1703,7 @@ export default function AvailableRooms() {
     const formattedDate = format(sessionDate, 'yyyy-MM-dd');
     const actualStartTime = useCustomTime ? customStartTime : startTime;
     const actualEndTime = useCustomTime ? customEndTime : endTime;
-    
+
     if (!actualStartTime || !actualEndTime) return;
 
     // Check room availability
@@ -1721,7 +1722,7 @@ export default function AvailableRooms() {
 
     // Check for conflicts
     const warnings: string[] = [];
-    
+
     if (selectedProfessor && selectedGroup) {
       const { hasConflict, conflictMessage } = checkForConflicts(
         selectedProfessor as number,
@@ -1733,7 +1734,7 @@ export default function AvailableRooms() {
         selectedRoom as number,
         sessionType
       );
-      
+
       if (hasConflict) {
         warnings.push(conflictMessage);
       }
@@ -1775,6 +1776,7 @@ export default function AvailableRooms() {
     setUseCustomTime(false);
     setCustomStartTime('');
     setCustomEndTime('');
+    setIgnoreConflicts(false);
     setConflictWarnings([]);
     setRoomAvailabilityStatus({});
     setProfessorSearchTerm('');
@@ -1816,45 +1818,45 @@ export default function AvailableRooms() {
   // Fonction pour valider le formulaire
   const validateForm = (): boolean => {
     const errors: FormErrors = {};
-    
+
     if (!selectedProfessor) {
       errors.professor = 'Veuillez sélectionner un professeur';
     }
-    
+
     if (!selectedCourse) {
       errors.course = 'Veuillez sélectionner un cours';
     }
-    
+
     if (!selectedGroup) {
       errors.group = 'Veuillez sélectionner un groupe';
     }
-    
+
     if (!selectedRoom) {
       errors.room = 'Veuillez sélectionner une salle';
     }
-    
+
     if (!sessionDate) {
       errors.date = 'Veuillez sélectionner une date';
     }
-    
+
     if (!startTime) {
       errors.startTime = 'Veuillez sélectionner une heure de début';
     }
-    
+
     if (!endTime) {
       errors.endTime = 'Veuillez sélectionner une heure de fin';
     }
-    
+
     // Vérification que l'heure de début est avant l'heure de fin
     if (startTime && endTime) {
       const startMinutes = timeToMinutes(startTime);
       const endMinutes = timeToMinutes(endTime);
-      
+
       if (startMinutes >= endMinutes) {
         errors.time = "L'heure de fin doit être postérieure à l'heure de début";
       }
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -1865,10 +1867,10 @@ export default function AvailableRooms() {
     if (!validateForm()) {
       return;
     }
-    
+
     // Formatage de la date
     const formattedDate = format(sessionDate!, 'yyyy-MM-dd');
-    
+
     // Vérification des conflits
     const { hasConflict, conflictMessage } = checkForConflicts(
       selectedProfessor as number,
@@ -1880,8 +1882,8 @@ export default function AvailableRooms() {
       selectedRoom as number,
       sessionType
     );
-    
-    if (hasConflict) {
+
+    if (hasConflict && !ignoreConflicts) {
       setSnackbar({
         open: true,
         message: conflictMessage,
@@ -1889,7 +1891,7 @@ export default function AvailableRooms() {
       });
       return;
     }
-    
+
     // Vérification de la disponibilité de la salle
     if (!isRoomAvailable(
       selectedRoom as number,
@@ -1898,7 +1900,7 @@ export default function AvailableRooms() {
       useCustomTime ? customEndTime : endTime,
       currentSession?.id,
       selectedProfessor as number
-    )) {
+    ) && !ignoreConflicts) {
       setSnackbar({
         open: true,
         message: "La salle sélectionnée n'est pas disponible à cette date et à cet horaire",
@@ -1906,7 +1908,7 @@ export default function AvailableRooms() {
       });
       return;
     }
-    
+
     try {
       // Préparation des données
       const sessionData: ExtraSession = {
@@ -1921,13 +1923,13 @@ export default function AvailableRooms() {
         session_type: sessionType,
         description: description
       };
-      
+
       // Ajout ou mise à jour dans la base de données
       if (editMode && currentSession?.id) {
         await window.db.updateExtraSession(sessionData);
-        
+
         // Mise à jour dans l'état local
-        setExtraSessions(prev => 
+        setExtraSessions(prev =>
           prev.map(s => s.id === currentSession.id ? {
             id: s.id,
             room_id: s.room_id,
@@ -1945,7 +1947,7 @@ export default function AvailableRooms() {
             room_name: rooms.find(r => r.id === selectedRoom)?.name
           } : s)
         );
-        
+
         setSnackbar({
           open: true,
           message: "La séance a été mise à jour avec succès",
@@ -1965,9 +1967,9 @@ export default function AvailableRooms() {
           session_type: 'extra' | 'makeup';
           description?: string;
         }
-        
+
         const newSession = await window.db.createExtraSession(sessionData) as unknown as ExtraSessionResponse;
-        
+
         // Ajout dans l'état local avec les noms complets
         setExtraSessions(prev => [...prev, {
           id: newSession.id,
@@ -1985,14 +1987,14 @@ export default function AvailableRooms() {
           group_name: groups.find(g => g.id === selectedGroup)?.name,
           room_name: rooms.find(r => r.id === selectedRoom)?.name
         }]);
-        
+
         setSnackbar({
           open: true,
           message: "La séance a été ajoutée avec succès",
           severity: 'success'
         });
       }
-      
+
       // Fermeture de la boîte de dialogue
       handleCloseDialog();
     } catch (error) {
@@ -2010,10 +2012,10 @@ export default function AvailableRooms() {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette séance ?')) {
       try {
         await window.db.deleteExtraSession(sessionId);
-        
+
         // Mise à jour de l'état local
         setExtraSessions(prev => prev.filter(s => s.id !== sessionId));
-        
+
         setSnackbar({
           open: true,
           message: "La séance a été supprimée avec succès",
@@ -2040,7 +2042,7 @@ export default function AvailableRooms() {
     try {
       console.log('🔍 fetchRegularAssignments - currentYear:', currentYear);
       console.log('🔍 fetchRegularAssignments - currentSemester:', currentSemester);
-      
+
       if (currentYear && currentSemester) {
         console.log(`🔍 جلب التكليفات العادية للسنة: ${currentYear.year_name}, الفصل: ${currentSemester.semester_name}`);
         const assignments = await window.db.getAssignments(
@@ -2050,9 +2052,9 @@ export default function AvailableRooms() {
         );
         setRegularAssignments(assignments);
         console.log(`✅ تم جلب ${assignments.length} تكليف عادي`);
-        
+
         // تسجيل تفاصيل التكليفات العادية للقاعة 10 في الأحد
-        const room10SundayAssignments = assignments.filter(assignment => 
+        const room10SundayAssignments = assignments.filter(assignment =>
           assignment.room_id === 11 && assignment.day_of_week === 1
         );
         console.log(`🔍 التكليفات العادية للقاعة 10 في الأحد: ${room10SundayAssignments.length}`);
@@ -2085,7 +2087,7 @@ export default function AvailableRooms() {
     setSelectedProfessor(id);
     setProfessorSearchTerm('');
     setIsProfessorDropdownOpen(false);
-    
+
     // إعادة تعيين الحقول الأخرى عند تغيير الأستاذ
     setSelectedCourse('');
     setCourseSearchTerm('');
@@ -2121,7 +2123,7 @@ export default function AvailableRooms() {
   // تصفية الأساتذة والمقررات حسب البحث
   useEffect(() => {
     if (professorSearchTerm) {
-      const filtered = professors.filter(prof => 
+      const filtered = professors.filter(prof =>
         prof.name.toLowerCase().includes(professorSearchTerm.toLowerCase())
       );
       setFilteredProfessors(filtered);
@@ -2134,7 +2136,7 @@ export default function AvailableRooms() {
     if (courseSearchTerm) {
       // إذا تم اختيار أستاذ، استخدم مقرراته فقط، وإلا استخدم جميع المقررات
       const coursesToFilter = selectedProfessor ? professorCourses : courses;
-      const filtered = coursesToFilter.filter(course => 
+      const filtered = coursesToFilter.filter(course =>
         course.name.toLowerCase().includes(courseSearchTerm.toLowerCase())
       );
       setFilteredCourses(filtered);
@@ -2177,7 +2179,7 @@ export default function AvailableRooms() {
 
     // استخراج التخصصات الفريدة من المجموعات
     const uniqueSpecializations = new Map<number, string>();
-    
+
     profGroups.forEach(group => {
       if (group.specialization) {
         const groupSpec = specializations.find(spec => spec.name === group.specialization);
@@ -2263,8 +2265,8 @@ export default function AvailableRooms() {
 
       {/* Affichage des erreurs */}
       {error && (
-        <Alert 
-          severity="error" 
+        <Alert
+          severity="error"
           onClose={() => setError(null)}
           sx={{ mb: 3 }}
         >
@@ -2301,7 +2303,7 @@ export default function AvailableRooms() {
               </Select>
             </FormControl>
           </Grid>
-          
+
           <Grid item xs={12} md={3}>
             <FormControl fullWidth sx={{ mb: 2 }}>
               <InputLabel id="time-select-label">التوقيت</InputLabel>
@@ -2321,7 +2323,7 @@ export default function AvailableRooms() {
               </Select>
             </FormControl>
           </Grid>
-          
+
           <Grid item xs={12} md={3}>
             <FormControl fullWidth>
               <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={arSA}>
@@ -2334,7 +2336,7 @@ export default function AvailableRooms() {
               <FormHelperText>اختياري: للتحقق من توفر القاعات في تاريخ محدد</FormHelperText>
             </FormControl>
           </Grid>
-          
+
           <Grid item xs={12} md={3}>
             <TextField
               fullWidth
@@ -2346,29 +2348,29 @@ export default function AvailableRooms() {
               sx={{ mb: 2 }}
             />
           </Grid>
-          
+
           <Grid item xs={12}>
-            <Button 
-              variant="contained" 
-              color="primary" 
+            <Button
+              variant="contained"
+              color="primary"
               onClick={findAvailableRooms}
               startIcon={<CalendarTodayIcon />}
               sx={{ mb: 4 }}
             >
               البحث عن القاعات المتاحة
             </Button>
-            <Button 
-              variant="contained" 
-              color="primary" 
+            <Button
+              variant="contained"
+              color="primary"
               onClick={exportRoomAvailabilityMatrix}
               startIcon={<PrintIcon />}
               sx={{ mb: 4, ml: 2 }}
             >
               تصدير مصفوفة توفر القاعات
             </Button>
-            <Button 
-              variant="contained" 
-              color="primary" 
+            <Button
+              variant="contained"
+              color="primary"
               onClick={exportDailyRoomMatrix}
               startIcon={<PrintIcon />}
               sx={{ mb: 4, ml: 2 }}
@@ -2399,8 +2401,8 @@ export default function AvailableRooms() {
                     <TableCell align="right">{room.floor !== undefined ? room.floor : 'غير محدد'}</TableCell>
                     <TableCell align="right">{room.capacity !== undefined ? room.capacity : 'غير محدد'}</TableCell>
                     <TableCell align="center">
-                      <Button 
-                        variant="outlined" 
+                      <Button
+                        variant="outlined"
                         size="small"
                         onClick={() => {
                           handleOpenCreateDialog();
@@ -2436,9 +2438,9 @@ export default function AvailableRooms() {
       <TabPanel value={tabValue} index={1}>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <Button 
-              variant="contained" 
-              color="primary" 
+            <Button
+              variant="contained"
+              color="primary"
               onClick={handleOpenCreateDialog}
               startIcon={<AddIcon />}
               sx={{ mb: 3 }}
@@ -2544,7 +2546,7 @@ export default function AvailableRooms() {
                   if (sessionType && session.session_type !== sessionType) {
                     return false;
                   }
-                  
+
                   return true;
                 })
                 .map((session) => (
@@ -2559,22 +2561,22 @@ export default function AvailableRooms() {
                     <TableCell align="right">{session.group_name}</TableCell>
                     <TableCell align="right">{session.room_name}</TableCell>
                     <TableCell align="center">
-                      <IconButton 
-                        aria-label="edit" 
+                      <IconButton
+                        aria-label="edit"
                         color="primary"
                         onClick={() => handleOpenEditDialog(session)}
                       >
                         <EditIcon />
                       </IconButton>
-                      <IconButton 
-                        aria-label="delete" 
+                      <IconButton
+                        aria-label="delete"
                         color="error"
                         onClick={() => handleDeleteSession(session.id!)}
                       >
                         <DeleteIcon />
                       </IconButton>
-                      <IconButton 
-                        aria-label="print" 
+                      <IconButton
+                        aria-label="print"
                         color="primary"
                         onClick={() => printIndividualSession(session)}
                       >
@@ -2593,40 +2595,40 @@ export default function AvailableRooms() {
           </Alert>
         )}
         <Box sx={{ mt: 3, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-          <Button 
-            variant="contained" 
-            color="primary" 
+          <Button
+            variant="contained"
+            color="primary"
             onClick={() => printSessionsList('all')}
             startIcon={<PrintIcon />}
           >
             طباعة جميع الحصص
           </Button>
-          <Button 
-            variant="contained" 
-            color="primary" 
+          <Button
+            variant="contained"
+            color="primary"
             onClick={() => printSessionsList('extra')}
             startIcon={<PrintIcon />}
           >
             طباعة الحصص الإضافية
           </Button>
-          <Button 
-            variant="contained" 
-            color="primary" 
+          <Button
+            variant="contained"
+            color="primary"
             onClick={() => printSessionsList('makeup')}
             startIcon={<PrintIcon />}
           >
             طباعة حصص التعويض
           </Button>
-          <Button 
-            variant="outlined" 
-            color="primary" 
+          <Button
+            variant="outlined"
+            color="primary"
             onClick={() => setDepartmentHeadDialogOpen(true)}
             startIcon={<EditIcon />}
           >
             تعديل اسم رئيس القسم
           </Button>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             color="success"
             onClick={() => setAnnouncementDialogOpen(true)}
             startIcon={<PrintIcon />}
@@ -2682,7 +2684,7 @@ export default function AvailableRooms() {
                 {formErrors.professor && <FormHelperText>{formErrors.professor}</FormHelperText>}
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <FormControl fullWidth error={!!formErrors.course} disabled={!selectedProfessor}>
                 <InputLabel id="course-select-label">المقرر</InputLabel>
@@ -2728,7 +2730,7 @@ export default function AvailableRooms() {
                 {formErrors.course && <FormHelperText>{formErrors.course}</FormHelperText>}
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12} md={4}>
               <FormControl fullWidth disabled={!selectedProfessor}>
                 <InputLabel id="department-select-label">القسم</InputLabel>
@@ -2751,7 +2753,7 @@ export default function AvailableRooms() {
                 )}
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12} md={4}>
               <FormControl fullWidth disabled={!selectedDepartment || !selectedProfessor}>
                 <InputLabel id="specialization-select-label">التخصص</InputLabel>
@@ -2774,7 +2776,7 @@ export default function AvailableRooms() {
                 )}
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12} md={4}>
               <FormControl fullWidth error={!!formErrors.group} disabled={!selectedSpecialization || !selectedProfessor}>
                 <InputLabel id="group-select-label">المجموعة</InputLabel>
@@ -2798,7 +2800,7 @@ export default function AvailableRooms() {
                 {formErrors.group && <FormHelperText>{formErrors.group}</FormHelperText>}
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <FormControl fullWidth error={!!formErrors.room}>
                 <InputLabel id="room-select-label">القاعة</InputLabel>
@@ -2819,7 +2821,7 @@ export default function AvailableRooms() {
                 {formErrors.room && <FormHelperText>{formErrors.room}</FormHelperText>}
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <FormControl fullWidth error={!!formErrors.date}>
                 <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={arSA}>
@@ -2832,7 +2834,7 @@ export default function AvailableRooms() {
                 {formErrors.date && <FormHelperText>{formErrors.date}</FormHelperText>}
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel id="session-type-select-label">نوع الحصة</InputLabel>
@@ -2848,7 +2850,7 @@ export default function AvailableRooms() {
                 </Select>
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel id="start-time-select-label">وقت البداية</InputLabel>
@@ -2881,7 +2883,7 @@ export default function AvailableRooms() {
               )}
               {formErrors.startTime && <FormHelperText>{formErrors.startTime}</FormHelperText>}
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel id="end-time-select-label">وقت النهاية</InputLabel>
@@ -2917,7 +2919,7 @@ export default function AvailableRooms() {
                 <FormHelperText error>{formErrors.time}</FormHelperText>
               )}
             </Grid>
-            
+
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -2928,7 +2930,24 @@ export default function AvailableRooms() {
                 onChange={(e) => setDescription(e.target.value)}
               />
             </Grid>
-            
+
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={ignoreConflicts}
+                    onChange={(e) => setIgnoreConflicts(e.target.checked)}
+                    color="warning"
+                  />
+                }
+                label={
+                  <Typography variant="body2" color="warning.main" fontWeight="bold">
+                    تجاهل التعارضات (فرض الإضافة) - استخدم هذا الخيار بحذر!
+                  </Typography>
+                }
+              />
+            </Grid>
+
             {/* Real-time conflict warnings */}
             {conflictWarnings.length > 0 && (
               <Grid item xs={12}>
@@ -2944,7 +2963,7 @@ export default function AvailableRooms() {
                 </Alert>
               </Grid>
             )}
-            
+
             {/* Room availability status */}
             {selectedRoom && sessionDate && (startTime || customStartTime) && (endTime || customEndTime) && (
               <Grid item xs={12}>
@@ -2970,8 +2989,8 @@ export default function AvailableRooms() {
       </Dialog>
 
       {/* حوار اختيار نطاق التواريخ للطباعة */}
-      <Dialog 
-        open={printDateRangeDialogOpen} 
+      <Dialog
+        open={printDateRangeDialogOpen}
         onClose={() => setPrintDateRangeDialogOpen(false)}
         maxWidth="sm"
         fullWidth
@@ -3012,7 +3031,7 @@ export default function AvailableRooms() {
           <Button onClick={() => setPrintDateRangeDialogOpen(false)}>
             إلغاء
           </Button>
-          <Button 
+          <Button
             onClick={() => {
               // طباعة عادية (window.print)
               let filteredSessions = extraSessions;
@@ -3026,43 +3045,43 @@ export default function AvailableRooms() {
               if (printStartDate && printEndDate) {
                 const startDateStr = format(printStartDate, 'yyyy-MM-dd');
                 const endDateStr = format(printEndDate, 'yyyy-MM-dd');
-                
+
                 filteredSessions = filteredSessions.filter(session => {
                   return session.session_date >= startDateStr && session.session_date <= endDateStr;
                 });
               }
 
               const content = generateSessionsListContent(filteredSessions, printSessionType);
-              const title = printSessionType === 'extra' 
-                ? 'قائمة الحصص الإضافية' 
-                : printSessionType === 'makeup' 
+              const title = printSessionType === 'extra'
+                ? 'قائمة الحصص الإضافية'
+                : printSessionType === 'makeup'
                   ? 'قائمة حصص التعويض'
                   : printSessionType === 'exam'
                     ? 'قائمة الفروض المحروسة'
                     : 'قائمة الحصص الإضافية وحصص التعويض والفروض المحروسة';
-              
-              const dateRangeText = (printStartDate && printEndDate) 
+
+              const dateRangeText = (printStartDate && printEndDate)
                 ? ` (من ${format(printStartDate, 'dd/MM/yyyy')} إلى ${format(printEndDate, 'dd/MM/yyyy')})`
                 : '';
-              
+
               printContent(content, {
                 title: title + dateRangeText,
                 orientation: 'landscape',
                 fontSize: '12pt',
                 asPDF: false // ❌ طباعة عادية
               });
-              
+
               setPrintDateRangeDialogOpen(false);
               setPrintStartDate(null);
               setPrintEndDate(null);
-            }} 
+            }}
             variant="outlined"
             color="primary"
           >
             طباعة عادية
           </Button>
-          <Button 
-            onClick={executePrintSessionsList} 
+          <Button
+            onClick={executePrintSessionsList}
             variant="contained"
             color="success"
             startIcon={<PrintIcon />}
@@ -3100,10 +3119,10 @@ export default function AvailableRooms() {
       </Dialog>
 
       {/* Dialog إعلان للطلبة */}
-      <Dialog 
-        open={announcementDialogOpen} 
-        onClose={() => setAnnouncementDialogOpen(false)} 
-        maxWidth="md" 
+      <Dialog
+        open={announcementDialogOpen}
+        onClose={() => setAnnouncementDialogOpen(false)}
+        maxWidth="md"
         fullWidth
       >
         <DialogTitle>إعداد إعلان للطلبة 📝</DialogTitle>
@@ -3244,7 +3263,7 @@ export default function AvailableRooms() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setAnnouncementDialogOpen(false)}>إلغاء</Button>
-          <Button 
+          <Button
             onClick={() => {
               setAnnouncementDepartment('');
               setAnnouncementSpecialization('');
@@ -3257,9 +3276,9 @@ export default function AvailableRooms() {
           >
             مسح الفلاتر
           </Button>
-          <Button 
-            variant="contained" 
-            color="primary" 
+          <Button
+            variant="contained"
+            color="primary"
             onClick={printStudentAnnouncement}
             startIcon={<PrintIcon />}
           >
@@ -3269,14 +3288,14 @@ export default function AvailableRooms() {
       </Dialog>
 
       {/* Notification Snackbar */}
-      <Snackbar 
-        open={snackbar.open} 
+      <Snackbar
+        open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
       >
-        <Alert 
-          onClose={handleCloseSnackbar} 
+        <Alert
+          onClose={handleCloseSnackbar}
           severity={snackbar.severity}
           variant="filled"
         >

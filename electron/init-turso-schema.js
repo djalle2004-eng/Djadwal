@@ -203,6 +203,18 @@ async function initTursoSchema() {
     `);
     console.log('✅ Created audit_log table');
 
+    // Create print_settings table for global print configuration
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS print_settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        setting_key TEXT UNIQUE NOT NULL,
+        setting_value TEXT,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_by INTEGER REFERENCES users(id)
+      )
+    `);
+    console.log('✅ Created print_settings table');
+
     // Create indexes
     console.log('📑 Creating indexes...');
 

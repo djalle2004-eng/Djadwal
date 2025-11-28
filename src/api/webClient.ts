@@ -253,15 +253,43 @@ export const webDataUtils = {
         a.click();
         document.body.removeChild(a);
     },
-    getPrintSettings: () => {
-        const settings = localStorage.getItem('printSettings');
-        return Promise.resolve(settings ? JSON.parse(settings) : {});
+    getPrintSettings: async () => {
+        try {
+            return await fetchApi('/print-settings', { method: 'GET' });
+        } catch (error) {
+            console.error('Error fetching print settings from server:', error);
+            return {
+                universityLogoUrl: '',
+                facultyLogoUrl: '',
+                universityName: 'جامعة الشهيد حمه لخضر - الوادي',
+                facultyName: 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'
+            };
+        }
     },
-    savePrintSettings: (settings) => {
-        localStorage.setItem('printSettings', JSON.stringify(settings));
-        return Promise.resolve(true);
+    savePrintSettings: async (settings: any) => {
+        return await fetchApi('/print-settings', {
+            method: 'PUT',
+            body: JSON.stringify(settings)
+        });
+    },
+    uploadLogo: async (file: File, type: 'university' | 'faculty') => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', type);
+
+        const response = await fetch(`${API_URL}/upload-logo`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ error: 'Upload failed' }));
+            throw new Error(error.error || 'Upload failed');
+        }
+
+        return await response.json();
     },
     getAuditLogs: () => {
-        return fetchApi('/api/audit-logs', { method: 'GET' });
+        return fetchApi('/audit-logs', { method: 'GET' });
     }
 };

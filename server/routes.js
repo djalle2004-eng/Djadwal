@@ -652,4 +652,133 @@ router.get('/time-slots', async (req, res) => {
     }
 });
 
+// --- Logo Upload & Print Settings ---
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configure multer for logo uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join(__dirname, 'uploads', 'logos');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const timestamp = Date.now();
+        const ext = path.extname(file.originalname);
+        const type = req.body.type || 'logo';
+        cb(null, `${type}_${timestamp}${ext}`);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|svg|ico/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+
+        if (extname && mimetype) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files (JPEG, PNG, SVG, ICO) are allowed'));
+        }
+    }
+});
+
+// Upload logo endpoint
+router.post('/upload-logo', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        const { type } = req.body; // 'university' or 'faculty'
+        const logoUrl = `/uploads/logos/${req.file.filename}`;
+
+        // Save to database
+        const settingKey = type === 'university' ? 'university_logo_url' : 'faculty_logo_url';
+
+        await executeQuery(
+            `INSERT INTO print_settings (setting_key, setting_value, updated_at) 
+             VALUES ($1, $2, CURRENT_TIMESTAMP) 
+             ON CONFLICT(setting_key) 
+             DO UPDATE SET setting_value = $2, updated_at = CURRENT_TIMESTAMP`,
+            [settingKey, logoUrl]
+        );
+
+        res.json({ url: logoUrl, message: 'Logo uploaded successfully' });
+    } catch (error) {
+        console.error('Error uploading logo:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get print settings
+router.get('/print-settings', async (req, res) => {
+    try {
+        const settings = await executeQuery('SELECT setting_key, setting_value FROM print_settings');
+
+        const result = {
+            universityLogoUrl: '',
+            facultyLogoUrl: '',
+            universityName: 'جامعة الشهيد حمه لخضر - الوادي',
+            facultyName: 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'
+        };
+
+        settings.forEach(setting => {
+            if (setting.setting_key === 'university_logo_url') {
+                result.universityLogoUrl = setting.setting_value || '';
+            } else if (setting.setting_key === 'faculty_logo_url') {
+                result.facultyLogoUrl = setting.setting_value || '';
+            } else if (setting.setting_key === 'university_name') {
+                result.universityName = setting.setting_value || result.universityName;
+            } else if (setting.setting_key === 'faculty_name') {
+                result.facultyName = setting.setting_value || result.facultyName;
+            }
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error fetching print settings:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update print settings (names only, logos via upload)
+router.put('/print-settings', async (req, res) => {
+    try {
+        const { universityName, facultyName } = req.body;
+
+        if (universityName) {
+            await executeQuery(
+                `INSERT INTO print_settings (setting_key, setting_value, updated_at) 
+                 VALUES ($1, $2, CURRENT_TIMESTAMP) 
+                 ON CONFLICT(setting_key) 
+                 DO UPDATE SET setting_value = $2, updated_at = CURRENT_TIMESTAMP`,
+                ['university_name', universityName]
+            );
+        }
+
+        if (facultyName) {
+            await executeQuery(
+                `INSERT INTO print_settings (setting_key, setting_value, updated_at) 
+                 VALUES ($1, $2, CURRENT_TIMESTAMP) 
+                 ON CONFLICT(setting_key) 
+                 DO UPDATE SET setting_value = $2, updated_at = CURRENT_TIMESTAMP`,
+                ['faculty_name', facultyName]
+            );
+        }
+
+        res.json({ success: true, message: 'Print settings updated successfully' });
+    } catch (error) {
+        console.error('Error updating print settings:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;
