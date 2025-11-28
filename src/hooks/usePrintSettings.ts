@@ -10,8 +10,8 @@ import type { PrintSettings, PrintOptions } from '../types/shared';
  * القيم الافتراضية لإعدادات الطباعة
  */
 const DEFAULT_PRINT_SETTINGS: PrintSettings = {
-  universityName: 'الجمهورية الجزائرية الديمقراطية الشعبية',
-  facultyName: 'جـامـعـة عمار ثليجي الأغواط',
+  universityName: 'جامعة الشهيد حمه لخضر - الوادي',
+  facultyName: 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير',
   departmentName: '',
   universityLogoUrl: '',
   facultyLogoUrl: '',
@@ -63,17 +63,17 @@ export function usePrintSettings(): UsePrintSettingsReturn {
   const loadSettings = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const savedSettings = await window.dataUtils.getPrintSettings();
-      
+
       if (savedSettings) {
         // دمج الإعدادات المحفوظة مع القيم الافتراضية
         const mergedSettings: PrintSettings = {
           ...DEFAULT_PRINT_SETTINGS,
           ...savedSettings
         };
-        
+
         setSettings(mergedSettings);
         console.log('✅ تم تحميل إعدادات الطباعة بنجاح:', mergedSettings);
       } else {
@@ -94,7 +94,7 @@ export function usePrintSettings(): UsePrintSettingsReturn {
   const saveSettings = useCallback(async (newSettings: PrintSettings) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       // تحويل الإعدادات إلى الصيغة المتوقعة
       await window.dataUtils.savePrintSettings(newSettings as any);
