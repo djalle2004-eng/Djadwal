@@ -1,7 +1,8 @@
 // Client Web pour remplacer l'API Electron
 // Ce fichier implémente la même interface que window.db mais utilise des appels API HTTP
 
-const API_URL = 'http://localhost:3001/api';
+// Utiliser l'URL relative en production, localhost en développement
+const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api';
 
 // Helper pour les appels API
 async function fetchApi(endpoint: string, options: RequestInit = {}) {
