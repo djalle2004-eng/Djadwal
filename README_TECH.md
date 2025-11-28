@@ -1,6 +1,6 @@
 # Djadwal - Documentation Technique pour Développeurs
 
-**Version : 19.11.2025.Turso**
+**Version : 28.11.25.Turso**
 
 Cette documentation s'adresse aux développeurs externes qui prendront en charge le développement et la maintenance de l'application Djadwal.
 
@@ -128,6 +128,8 @@ groups (id, name, specialization, parent_group_id, department_id, group_type, ye
 professors (id, name, email, Title, Phone, "Academic Title", created_at)
 courses (id, name, code, metadata, department_id, created_at)
 rooms (id, name, capacity, created_at)
+users (id, username, password_hash, full_name, role, permissions, created_at)
+print_settings (id, setting_key, setting_value, updated_at, updated_by)
 
 -- Tables de liaison
 assignments (id, group_id, course_id, professor_id, room_id, day_of_week, 
@@ -157,17 +159,21 @@ executeQuery(query, params) // Requêtes avec retry + logs détaillés
 ensureExamNoteColumn()      // Ajout dynamique de colonnes si nécessaire
 ```
 
-### Nouvelles Fonctions Database (v26.10.2025)
+### Nouvelles Fonctions Database (v28.11.25)
 ```javascript
-// Années académiques
-addAcademicYear(yearName, setAsCurrent)
-deleteAcademicYear(yearId)
-setActiveAcademicYear(yearId)
+// Gestion des Logos et Impression
+uploadLogo(file, type)
+getPrintSettings()
+savePrintSettings(settings)
 
-// Semestres
+// Gestion des Permissions
+getUserPermissions(userId)
+saveUserPermissions(userId, permissions)
+
+// Années académiques & Semestres
+addAcademicYear(yearName, setAsCurrent)
+setActiveAcademicYear(yearId)
 addSemester(academicYearId, semesterName, startDate, endDate, setAsCurrent)
-updateSemester(semesterId, semesterName, startDate, endDate)
-deleteSemester(semesterId)
 setActiveSemester(semesterId)
 ```
 
@@ -446,11 +452,7 @@ dist-electron/
 └── latest.yml                         # Auto-updater metadata
 ```
 
-### Configuration .env pour Production
-```env
-USE_NEON=true
-NEON_CONNECTION_STRING=postgresql://user:pass@host.neon.tech/db?sslmode=require
-```
+
 
 ### Distribution Multi-Plateforme
 ```json
