@@ -2,13 +2,13 @@ import React, { useState, useEffect, useContext, useRef, useMemo } from 'react';
 import DatabaseErrorAlert from '../components/DatabaseErrorAlert';
 import { AcademicYearContext } from '../context/AcademicYearContext';
 import { useAssignments } from '../context/AssignmentContext';
-import * as XLSX from 'xlsx';
 import { printContent } from '../utils/printUtils';
 import { jsPDF } from 'jspdf';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { usePermissions } from '../hooks/usePermissions';
 import { usePrintSettings, createPrintOptions } from '../hooks/usePrintSettings';
 import AIAssistant from '../components/AIAssistant';
+import { exportScheduleToExcel } from '../utils/excelUtils';
 
 // تعريف الخطوط العربية
 // const arabicFontConfig = {
@@ -1756,83 +1756,58 @@ export default function Schedule() {
     }
   };
 
-  // دالة تصدير الجدول إلى Excel
-  const exportToExcel = () => {
-    // إنشاء مصفوفة لبيانات ورقة الإكسل
-    const worksheetData: any[][] = [];
+  // دالة تصدير الجدول إلى Excel باستخدام ExcelJS
+  const exportToExcel = async () => {
+    try {
+      setIsLoading(true);
 
-    // إضافة العنوان
-    worksheetData.push([`جدول المحاضرات - ${selectedSpecialization}`]);
-    worksheetData.push([`السنة الدراسية: ${currentYear?.year_name || ''} - الفصل: ${currentSemester?.semester_name || ''}`]);
-    worksheetData.push([]); // صف فارغ
+      if (!currentYear || !currentSemester) {
+        alert('الرجاء اختيار السنة الدراسية والفصل الدراسي');
+        setIsLoading(false);
+        return;
+      }
 
-    // إضافة رأس الجدول
-    const headerRow = ['اليوم / الوقت', ...timeSlots.map(slot => `${slot.start} - ${slot.end}`)];
-    worksheetData.push(headerRow);
+      // تحضير بيانات الجدول بنفس طريقة PDF
+      const tableData: any[][] = [];
 
-    // إضافة بيانات الجدول
-    days.forEach((_, dayIndex) => {
-      const rowData = [days[dayIndex].name];
+      timeSlots.forEach((timeSlot) => {
+        const rowData: any[] = [];
 
-      // إضافة بيانات الخلايا
-      timeSlots.forEach((_, timeIndex) => {
-        const cell = scheduleData[dayIndex]?.[timeIndex];
+        days.forEach((_, dayIndex) => {
+          const dayAssignments = contextAssignments.filter(
+            (a: any) =>
+              a.day_of_week === dayIndex &&
+              a.start_time === timeSlot.start &&
+              a.end_time === timeSlot.end &&
+              (selectedSpecialization ? a.specialization === selectedSpecialization : true) &&
+              (selectedDepartment ? groups.find(g => g.id === a.group_id)?.department_id === selectedDepartment : true)
+          );
 
-        if (!cell) {
-          rowData.push(''); // خلية فارغة
-        } else if (cell.assignments && cell.assignments.length > 0) {
-          // خلية تحتوي على تكاليف متعددة
-          const cellText = cell.assignments.map(assignment => {
-            const group = groups.find(g => g.id === assignment.group_id);
-            const course = courses.find(c => c.id === assignment.course_id);
-            const professor = professors.find(p => p.id === assignment.professor_id);
-            const room = rooms.find(r => r.id === assignment.room_id);
+          rowData.push(dayAssignments);
+        });
 
-            return `${group?.name || ''}\n${course?.name || ''}\n${professor?.name || ''}\n${room?.name || ''}`;
-          }).join('\n---\n');
-
-          rowData.push(cellText);
-        } else {
-          // خلية تحتوي على تكليف واحد
-          const group = groups.find(g => g.id === cell.group_id);
-          const course = courses.find(c => c.id === cell.course_id);
-          const professor = professors.find(p => p.id === cell.professor_id);
-          const room = rooms.find(r => r.id === cell.room_id);
-
-          const cellText = `${group?.name || ''}\n${course?.name || ''}\n${professor?.name || ''}\n${room?.name || ''}`;
-          rowData.push(cellText);
-        }
+        tableData.push(rowData);
       });
 
-      worksheetData.push(rowData);
-    });
+      const title = `جدول المحاضرات - ${selectedSpecialization || 'جميع التخصصات'}`;
+      const subtitle = `السنة الدراسية: ${currentYear.year_name} - الفصل: ${currentSemester.semester_name}`;
+      const dayNames = days.map(d => d.name);
 
-    // إنشاء ورقة عمل من البيانات
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+      await exportScheduleToExcel(
+        tableData,
+        dayNames,
+        timeSlots,
+        title,
+        subtitle,
+        printSettingsHook
+      );
 
-    // تعديل عرض الأعمدة
-    const columnWidths = [
-      { wch: 15 }, // عرض عمود اليوم
-      ...Array(timeSlots.length).fill({ wch: 30 }) // عرض أعمدة الأوقات
-    ];
-    worksheet['!cols'] = columnWidths;
-
-    // تعديل ارتفاع الصفوف
-    const rowHeights = [
-      { hpt: 30 }, // ارتفاع صف العنوان
-      { hpt: 30 }, // ارتفاع صف السنة الدراسية
-      { hpt: 20 }, // ارتفاع الصف الفارغ
-      { hpt: 30 }, // ارتفاع صف الرأس
-      ...Array(days.length).fill({ hpt: 100 }) // ارتفاع صفوف الأيام
-    ];
-    worksheet['!rows'] = rowHeights;
-
-    // إنشاء مصنف عمل وإضافة ورقة العمل إليه
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'جدول المحاضرات');
-
-    // حفظ المصنف كملف إكسل
-    XLSX.writeFile(workbook, `جدول_المحاضرات_${selectedSpecialization}_${new Date().toLocaleDateString()}.xlsx`);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      alert('حدث خطأ أثناء التصدير إلى Excel');
+      setIsLoading(false);
+    }
   };
 
   // دالة اختصار اسم المجموعة

@@ -822,4 +822,48 @@ router.put('/print-settings', async (req, res) => {
     }
 });
 
+// --- Backup & Export ---
+router.get('/export/data', async (req, res) => {
+    try {
+        // Export all tables
+        const backup = {
+            timestamp: new Date().toISOString(),
+            version: '28.11.25.Turso',
+            tables: {}
+        };
+
+        // List of tables to export
+        const tables = [
+            'academic_years',
+            'semesters',
+            'departments',
+            'groups',
+            'professors',
+            'courses',
+            'rooms',
+            'assignments',
+            'extra_sessions',
+            'users',
+            'print_settings',
+            'audit_log'
+        ];
+
+        // Export each table
+        for (const table of tables) {
+            try {
+                const data = await executeQuery(`SELECT * FROM ${table}`);
+                backup.tables[table] = data;
+            } catch (error) {
+                console.warn(`Could not export table ${table}:`, error.message);
+                backup.tables[table] = [];
+            }
+        }
+
+        res.json(backup);
+    } catch (error) {
+        console.error('Error creating backup:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

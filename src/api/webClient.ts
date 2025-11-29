@@ -192,9 +192,34 @@ export const webClient = {
         body: JSON.stringify({ permissions: permissionsJson })
     }),
 
-    // --- Backup & Export (Simplified for Web) ---
-    createBackup: () => { console.warn('Backup not fully supported in web mode'); return Promise.resolve(null); },
-    restoreBackup: () => { console.warn('Restore not fully supported in web mode'); return Promise.resolve(null); },
+    // --- Backup & Export (Web Implementation) ---
+    createBackup: async () => {
+        try {
+            const data = await fetchApi('/export/data');
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const filename = `djadwal-backup-${timestamp}.json`;
+
+            // Trigger download
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            return { success: true, filename };
+        } catch (error) {
+            console.error('Backup failed:', error);
+            throw error;
+        }
+    },
+    restoreBackup: () => {
+        console.warn('Restore not yet implemented in web mode');
+        return Promise.resolve(null);
+    },
     getBackupHistory: () => Promise.resolve([]),
     deleteBackup: () => Promise.resolve(true),
     exportToJSON: (academicYearId) => fetchApi(`/export/json?academicYearId=${academicYearId}`), // Need route
