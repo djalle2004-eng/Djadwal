@@ -14,11 +14,21 @@ const COLORS = {
 };
 
 /**
- * تحويل Data URI إلى Buffer
+ * تحويل Data URI إلى Uint8Array (متوافق مع المتصفح)
  */
-function dataURItoBuffer(dataURI: string): Buffer {
-    const base64Data = dataURI.split(',')[1];
-    return Buffer.from(base64Data, 'base64');
+function dataURItoBuffer(dataURI: string): Uint8Array {
+    try {
+        const base64Data = dataURI.split(',')[1];
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes;
+    } catch (error) {
+        console.error('Error converting Data URI to buffer:', error);
+        return new Uint8Array(0);
+    }
 }
 
 /**
@@ -30,35 +40,51 @@ async function addLogosToWorksheet(
     settings: PrintSettings
 ): Promise<void> {
     try {
-        let logoCol = 1;
+        let logoCol = 0; // البدء من العمود الأول
 
-        // إضافة شعار الجامعة
+        // إضافة شعار الجامعة (يمين)
         if (settings.universityLogoUrl && settings.universityLogoUrl.startsWith('data:image')) {
-            const universityLogoBuffer = dataURItoBuffer(settings.universityLogoUrl);
-            const universityLogoId = workbook.addImage({
-                buffer: universityLogoBuffer,
-                extension: settings.universityLogoUrl.includes('png') ? 'png' : 'jpeg',
-            });
+            try {
+                const universityLogoBuffer = dataURItoBuffer(settings.universityLogoUrl);
+                if (universityLogoBuffer.length > 0) {
+                    const extension = settings.universityLogoUrl.includes('png') ? 'png' : 'jpeg';
+                    const universityLogoId = workbook.addImage({
+                        buffer: universityLogoBuffer,
+                        extension: extension,
+                    });
 
-            worksheet.addImage(universityLogoId, {
-                tl: { col: logoCol - 0.1, row: 0.1 },
-                ext: { width: 80, height: 80 },
-            });
-            logoCol += 2;
+                    worksheet.addImage(universityLogoId, {
+                        tl: { col: 0.2, row: 0.2 }, // إزاحة طفيفة
+                        ext: { width: 80, height: 80 },
+                    });
+                }
+            } catch (err) {
+                console.warn('Failed to add university logo:', err);
+            }
         }
 
-        // إضافة شعار الكلية
+        // إضافة شعار الكلية (يسار)
+        // نحتاج لمعرفة عرض الصفحة لوضعه في اليسار، لكن ExcelJS لا يدعم ذلك بسهولة في العرض المباشر
+        // سنضعه في العمود الثالث مؤقتاً أو نتركه بجانب الأول إذا لم نتمكن من تحديد النهاية
         if (settings.facultyLogoUrl && settings.facultyLogoUrl.startsWith('data:image')) {
-            const facultyLogoBuffer = dataURItoBuffer(settings.facultyLogoUrl);
-            const facultyLogoId = workbook.addImage({
-                buffer: facultyLogoBuffer,
-                extension: settings.facultyLogoUrl.includes('png') ? 'png' : 'jpeg',
-            });
+            try {
+                const facultyLogoBuffer = dataURItoBuffer(settings.facultyLogoUrl);
+                if (facultyLogoBuffer.length > 0) {
+                    const extension = settings.facultyLogoUrl.includes('png') ? 'png' : 'jpeg';
+                    const facultyLogoId = workbook.addImage({
+                        buffer: facultyLogoBuffer,
+                        extension: extension,
+                    });
 
-            worksheet.addImage(facultyLogoId, {
-                tl: { col: logoCol - 0.1, row: 0.1 },
-                ext: { width: 80, height: 80 },
-            });
+                    // وضعه في العمود C تقريباً
+                    worksheet.addImage(facultyLogoId, {
+                        tl: { col: 2.2, row: 0.2 },
+                        ext: { width: 80, height: 80 },
+                    });
+                }
+            } catch (err) {
+                console.warn('Failed to add faculty logo:', err);
+            }
         }
     } catch (error) {
         console.error('Error adding logos:', error);
@@ -73,7 +99,7 @@ function applyHeaderFormatting(
     row: ExcelJS.Row,
     settings: PrintSettings
 ): void {
-    row.height = 25;
+    row.height = 30;
     row.eachCell((cell) => {
         cell.fill = {
             type: 'pattern',
@@ -121,8 +147,8 @@ function applyCellFormatting(
     };
 
     cell.alignment = {
-        vertical: 'top',
-        horizontal: 'right',
+        vertical: 'middle', // توسيط عمودي أفضل للقراءة
+        horizontal: 'center', // توسيط أفقي
         wrapText: true,
     };
 
@@ -141,7 +167,7 @@ async function protectWorksheet(
     worksheet: ExcelJS.Worksheet,
     dataStartRow: number
 ): Promise<void> {
-    // تأمين جميع الخلايا
+    // تأمين جميع الخلايا افتراضياً
     worksheet.eachRow((row) => {
         row.eachCell((cell) => {
             cell.protection = { locked: true };
@@ -152,7 +178,7 @@ async function protectWorksheet(
     worksheet.eachRow((row, rowNumber) => {
         if (rowNumber >= dataStartRow) {
             row.eachCell((cell, colNumber) => {
-                // إلغاء تأمين خلايا البيانات (ليس العناوين)
+                // إلغاء تأمين خلايا البيانات (العمود الأول هو الوقت، نتركه مؤمناً)
                 if (colNumber > 1) {
                     cell.protection = { locked: false };
                 }
@@ -201,7 +227,7 @@ export async function exportScheduleToExcel(
     worksheet.mergeCells(currentRow, 1, currentRow, days.length + 1);
     const titleCell = worksheet.getCell(currentRow, 1);
     titleCell.value = settings.universityName || 'الجامعة';
-    titleCell.font = { name: 'Arial', size: settings.titleFontSize || 16, bold: true };
+    titleCell.font = { name: 'Arial', size: settings.titleFontSize || 18, bold: true };
     titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
     currentRow++;
 
@@ -209,7 +235,7 @@ export async function exportScheduleToExcel(
     worksheet.mergeCells(currentRow, 1, currentRow, days.length + 1);
     const facultyCell = worksheet.getCell(currentRow, 1);
     facultyCell.value = settings.facultyName || 'الكلية';
-    facultyCell.font = { name: 'Arial', size: settings.subtitleFontSize || 14 };
+    facultyCell.font = { name: 'Arial', size: settings.subtitleFontSize || 16 };
     facultyCell.alignment = { vertical: 'middle', horizontal: 'center' };
     currentRow++;
 
@@ -240,17 +266,30 @@ export async function exportScheduleToExcel(
     scheduleData.forEach((rowData, index) => {
         const row = worksheet.getRow(currentRow);
         const timeSlot = timeSlots[index];
+
+        // تحضير القيم للصف
         const values = [`${timeSlot.start} - ${timeSlot.end}`, ...rowData.map((cell: any) => {
-            if (!cell || cell.length === 0) return '';
-            return cell
-                .map((assignment: any) =>
-                    `${assignment.course_name}\n${assignment.group_name}\n${assignment.professor_name} (${assignment.room_name})`
-                )
-                .join('\n\n');
+            if (!cell || (Array.isArray(cell) && cell.length === 0)) return '';
+
+            // إذا كانت الخلية مصفوفة (كما في Schedule.tsx)
+            if (Array.isArray(cell)) {
+                return cell.map((assignment: any) => {
+                    // محاولة الحصول على البيانات بأسماء مختلفة للحقول لضمان عدم فقدان البيانات
+                    const course = assignment.course_name || assignment.subject_name || assignment.module_name || '';
+                    const group = assignment.group_name || assignment.group || '';
+                    const professor = assignment.professor_name || assignment.teacher_name || '';
+                    const room = assignment.room_name || assignment.classroom_name || assignment.location || '';
+
+                    // تنسيق النص داخل الخلية
+                    return `${course}\n${group}\n${professor} (${room})`;
+                }).join('\n-------------------\n'); // فاصل بين الحصص المتعددة في نفس الوقت
+            }
+
+            return String(cell);
         })];
 
         row.values = values;
-        row.height = 60;
+        row.height = 80; // زيادة الارتفاع لاستيعاب الأسطر المتعددة
 
         row.eachCell((cell) => {
             applyCellFormatting(cell, settings, index % 2 === 1);
@@ -260,9 +299,9 @@ export async function exportScheduleToExcel(
     });
 
     // ضبط عرض الأعمدة
-    worksheet.getColumn(1).width = 20;
+    worksheet.getColumn(1).width = 20; // عمود الوقت
     for (let i = 2; i <= days.length + 1; i++) {
-        worksheet.getColumn(i).width = 25;
+        worksheet.getColumn(i).width = 30; // أعمدة الأيام
     }
 
     // إضافة فلاتر تلقائية
@@ -315,7 +354,7 @@ export async function exportTableToExcel(
     worksheet.mergeCells(currentRow, 1, currentRow, headers.length);
     const titleCell = worksheet.getCell(currentRow, 1);
     titleCell.value = settings.universityName || 'الجامعة';
-    titleCell.font = { name: 'Arial', size: settings.titleFontSize || 16, bold: true };
+    titleCell.font = { name: 'Arial', size: settings.titleFontSize || 18, bold: true };
     titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
     currentRow++;
 
@@ -323,7 +362,7 @@ export async function exportTableToExcel(
     worksheet.mergeCells(currentRow, 1, currentRow, headers.length);
     const facultyCell = worksheet.getCell(currentRow, 1);
     facultyCell.value = settings.facultyName || 'الكلية';
-    facultyCell.font = { name: 'Arial', size: settings.subtitleFontSize || 14 };
+    facultyCell.font = { name: 'Arial', size: settings.subtitleFontSize || 16 };
     facultyCell.alignment = { vertical: 'middle', horizontal: 'center' };
     currentRow++;
 
