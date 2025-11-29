@@ -1783,7 +1783,23 @@ export default function Schedule() {
               (selectedDepartment ? groups.find(g => g.id === a.group_id)?.department_id === selectedDepartment : true)
           );
 
-          rowData.push(dayAssignments);
+          // إثراء البيانات بالأسماء لضمان ظهورها في Excel
+          const enrichedAssignments = dayAssignments.map((a: any) => {
+            const group = groups.find(g => g.id === a.group_id);
+            const course = courses.find(c => c.id === a.course_id);
+            const professor = professors.find(p => p.id === a.professor_id);
+            const room = rooms.find(r => r.id === a.room_id);
+
+            return {
+              ...a,
+              group_name: group ? group.name : (a.group_name || ''),
+              course_name: course ? course.name : (a.course_name || ''),
+              professor_name: professor ? professor.name : (a.professor_name || ''),
+              room_name: room ? room.name : (a.room_name || ''),
+            };
+          });
+
+          rowData.push(enrichedAssignments);
         });
 
         tableData.push(rowData);
