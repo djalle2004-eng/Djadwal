@@ -5,6 +5,8 @@ import { useAcademicYear } from '../context/AcademicYearContext';
 import { useAssignments } from '../context/AssignmentContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { printContent, generateFullDocument } from '../utils/printUtils';
+import { exportScheduleToExcel } from '../utils/excelUtils';
+import { usePrintSettings } from '../hooks/usePrintSettings';
 
 // واجهات البيانات
 interface Professor {
@@ -691,6 +693,55 @@ export default function GroupSchedules() {
     }
   };
 
+  // تصدير الجدول إلى Excel
+  const { settings: printSettingsHook } = usePrintSettings();
+
+  const exportGroupScheduleToExcel = async () => {
+    if (!selectedGroup || !currentYear || !currentSemester) {
+      alert('يرجى اختيار فوجاً أولاً');
+      return;
+    }
+
+    try {
+      const groupData = groups.find(g => g.id === selectedGroup);
+      if (!groupData) return;
+
+      // تحضير بيانات الجدول
+      const tableData: any[][] = [];
+
+      timeSlots.forEach((timeSlot) => {
+        const rowData: any[] = [];
+
+        activeDays.forEach((day) => {
+          const assignment = groupAssignments.find(a =>
+            a.day_of_week === day.id &&
+            a.start_time === timeSlot.start
+          );
+
+          rowData.push(assignment ? [assignment] : []);
+        });
+
+        tableData.push(rowData);
+      });
+
+      const title = `الجدول الزمني - ${groupData.name}`;
+      const subtitle = `${groupData.specialization || ''} - ${currentYear.year_name} - ${currentSemester.semester_name}`;
+      const dayNames = activeDays.map(d => d.name);
+
+      await exportScheduleToExcel(
+        tableData,
+        dayNames,
+        timeSlots.map(ts => ({ start: ts.start, end: ts.end })),
+        title,
+        subtitle,
+        printSettingsHook
+      );
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      alert('حدث خطأ أثناء التصدير إلى Excel');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -772,7 +823,7 @@ export default function GroupSchedules() {
           </div>
         )}
 
-        {/* أزرار الطباعة */}
+        {/* أزرار الطباعة والتصدير */}
         {selectedGroup && can('view', 'reports') && (
           <div className="mt-4 flex gap-3 justify-end">
             <button
@@ -786,6 +837,12 @@ export default function GroupSchedules() {
               className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center gap-2 font-semibold"
             >
               📄 حفظ كـ PDF
+            </button>
+            <button
+              onClick={exportGroupScheduleToExcel}
+              className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 flex items-center gap-2 font-semibold"
+            >
+              📊 تصدير Excel
             </button>
           </div>
         )}

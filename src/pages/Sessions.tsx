@@ -2,7 +2,8 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { AcademicYearContext } from '../context/AcademicYearContext';
 import { useAssignments, AssignmentProvider } from '../context/AssignmentContext';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
-import * as XLSX from 'xlsx';
+import { usePrintSettings } from '../hooks/usePrintSettings';
+import { exportTableToExcel } from '../utils/excelUtils';
 import { createTableTemplate, generatePDFFromHTML, generatePDFFromHTMLFallback } from '../utils/pdfUtils';
 import DatabaseErrorAlert from '../components/DatabaseErrorAlert';
 
@@ -496,20 +497,36 @@ const SessionsContent = () => {
     }
   };
 
-  // Fonction pour exporter vers Excel
-  const exportToScheduleExcel = (sessions: AssignmentWithDetails[]) => {
-    const worksheet = XLSX.utils.json_to_sheet(sessions.map(session => ({
-      'اليوم': session.dayName,
-      'الوقت': session.lecture_time,
-      'المادة': session.courseName,
-      'الأستاذ': session.professorName,
-      'المجموعة': session.groupName,
-      'القاعة': session.roomName
-    })));
+  // Fonction pour exporter vers Excel avec ExcelJS
+  const { settings: printSettings } = usePrintSettings();
 
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'جدول المحاضرات');
-    XLSX.writeFile(workbook, 'جدول_المحاضرات.xlsx');
+  const exportToScheduleExcel = async (sessions: AssignmentWithDetails[]) => {
+    try {
+      const headers = ['اليوم', 'الوقت', 'المادة', 'الأستاذ', 'المجموعة', 'القاعة'];
+      const data = sessions.map(session => [
+        session.dayName,
+        session.lecture_time,
+        session.courseName,
+        renderProfessorName(session.professorName),
+        session.groupName,
+        session.roomName
+      ]);
+
+      const title = 'جدول المحاضرات';
+      const subtitle = `${filterGroupSpecialization ? `التخصص: ${filterGroupSpecialization}` : 'جميع التخصصات'}`;
+
+      await exportTableToExcel(
+        headers,
+        data,
+        title,
+        subtitle,
+        printSettings,
+        'جدول_المحاضرات'
+      );
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      alert('حدث خطأ أثناء التصدير إلى Excel');
+    }
   };
 
   // دالة التصدير إلى PDF
@@ -672,8 +689,8 @@ const SessionsContent = () => {
                     key={professor}
                     {...professorNavigation.getItemProps(professor, index)}
                     className={`px-4 py-2 cursor-pointer ${index === professorNavigation.selectedIndex
-                        ? 'bg-blue-100'
-                        : 'hover:bg-gray-100'
+                      ? 'bg-blue-100'
+                      : 'hover:bg-gray-100'
                       }`}
                   >
                     {professor}
