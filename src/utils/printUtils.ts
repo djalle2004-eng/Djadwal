@@ -2,6 +2,8 @@
  * Utilitaires pour l'impression des documents
  */
 import html2pdf from 'html2pdf.js';
+import { format } from 'date-fns';
+import { arSA } from 'date-fns/locale';
 import type { PrintOptions, PageOrientation, PageSize, TextAlignment } from '../types/shared';
 
 // إعادة تصدير الأنواع للتوافق مع الإصدارات القديمة

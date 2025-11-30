@@ -517,7 +517,7 @@ export default function GroupSchedules() {
               <BookOpen size={12} />
               {cell.assignment.course_name}
             </div>
-            <div className={`text-xs flex items-center gap-1 ${cell.assignment.professor_name === 'أستاذ(ة) مؤقت(ة)' ? 'text-red-600 font-bold' : 'text-gray-600'}`}>
+            <div className={`text-xs flex items-center gap-1 ${cell.assignment.professor_name && cell.assignment.professor_name.includes('أستاذ(ة) مؤقت(ة)') ? 'text-red-600 font-bold' : 'text-gray-600'}`}>
               <Users size={10} />
               {cell.assignment.professor_name}
             </div>
