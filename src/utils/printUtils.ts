@@ -646,17 +646,15 @@ export const generateDocumentHeader = (
   const titleFontSize = options?.titleFontSize || 16;
 
   return `
-    <div style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; width: 100%; position: relative;">
-      ${options?.universityLogoUrl || options?.facultyLogoUrl ? `
-        <div style="position: relative; min-height: ${logoSize}px;">
-          ${options?.universityLogoUrl ? `<img src="${options.universityLogoUrl}" style="position: absolute; right: 0; top: 0; max-width: ${logoSize}px; max-height: ${logoSize}px; object-fit: contain;" alt="شعار الجامعة">` : ''}
-          ${options?.facultyLogoUrl ? `<img src="${options.facultyLogoUrl}" style="position: absolute; left: 0; top: 0; max-width: ${logoSize}px; max-height: ${logoSize}px; object-fit: contain;" alt="شعار الكلية">` : ''}
+    <div style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; width: 100%;">
+      <div style="display: flex; align-items: center; justify-content: space-between; min-height: ${logoSize}px;">
+        ${options?.universityLogoUrl ? `<img src="${options.universityLogoUrl}" style="max-width: ${logoSize}px; max-height: ${logoSize}px; object-fit: contain; flex-shrink: 0;" alt="شعار الجامعة">` : '<div style="width: ${logoSize}px;"></div>'}
+        <div style="flex: 1; text-align: center; padding: 0 15px;">
+          ${options?.universityName ? `<h3 style="font-size: ${headerFontSize}pt; margin: 3px 0; font-weight: bold;">${options.universityName}</h3>` : ''}
+          ${options?.facultyName ? `<h3 style="font-size: ${headerFontSize}pt; margin: 3px 0; font-weight: bold;">${options.facultyName}</h3>` : ''}
+          <h1 style="font-size: ${titleFontSize}pt; font-weight: bold; margin: 8px 0; color: #2c3e50;">${title}</h1>
         </div>
-      ` : ''}
-      <div style="text-align: center; margin-top: ${options?.universityLogoUrl || options?.facultyLogoUrl ? '5px' : '0'};">
-        ${options?.universityName ? `<h3 style="font-size: ${headerFontSize}pt; margin: 3px 0; font-weight: bold;">${options.universityName}</h3>` : ''}
-        ${options?.facultyName ? `<h3 style="font-size: ${headerFontSize}pt; margin: 3px 0; font-weight: bold;">${options.facultyName}</h3>` : ''}
-        <h1 style="font-size: ${titleFontSize}pt; font-weight: bold; margin: 8px 0; color: #2c3e50;">${title}</h1>
+        ${options?.facultyLogoUrl ? `<img src="${options.facultyLogoUrl}" style="max-width: ${logoSize}px; max-height: ${logoSize}px; object-fit: contain; flex-shrink: 0;" alt="شعار الكلية">` : '<div style="width: ${logoSize}px;"></div>'}
       </div>
     </div>
   `;
