@@ -1776,19 +1776,19 @@ export default function Schedule() {
         days.forEach((_, dayIndex) => {
           const dayAssignments = contextAssignments.filter(
             (a: any) =>
-              a.day_of_week === dayIndex &&
-              a.start_time === timeSlot.start &&
-              a.end_time === timeSlot.end &&
-              (selectedSpecialization ? a.specialization === selectedSpecialization : true) &&
-              (selectedDepartment ? groups.find(g => g.id === a.group_id)?.department_id === selectedDepartment : true)
+              a.day_of_week == dayIndex &&
+              a.start_time == timeSlot.start &&
+              a.end_time == timeSlot.end &&
+              (selectedSpecialization ? a.specialization == selectedSpecialization : true) &&
+              (selectedDepartment ? groups.find(g => g.id == a.group_id)?.department_id == selectedDepartment : true)
           );
 
           // إثراء البيانات بالأسماء لضمان ظهورها في Excel
           const enrichedAssignments = dayAssignments.map((a: any) => {
-            const group = groups.find(g => g.id === a.group_id);
-            const course = courses.find(c => c.id === a.course_id);
-            const professor = professors.find(p => p.id === a.professor_id);
-            const room = rooms.find(r => r.id === a.room_id);
+            const group = groups.find(g => g.id == a.group_id);
+            const course = courses.find(c => c.id == a.course_id);
+            const professor = professors.find(p => p.id == a.professor_id);
+            const room = rooms.find(r => r.id == a.room_id);
 
             return {
               ...a,
