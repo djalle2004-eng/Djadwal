@@ -18,7 +18,7 @@ export const printContent = (content: string, options: PrintOptions): void => {
     generatePDFFromHTML(content, options);
     return;
   }
-  
+
   // استخدام window.print() العادي
   // Créer un iframe pour l'impression
   const printFrame = document.createElement('iframe');
@@ -28,7 +28,7 @@ export const printContent = (content: string, options: PrintOptions): void => {
   printFrame.style.width = '0';
   printFrame.style.height = '0';
   printFrame.style.border = '0';
-  
+
   // Ajouter à la page
   document.body.appendChild(printFrame);
 
@@ -41,11 +41,11 @@ export const printContent = (content: string, options: PrintOptions): void => {
 
   // Écrire le contenu HTML dans l'iframe
   frameDoc.open();
-  
+
   // تحديد حجم الصفحة
   const pageSize = options.pageSize || 'A4';
   const orientation = options.orientation || 'portrait';
-  
+
   // CSS محسّن مع دعم كامل للإعدادات
   const printCSS = `
     @page {
@@ -156,12 +156,12 @@ export const printContent = (content: string, options: PrintOptions): void => {
     
     ${options.customCSS || ''}
   `;
-  
+
   // إضافة header إذا كان موجوداً
-  const headerHTML = options.showHeader !== false && options.headerContent 
-    ? `<div class="print-header">${options.headerContent}</div>` 
+  const headerHTML = options.showHeader !== false && options.headerContent
+    ? `<div class="print-header">${options.headerContent}</div>`
     : '';
-  
+
   // إضافة footer إذا كان موجوداً
   const footerHTML = options.showFooter !== false && (options.footerContent || options.showPageNumbers)
     ? `<div class="print-footer">
@@ -169,7 +169,7 @@ export const printContent = (content: string, options: PrintOptions): void => {
         ${options.showPageNumbers ? '<div class="page-number">صفحة </div>' : ''}
       </div>`
     : '';
-  
+
   frameDoc.write(`
     <!DOCTYPE html>
     <html dir="rtl" lang="ar">
@@ -209,26 +209,26 @@ export const printContent = (content: string, options: PrintOptions): void => {
 export const generatePDFFromHTML = (content: string, options: PrintOptions): void => {
   // إنشاء عنصر مؤقت
   const element = document.createElement('div');
-  
+
   // حساب scale بناءً على حجم الصفحة والهوامش
   const pageSize = options.pageSize || 'A4';
   const isLandscape = options.orientation === 'landscape';
-  
+
   // حساب الهوامش
   const marginTop = options.pageMarginTop || 5;
   const marginBottom = options.pageMarginBottom || 5;
   const marginLeft = options.pageMarginLeft || 5;
   const marginRight = options.pageMarginRight || 5;
-  
+
   // إضافة header و footer إذا كانا موجودين
-  const headerHTML = options.showHeader !== false && options.headerContent 
-    ? `<div style="text-align: center; margin-bottom: 15px; font-size: 12pt;">${options.headerContent}</div>` 
+  const headerHTML = options.showHeader !== false && options.headerContent
+    ? `<div style="text-align: center; margin-bottom: 15px; font-size: 12pt;">${options.headerContent}</div>`
     : '';
-  
+
   const footerHTML = options.showFooter !== false && options.footerContent
     ? `<div style="text-align: center; margin-top: 15px; font-size: 10pt; border-top: 1px solid #ddd; padding-top: 10px;">${options.footerContent}</div>`
     : '';
-  
+
   element.innerHTML = `
     <div style="
       direction: rtl; 
@@ -262,16 +262,16 @@ export const generatePDFFromHTML = (content: string, options: PrintOptions): voi
       </div>
     </div>
   `;
-  
+
   // ✅ إعدادات محسّنة مع هوامش ديناميكية
   const opt = {
     margin: [marginTop, marginRight, marginBottom, marginLeft],
     filename: `${options.title}.pdf`,
-    image: { 
-      type: 'jpeg', 
-      quality: 0.95 
+    image: {
+      type: 'jpeg',
+      quality: 0.95
     },
-    html2canvas: { 
+    html2canvas: {
       scale: 2,
       useCORS: true,
       letterRendering: true,
@@ -283,20 +283,20 @@ export const generatePDFFromHTML = (content: string, options: PrintOptions): voi
       windowHeight: isLandscape ? 2800 : 4000,
       backgroundColor: '#ffffff'
     },
-    jsPDF: { 
-      unit: 'mm', 
-      format: pageSize.toLowerCase(), 
+    jsPDF: {
+      unit: 'mm',
+      format: pageSize.toLowerCase(),
       orientation: options.orientation || 'portrait',
       compress: true,
       putOnlyUsedFonts: true
     },
-    pagebreak: { 
+    pagebreak: {
       mode: 'avoid-all',
       avoid: ['tr', 'td', 'th', 'table', 'div', 'thead', 'tbody']
     },
     enableLinks: false
   };
-  
+
   // عرض رسالة تحميل
   const loadingDiv = document.createElement('div');
   loadingDiv.innerHTML = `
@@ -323,7 +323,7 @@ export const generatePDFFromHTML = (content: string, options: PrintOptions): voi
     </div>
   `;
   document.body.appendChild(loadingDiv);
-  
+
   // توليد وحفظ PDF
   html2pdf()
     .set(opt)
@@ -350,13 +350,13 @@ export const generateSessionsListContent = (
   sessions: any[],
   filterType: 'extra' | 'makeup' | 'exam' | 'all' = 'all'
 ): string => {
-  const filteredSessions = filterType === 'all' 
-    ? sessions 
+  const filteredSessions = filterType === 'all'
+    ? sessions
     : sessions.filter(s => s.session_type === filterType);
-  
-  const title = filterType === 'extra' 
-    ? 'قائمة الحصص الإضافية' 
-    : filterType === 'makeup' 
+
+  const title = filterType === 'extra'
+    ? 'قائمة الحصص الإضافية'
+    : filterType === 'makeup'
       ? 'قائمة حصص التعويض'
       : filterType === 'exam'
         ? 'قائمة الفروض المحروسة'
@@ -364,7 +364,7 @@ export const generateSessionsListContent = (
 
   const today = new Date();
   const formattedDate = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
-  
+
   return `
     <div style="text-align: center; margin-bottom: 20px;">
       <h1 style="font-size: 20pt; font-weight: bold; margin-bottom: 10px;">${title}</h1>
@@ -417,7 +417,7 @@ export const generateIndividualSessionContent = (
   const today = new Date();
   const formattedToday = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
   const sessionType = session.session_type === 'extra' ? 'حصة إضافية' : 'حصة تعويض';
-  
+
   return `
     <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #333; padding-bottom: 15px;">
       <h1 style="font-size: 24pt; font-weight: bold; color: #2c3e50;">شهادة ${sessionType}</h1>
@@ -479,7 +479,7 @@ export const generateStudentAnnouncementContent = (
 ): string => {
   const today = new Date();
   const formattedToday = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
-  
+
   // تحديد نوع الحصة للعنوان
   let sessionTypeText = '';
   if (sessionType === 'extra') {
@@ -504,9 +504,9 @@ export const generateStudentAnnouncementContent = (
   });
 
   // إنشاء جدول الحصص
-  const tableHeaders = ['التاريخ', 'التوقيت', 'المقرر', 'الأستاذ', 'المجموعة', 'القاعة', 'نوع الحصة'];
+  const tableHeaders = ['اليوم والتاريخ', 'التوقيت', 'المقرر', 'الأستاذ', 'المجموعة', 'القاعة', 'نوع الحصة'];
   const tableRows = sessions.map(session => [
-    formatDate(session.session_date),
+    `<div style="text-align: center;">${format(new Date(session.session_date), 'EEEE', { locale: arSA })}<br/>${format(new Date(session.session_date), 'dd/MM/yyyy')}</div>`,
     `${session.start_time} - ${session.end_time}`,
     session.course_name || '',
     session.professor_name || '',
@@ -532,7 +532,7 @@ export const generateStudentAnnouncementContent = (
 
   // التحقق من وجود فروض محروسة
   const hasExamSessions = sessions.some(s => s.session_type === 'exam');
-  
+
   // ملاحظة هامة
   const importantNote = `
     <div style="margin: 30px 20px; padding: 15px; background-color: #fff3cd; border: 2px solid #ffc107; border-radius: 5px;">
@@ -545,7 +545,7 @@ export const generateStudentAnnouncementContent = (
       </p>
     </div>
   `;
-  
+
   // ملاحظة هامة ثانية للفروض المحروسة
   const examNote = hasExamSessions ? `
     <div style="margin: 30px 20px; padding: 15px; background-color: #ffe6e6; border: 2px solid #dc3545; border-radius: 5px;">
@@ -597,18 +597,18 @@ export const generateStyledTable = (
   rows: string[][],
   title?: string
 ): string => {
-  const tableHeader = headers.map(h => 
+  const tableHeader = headers.map(h =>
     `<th style="border: 2px solid #333; padding: 8px; text-align: center; font-weight: bold; background-color: #f0f0f0;">${h}</th>`
   ).join('');
-  
+
   const tableRows = rows.map(row => `
     <tr>
-      ${row.map(cell => 
-        `<td style="border: 1px solid #666; padding: 6px; text-align: center;">${cell}</td>`
-      ).join('')}
+      ${row.map(cell =>
+    `<td style="border: 1px solid #666; padding: 6px; text-align: center;">${cell}</td>`
+  ).join('')}
     </tr>
   `).join('');
-  
+
   return `
     ${title ? `<h2 style="text-align: center; margin: 20px 0; font-size: 18pt;">${title}</h2>` : ''}
     <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 10pt;">
@@ -642,7 +642,7 @@ export const generateDocumentHeader = (
   const logoSize = options?.logoSize || 80;
   const headerFontSize = options?.headerFontSize || 16;
   const titleFontSize = options?.titleFontSize || 16;
-  
+
   return `
     <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; width: 100%;">
       ${options?.universityLogoUrl || options?.facultyLogoUrl ? `
@@ -710,7 +710,7 @@ export const generateFullDocument = (
 ): string => {
   const today = new Date();
   const formattedDate = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
-  
+
   return `
     <style>
       /* ✅ تحجيم تلقائي للجداول الكبيرة */
@@ -764,26 +764,26 @@ export const generateFullDocument = (
     </style>
     
     ${generateDocumentHeader(
-      title,
-      {
-        universityName: options?.universityName,
-        facultyName: options?.facultyName,
-        universityLogoUrl: options?.universityLogoUrl,
-        facultyLogoUrl: options?.facultyLogoUrl,
-        logoSize: options?.logoSize,
-        headerFontSize: options?.headerFontSize,
-        titleFontSize: options?.titleFontSize
-      }
-    )}
+    title,
+    {
+      universityName: options?.universityName,
+      facultyName: options?.facultyName,
+      universityLogoUrl: options?.universityLogoUrl,
+      facultyLogoUrl: options?.facultyLogoUrl,
+      logoSize: options?.logoSize,
+      headerFontSize: options?.headerFontSize,
+      titleFontSize: options?.titleFontSize
+    }
+  )}
     
     <div style="margin: 10px 0; width: 100%; overflow: hidden;">
       ${content}
     </div>
     
     ${generateDocumentFooter(
-      options?.footerLeft || `تاريخ الطباعة: ${formattedDate}`,
-      options?.footerRight || 'رئيس القسم',
-      options?.footerCenter
-    )}
+    options?.footerLeft || `تاريخ الطباعة: ${formattedDate}`,
+    options?.footerRight || 'رئيس القسم',
+    options?.footerCenter
+  )}
   `;
 };
