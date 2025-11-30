@@ -837,7 +837,7 @@ export default function Schedule() {
           {group && <div className="font-bold">{group.name}</div>}
           {course && <div>{course.name}</div>}
           {professor && (
-            <div className={`text-xs ${isProfessorTemporary(professor) || professor.name === 'أستاذ(ة) مؤقت(ة)' ? 'text-red-600 font-bold' : ''}`}>
+            <div className={`text-xs ${isProfessorTemporary(professor) || (professor.name && professor.name.includes('أستاذ(ة) مؤقت(ة)')) ? 'text-red-600 font-bold' : ''}`}>
               {professor.name}
             </div>
           )}
