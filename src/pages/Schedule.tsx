@@ -1779,7 +1779,7 @@ export default function Schedule() {
               a.day_of_week == dayIndex &&
               a.start_time == timeSlot.start &&
               a.end_time == timeSlot.end &&
-              (selectedSpecialization ? a.specialization == selectedSpecialization : true) &&
+              (selectedSpecialization ? groups.find(g => g.id == a.group_id)?.specialization == selectedSpecialization : true) &&
               (selectedDepartment ? groups.find(g => g.id == a.group_id)?.department_id == selectedDepartment : true)
           );
 
