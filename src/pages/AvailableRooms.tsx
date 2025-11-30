@@ -2525,76 +2525,7 @@ export default function AvailableRooms() {
         </Box>
 
         {/* Tableau des séances programmées */}
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell align="right">نوع الحصة</TableCell>
-                <TableCell align="right">التاريخ</TableCell>
-                <TableCell align="right">التوقيت</TableCell>
-                <TableCell align="right">الأستاذ</TableCell>
-                <TableCell align="right">المقرر</TableCell>
-                <TableCell align="right">المجموعة</TableCell>
-                <TableCell align="right">القاعة</TableCell>
-                <TableCell align="center">الإجراءات</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {(showArchived ? archivedSessions : extraSessions)
-                .filter(session => {
-                  // Filtrer par type si nécessaire
-                  if (sessionType && session.session_type !== sessionType) {
-                    return false;
-                  }
-
-                  return true;
-                })
-                .map((session) => (
-                  <TableRow key={session.id}>
-                    <TableCell align="right">
-                      {session.session_type === 'extra' ? 'حصة إضافية' : session.session_type === 'makeup' ? 'حصة تعويض' : 'إمتحان الأعمال'}
-                    </TableCell>
-                    <TableCell align="right">{format(new Date(session.session_date), 'dd/MM/yyyy')}</TableCell>
-                    <TableCell align="right">{`${session.start_time} - ${session.end_time}`}</TableCell>
-                    <TableCell align="right">{session.professor_name}</TableCell>
-                    <TableCell align="right">{session.course_name}</TableCell>
-                    <TableCell align="right">{session.group_name}</TableCell>
-                    <TableCell align="right">{session.room_name}</TableCell>
-                    <TableCell align="center">
-                      <IconButton
-                        aria-label="edit"
-                        color="primary"
-                        onClick={() => handleOpenEditDialog(session)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        aria-label="delete"
-                        color="error"
-                        onClick={() => handleDeleteSession(session.id!)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                      <IconButton
-                        aria-label="print"
-                        color="primary"
-                        onClick={() => printIndividualSession(session)}
-                      >
-                        <PrintIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {extraSessions.length === 0 && !loading && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            لا توجد حصص مبرمجة بعد
-          </Alert>
-        )}
-        <Box sx={{ mt: 3, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
           <Button
             variant="contained"
             color="primary"
@@ -2636,6 +2567,77 @@ export default function AvailableRooms() {
             إعلان للطلبة 📝
           </Button>
         </Box>
+
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell align="right">نوع الحصة</TableCell>
+                <TableCell align="right">اليوم والتاريخ</TableCell>
+                <TableCell align="right">التوقيت</TableCell>
+                <TableCell align="right">الأستاذ</TableCell>
+                <TableCell align="right">المقرر</TableCell>
+                <TableCell align="right">المجموعة</TableCell>
+                <TableCell align="right">القاعة</TableCell>
+                <TableCell align="center">الإجراءات</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {(showArchived ? archivedSessions : extraSessions)
+                .filter(session => {
+                  // Filtrer par type si nécessaire
+                  if (sessionType && session.session_type !== sessionType) {
+                    return false;
+                  }
+
+                  return true;
+                })
+                .map((session) => (
+                  <TableRow key={session.id}>
+                    <TableCell align="right">
+                      {session.session_type === 'extra' ? 'حصة إضافية' : session.session_type === 'makeup' ? 'حصة تعويض' : 'إمتحان الأعمال'}
+                    </TableCell>
+                    <TableCell align="right">{format(new Date(session.session_date), 'EEEE dd/MM/yyyy', { locale: arSA })}</TableCell>
+                    <TableCell align="right">{`${session.start_time} - ${session.end_time}`}</TableCell>
+                    <TableCell align="right">{session.professor_name}</TableCell>
+                    <TableCell align="right">{session.course_name}</TableCell>
+                    <TableCell align="right">{session.group_name}</TableCell>
+                    <TableCell align="right">{session.room_name}</TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        aria-label="edit"
+                        color="primary"
+                        onClick={() => handleOpenEditDialog(session)}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        aria-label="delete"
+                        color="error"
+                        onClick={() => handleDeleteSession(session.id!)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                      <IconButton
+                        aria-label="print"
+                        color="primary"
+                        onClick={() => printIndividualSession(session)}
+                      >
+                        <PrintIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {extraSessions.length === 0 && !loading && (
+          <Alert severity="info" sx={{ mt: 2 }}>
+            لا توجد حصص مبرمجة بعد
+          </Alert>
+        )}
+
       </TabPanel>
 
       {/* Boîte de dialogue pour ajouter/modifier une séance */}
