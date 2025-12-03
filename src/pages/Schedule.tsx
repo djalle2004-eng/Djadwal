@@ -10,6 +10,9 @@ import { usePermissions } from '../hooks/usePermissions';
 import { usePrintSettings, createPrintOptions } from '../hooks/usePrintSettings';
 import AIAssistant from '../components/AIAssistant';
 import { exportScheduleToExcel } from '../utils/excelUtils';
+import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, TouchSensor, closestCorners, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import { DraggableAssignment } from '../components/schedule/DraggableAssignment';
+import { DroppableCell } from '../components/schedule/DroppableCell';
 
 // تعريف الخطوط العربية
 // const arabicFontConfig = {
@@ -229,7 +232,145 @@ export default function Schedule() {
 
   // استخدام السياق للتعامل مع التكاليف
   const { assignments: contextAssignments, refreshAssignments, addAssignment, updateAssignment, deleteAssignment } = useAssignments();
-  const { isSandboxMode, enterSandboxMode, exitSandboxMode, sandboxAssignments, addSandboxAssignment, updateSandboxAssignment, deleteSandboxAssignment, commitChanges, discardChanges, hasChanges } = useSandbox();
+  const {
+    isSandboxMode,
+    enterSandboxMode,
+    exitSandboxMode,
+    sandboxAssignments,
+    addSandboxAssignment,
+    updateSandboxAssignment,
+    deleteSandboxAssignment,
+    commitChanges,
+    discardChanges,
+    hasChanges,
+    undo,
+    redo,
+    canUndo,
+    canRedo
+  } = useSandbox();
+
+  // Drag & Drop State
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeAssignment, setActiveAssignment] = useState<Assignment | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor)
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    setActiveId(active.id as string);
+    // Find the assignment being dragged
+    const assignmentId = parseInt((active.id as string).split('-')[1]);
+    const assignment = (isSandboxMode ? sandboxAssignments : contextAssignments).find((a: Assignment) => a.id === assignmentId);
+    if (assignment) {
+      setActiveAssignment(assignment);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    setActiveAssignment(null);
+
+    if (!over) return;
+
+    const activeIdString = active.id as string;
+    const overIdString = over.id as string;
+
+    if (activeIdString === overIdString) return;
+
+    // Parse IDs
+    // activeId format: assignment-{id}-{index} or assignment-{id}
+    // overId format: cell-{dayIndex}-{timeIndex}
+
+    const assignmentId = parseInt(activeIdString.split('-')[1]);
+
+    if (!overIdString.startsWith('cell-')) return;
+
+    const [_, dayIndexStr, timeIndexStr] = overIdString.split('-');
+    const newDayIndex = parseInt(dayIndexStr);
+    const newTimeIndex = parseInt(timeIndexStr);
+    const newTimeSlot = timeSlots[newTimeIndex];
+
+    // Find the assignment
+    const assignmentsList = isSandboxMode ? sandboxAssignments : contextAssignments;
+    const assignment = assignmentsList.find((a: Assignment) => a.id === assignmentId);
+
+    if (!assignment) return;
+
+    // Check for conflicts/occupancy in the target cell
+    // We look for assignments in the target slot that belong to the SAME GROUP or SAME PROFESSOR or SAME ROOM
+    // If we find one, we swap. If we find multiple, it's ambiguous, but we can try to swap with the one that conflicts.
+
+    const conflictingAssignments = assignmentsList.filter((a: Assignment) =>
+      a.day_of_week === newDayIndex &&
+      a.start_time === newTimeSlot.start &&
+      a.end_time === newTimeSlot.end &&
+      (a.group_id === assignment.group_id || a.professor_id === assignment.professor_id || a.room_id === assignment.room_id) &&
+      a.id !== assignment.id
+    );
+
+    const targetAssignment = conflictingAssignments[0]; // Take the first conflicting one for swapping
+
+    try {
+      if (targetAssignment) {
+        // SWAP LOGIC
+        const newSourceDay = assignment.day_of_week;
+        const newSourceStart = assignment.start_time;
+        const newSourceEnd = assignment.end_time;
+
+        const updatedSourceAssignment = {
+          ...assignment,
+          day_of_week: newDayIndex,
+          start_time: newTimeSlot.start,
+          end_time: newTimeSlot.end
+        };
+
+        const updatedTargetAssignment = {
+          ...targetAssignment,
+          day_of_week: newSourceDay,
+          start_time: newSourceStart,
+          end_time: newSourceEnd
+        };
+
+        if (isSandboxMode) {
+          updateSandboxAssignment(assignment.id!, updatedSourceAssignment);
+          updateSandboxAssignment(targetAssignment.id!, updatedTargetAssignment);
+        } else {
+          // In live mode, we need to be careful. Update one then the other.
+          // Or better, use a batch update if available.
+          // For now, sequential updates.
+          await updateAssignment(assignment.id!, updatedSourceAssignment);
+          await updateAssignment(targetAssignment.id!, updatedTargetAssignment);
+          await refreshAssignments();
+        }
+      } else {
+        // MOVE LOGIC (No conflict)
+        const updatedAssignment = {
+          ...assignment,
+          day_of_week: newDayIndex,
+          start_time: newTimeSlot.start,
+          end_time: newTimeSlot.end
+        };
+
+        if (isSandboxMode) {
+          updateSandboxAssignment(assignment.id!, updatedAssignment);
+        } else {
+          await updateAssignment(assignment.id!, updatedAssignment);
+          await refreshAssignments();
+        }
+      }
+    } catch (error) {
+      console.error("Error moving/swapping assignment:", error);
+      // setError(error instanceof Error ? error : new Error("خطأ أثناء نقل التكليف"));
+    }
+  };
 
   // Helper function to check if a professor is temporary
   const isProfessorTemporary = (professor: Professor) => {
@@ -738,6 +879,51 @@ export default function Schedule() {
   const renderCell = (dayIndex: number, timeIndex: number) => {
     const cell = scheduleData[dayIndex]?.[timeIndex];
 
+    // Calculate validity for Drag & Drop
+    let isValid = true;
+    if (activeAssignment) {
+      const assignmentsList = isSandboxMode ? sandboxAssignments : contextAssignments;
+      // Check for hard conflicts (Professor or Group busy in ANOTHER cell)
+      const isHardConflict = assignmentsList.some((a: Assignment) =>
+        a.id !== activeAssignment.id &&
+        a.day_of_week === dayIndex &&
+        a.start_time === timeSlots[timeIndex].start &&
+        a.end_time === timeSlots[timeIndex].end &&
+        (a.professor_id === activeAssignment.professor_id || a.group_id === activeAssignment.group_id) &&
+        // If the conflicting assignment is in the current cell (target), it's a swap (not a hard conflict)
+        // We assume assignments in the same cell share the same day/time/group(usually)/room
+        // But wait, if I drop on a cell, I am targeting that cell.
+        // If the conflicting assignment is NOT in this cell, it is a conflict.
+        // How to check if 'a' is in this cell?
+        // We can check if 'a' is one of the assignments currently rendered in this cell?
+        // Or simply: if 'a' is in the target cell, it means 'a' has the same group/course/etc as the cell.
+        // But 'a' IS at this day/time (checked above).
+        // So the question is: Is 'a' the assignment I would be swapping with?
+        // If I swap, I take 'a's place.
+        // If 'a' is in a different group (not visible or visible in another column if we had columns), it's a conflict.
+        // In this grid, we show ALL groups for the selected specialization.
+        // So if 'a' is in this grid, it is in this cell (since day/time match).
+        // So 'a' is visible.
+        // If 'a' is NOT in this grid (e.g. another specialization), then it is NOT in this cell.
+        // So we need to check if 'a' belongs to the currently filtered view?
+        // Actually, if 'a' is in the same cell, it's a swap.
+        // If 'a' is in a different cell (same time), it's a conflict.
+        // Since this is a 2D grid (Time x Day), there is only ONE cell for a given Time/Day.
+        // So ANY assignment at this Time/Day is "in this cell" visually, UNLESS the grid is filtered.
+        // The grid IS filtered by Specialization/Department.
+        // So if 'a' belongs to a different specialization, it won't be in `scheduleData`.
+        // But it IS in `assignmentsList`.
+        // So:
+        // If 'a' is in `scheduleData[dayIndex][timeIndex]`, it's a swap.
+        // If 'a' is NOT in `scheduleData[dayIndex][timeIndex]`, it's a hard conflict (busy elsewhere).
+        !scheduleData[dayIndex]?.[timeIndex]?.assignments?.some(sa => sa.id === a.id) &&
+        // Also check single assignment case
+        !(scheduleData[dayIndex]?.[timeIndex]?.group_id === a.group_id && scheduleData[dayIndex]?.[timeIndex]?.course_id === a.course_id)
+      );
+
+      isValid = !isHardConflict;
+    }
+
     // تحديد فئات CSS للحدود
     const getBorderClasses = () => {
       let classes = 'border';
@@ -763,90 +949,100 @@ export default function Schedule() {
     // التعامل مع الخلايا الفارغة
     if (!cell) {
       return (
-        <div
-          className={`${getBorderClasses()} p-2 h-20 cursor-pointer hover:bg-gray-100 relative group`}
-          onClick={() => handleCellClick(dayIndex, timeIndex)}
-        >
-          <div className="text-gray-400 text-center">فارغ</div>
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              className="bg-blue-500 text-white rounded-full p-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCellClick(dayIndex, timeIndex);
-              }}
-              title="إضافة"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
+        <DroppableCell id={`cell-${dayIndex}-${timeIndex}`} isOver={false} isValid={isValid}>
+          <div
+            className={`${getBorderClasses()} p-2 h-20 cursor-pointer hover:bg-gray-100 relative group`}
+            onClick={() => handleCellClick(dayIndex, timeIndex)}
+          >
+            <div className="text-gray-400 text-center">فارغ</div>
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                className="bg-blue-500 text-white rounded-full p-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCellClick(dayIndex, timeIndex);
+                }}
+                title="إضافة"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
           </div>
-        </div>
+        </DroppableCell>
       );
     }
 
     // التعامل مع الخلايا التي تحتوي على تكاليف متعددة
     if (cell.assignments && cell.assignments.length > 0) {
       return (
-        <div
-          className={`${getBorderClasses()} p-2 h-auto min-h-20 cursor-pointer hover:opacity-80 relative group`}
-          style={{ backgroundColor: scheduleStyle.filledCellColor }}
-          onClick={() => handleCellClick(dayIndex, timeIndex)}
-        >
-          <div className="max-h-none overflow-visible">
-            {cell.assignments.map((assignment, index) => {
-              const group = groups.find(g => g.id === assignment.group_id);
-              const course = courses.find(c => c.id === assignment.course_id);
-              const professor = professors.find(p => p.id === assignment.professor_id);
-              const room = rooms.find(r => r.id === assignment.room_id);
+        <DroppableCell id={`cell-${dayIndex}-${timeIndex}`} isOver={false} isValid={isValid}>
+          <div
+            className={`${getBorderClasses()} p-2 h-auto min-h-20 cursor-pointer hover:opacity-80 relative group`}
+            style={{ backgroundColor: scheduleStyle.filledCellColor }}
+            onClick={() => handleCellClick(dayIndex, timeIndex)}
+          >
+            <div className="max-h-none overflow-visible">
+              {cell.assignments.map((assignment, index) => {
+                const group = groups.find(g => g.id === assignment.group_id);
+                const course = courses.find(c => c.id === assignment.course_id);
+                const professor = professors.find(p => p.id === assignment.professor_id);
+                const room = rooms.find(r => r.id === assignment.room_id);
 
-              return (
-                <div
-                  key={`assignment-${assignment.id}-${index}`}
-                  className={`mb-1 pb-1 ${index < (cell.assignments?.length || 0) - 1 ? 'border-b border-gray-300' : ''}`}
-                >
-                  {group && <div className="font-bold text-xs">{group.name}</div>}
-                  {course && <div className="text-xs">{course.name}</div>}
-                  {professor && (
-                    <div className={`text-xs ${isProfessorTemporary(professor) ? 'text-red-600' : ''}`}>
-                      {professor.name}
+                return (
+                  <DraggableAssignment
+                    key={`assignment-${assignment.id}-${index}`}
+                    id={`assignment-${assignment.id}-${index}`}
+                    data={assignment}
+                    disabled={!isSandboxMode && !can('update', 'sessions')}
+                  >
+                    <div
+                      className={`mb-1 pb-1 ${index < (cell.assignments?.length || 0) - 1 ? 'border-b border-gray-300' : ''}`}
+                    >
+                      {group && <div className="font-bold text-xs">{group.name}</div>}
+                      {course && <div className="text-xs">{course.name}</div>}
+                      {professor && (
+                        <div className={`text-xs ${isProfessorTemporary(professor) ? 'text-red-600' : ''}`}>
+                          {professor.name}
+                        </div>
+                      )}
+                      {room && <div className="text-xs text-gray-500">{room.name}</div>}
                     </div>
-                  )}
-                  {room && <div className="text-xs text-gray-500">{room.name}</div>}
-                </div>
-              );
-            })}
-          </div>
+                  </DraggableAssignment>
+                );
+              })}
+            </div>
 
-          {/* أزرار تظهر عند تمرير المؤشر */}
-          <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex">
-            <button
-              className="bg-green-500 text-white rounded-full p-1 mx-0.5"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCellClick(dayIndex, timeIndex, true);
-              }}
-              title="إضافة تكليف جديد"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
-            <button
-              className="bg-red-500 text-white rounded-full p-1 mx-0.5"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteCell(dayIndex, timeIndex);
-              }}
-              title="حذف جميع التكاليف"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
+            {/* أزرار تظهر عند تمرير المؤشر */}
+            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex">
+              <button
+                className="bg-green-500 text-white rounded-full p-1 mx-0.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCellClick(dayIndex, timeIndex, true);
+                }}
+                title="إضافة تكليف جديد"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+              <button
+                className="bg-red-500 text-white rounded-full p-1 mx-0.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteCell(dayIndex, timeIndex);
+                }}
+                title="حذف جميع التكاليف"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
           </div>
-        </div>
+        </DroppableCell>
       );
     }
 
@@ -856,71 +1052,102 @@ export default function Schedule() {
     const professor = professors.find(p => p.id === cell.professor_id);
     const room = rooms.find(r => r.id === cell.room_id);
 
-    return (
-      <div
-        className={`${getBorderClasses()} p-2 h-auto min-h-20 cursor-pointer hover:opacity-80 relative group`}
-        style={{ backgroundColor: scheduleStyle.filledCellColor }}
-        onClick={() => handleCellClick(dayIndex, timeIndex)}
-      >
-        <div className="max-h-none overflow-visible">
-          {group && <div className="font-bold">{group.name}</div>}
-          {course && <div>{course.name}</div>}
-          {professor && (
-            <div className={`text-xs ${professor.Title === 'أستاذ(ة) مؤقت(ة)' ? 'text-red-600 font-bold' : ''}`}>
-              {professor.name}
-            </div>
-          )}
-          {room && <div className="text-xs text-gray-500">{room.name}</div>}
-        </div>
+    // Find the assignment object to get the ID
+    const singleAssignment = (isSandboxMode ? sandboxAssignments : contextAssignments).find((a: Assignment) =>
+      a.day_of_week === dayIndex &&
+      a.start_time === timeSlots[timeIndex].start &&
+      a.end_time === timeSlots[timeIndex].end &&
+      a.group_id === cell.group_id
+    );
 
-        {/* أزرار تظهر عند تمرير المؤشر */}
-        <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex">
-          {can('create', 'sessions') && (
-            <button
-              className="bg-green-500 text-white rounded-full p-1 mx-0.5"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCellClick(dayIndex, timeIndex, true);
-              }}
-              title="إضافة تكليف جديد"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
-          )}
-          {can('update', 'sessions') && (
-            <button
-              className="bg-blue-500 text-white rounded-full p-1 mx-0.5"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCellClick(dayIndex, timeIndex);
-              }}
-              title="تعديل التكليف"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </button>
-          )}
-          {can('delete', 'sessions') && (
-            <button
-              className="bg-red-500 text-white rounded-full p-1 mx-0.5"
-              onClick={(e) => {
-                e.stopPropagation();
-                // handleDeleteCell will delete all assignments in this cell
-                // For individual assignment deletion, need to implement separate function
-              }}
-              title="حذف التكليف"
-              disabled
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          )}
+    return (
+      <DroppableCell id={`cell-${dayIndex}-${timeIndex}`} isOver={false} isValid={isValid}>
+        <div
+          className={`${getBorderClasses()} p-2 h-auto min-h-20 cursor-pointer hover:opacity-80 relative group`}
+          style={{ backgroundColor: scheduleStyle.filledCellColor }}
+          onClick={() => handleCellClick(dayIndex, timeIndex)}
+        >
+          <div className="max-h-none overflow-visible">
+            {singleAssignment ? (
+              <DraggableAssignment
+                id={`assignment-${singleAssignment.id}`}
+                data={singleAssignment}
+                disabled={!isSandboxMode && !can('update', 'sessions')}
+              >
+                <div>
+                  {group && <div className="font-bold">{group.name}</div>}
+                  {course && <div>{course.name}</div>}
+                  {professor && (
+                    <div className={`text-xs ${professor.Title === 'أستاذ(ة) مؤقت(ة)' ? 'text-red-600 font-bold' : ''}`}>
+                      {professor.name}
+                    </div>
+                  )}
+                  {room && <div className="text-xs text-gray-500">{room.name}</div>}
+                </div>
+              </DraggableAssignment>
+            ) : (
+              <div>
+                {group && <div className="font-bold">{group.name}</div>}
+                {course && <div>{course.name}</div>}
+                {professor && (
+                  <div className={`text-xs ${professor.Title === 'أستاذ(ة) مؤقت(ة)' ? 'text-red-600 font-bold' : ''}`}>
+                    {professor.name}
+                  </div>
+                )}
+                {room && <div className="text-xs text-gray-500">{room.name}</div>}
+              </div>
+            )}
+          </div>
+
+          {/* أزرار تظهر عند تمرير المؤشر */}
+          <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex">
+            {can('create', 'sessions') && (
+              <button
+                className="bg-green-500 text-white rounded-full p-1 mx-0.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCellClick(dayIndex, timeIndex, true);
+                }}
+                title="إضافة تكليف جديد"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            )}
+            {can('update', 'sessions') && (
+              <button
+                className="bg-blue-500 text-white rounded-full p-1 mx-0.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCellClick(dayIndex, timeIndex);
+                }}
+                title="تعديل التكليف"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+            )}
+            {can('delete', 'sessions') && (
+              <button
+                className="bg-red-500 text-white rounded-full p-1 mx-0.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // handleDeleteCell will delete all assignments in this cell
+                  // For individual assignment deletion, need to implement separate function
+                }}
+                title="حذف التكليف"
+                disabled
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      </DroppableCell>
     );
   };
 
@@ -2189,6 +2416,22 @@ export default function Schedule() {
                 حفظ التغييرات
               </button>
               <button
+                onClick={undo}
+                disabled={!canUndo}
+                className={`px-3 py-2 rounded-md font-medium flex items-center ${canUndo ? 'text-gray-700 bg-white hover:bg-gray-50' : 'text-gray-400 bg-gray-100 cursor-not-allowed'}`}
+                title="تراجع (Ctrl+Z)"
+              >
+                <span className="ml-1">↩️</span> تراجع
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                className={`px-3 py-2 rounded-md font-medium flex items-center ${canRedo ? 'text-gray-700 bg-white hover:bg-gray-50' : 'text-gray-400 bg-gray-100 cursor-not-allowed'}`}
+                title="إعادة (Ctrl+Y)"
+              >
+                <span className="ml-1">↪️</span> إعادة
+              </button>
+              <button
                 onClick={discardChanges}
                 className="px-4 py-2 rounded-md text-yellow-700 bg-yellow-100 hover:bg-yellow-200 font-medium"
               >
@@ -2453,32 +2696,48 @@ export default function Schedule() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table id="schedule-table" className="min-w-full border-collapse">
-              <thead>
-                <tr>
-                  <th className="border p-2 bg-gray-100 w-20">الوقت / اليوم</th>
-                  {daysOfWeek.map((day, index) => (
-                    <th key={index} className="border p-2 bg-gray-100">{day}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {timeSlots.map((slot, timeIndex) => (
-                  <tr key={timeIndex}>
-                    <td className="border p-2 bg-gray-50 text-center">
-                      {slot.start} - {slot.end}
-                    </td>
-                    {daysOfWeek.map((_, dayIndex) => (
-                      <td key={dayIndex} className="border p-0 align-top">
-                        {renderCell(dayIndex, timeIndex)}
-                      </td>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="overflow-x-auto">
+              <table id="schedule-table" className="min-w-full border-collapse">
+                <thead>
+                  <tr>
+                    <th className="border p-2 bg-gray-100 w-20">الوقت / اليوم</th>
+                    {daysOfWeek.map((day, index) => (
+                      <th key={index} className="border p-2 bg-gray-100">{day}</th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {timeSlots.map((slot, timeIndex) => (
+                    <tr key={timeIndex}>
+                      <td className="border p-2 bg-gray-50 text-center">
+                        {slot.start} - {slot.end}
+                      </td>
+                      {daysOfWeek.map((_, dayIndex) => (
+                        <td key={dayIndex} className="border p-0 align-top h-24">
+                          {renderCell(dayIndex, timeIndex)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <DragOverlay>
+              {activeId && activeAssignment ? (
+                <div className="bg-blue-100 p-2 rounded shadow-lg border border-blue-300 opacity-90 w-40 h-20 overflow-hidden text-xs">
+                  <div className="font-bold">{groups.find(g => g.id === activeAssignment.group_id)?.name}</div>
+                  <div>{courses.find(c => c.id === activeAssignment.course_id)?.name}</div>
+                  <div>{professors.find(p => p.id === activeAssignment.professor_id)?.name}</div>
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
 
           {isCellModalOpen && selectedCell && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
