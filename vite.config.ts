@@ -6,23 +6,23 @@ import path from 'path';
 export default defineConfig({
   plugins: [
     react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['icon.ico'],
-      manifest: {
-        name: 'Djadwal',
-        short_name: 'Djadwal',
-        description: 'Application de gestion des emplois du temps',
-        theme_color: '#ffffff',
-        icons: [
-          {
-            src: 'icon.ico',
-            sizes: '64x64 32x32 24x24 16x16',
-            type: 'image/x-icon'
-          }
-        ]
-      }
-    })
+    // VitePWA({
+    //   registerType: 'autoUpdate',
+    //   includeAssets: ['icon.ico'],
+    //   manifest: {
+    //     name: 'Djadwal',
+    //     short_name: 'Djadwal',
+    //     description: 'Application de gestion des emplois du temps',
+    //     theme_color: '#ffffff',
+    //     icons: [
+    //       {
+    //         src: 'icon.ico',
+    //         sizes: '64x64 32x32 24x24 16x16',
+    //         type: 'image/x-icon'
+    //       }
+    //     ]
+    //   }
+    // })
   ],
   base: './', // Utiliser des chemins relatifs au lieu de chemins absolus
   resolve: {
@@ -58,7 +58,7 @@ export default defineConfig({
           vendor: ['react', 'react-dom'],
         },
         assetFileNames: (assetInfo) => {
-          if (assetInfo.name.endsWith('.svg')) {
+          if (assetInfo.name?.endsWith('.svg')) {
             return 'assets/images/[name][extname]';
           }
           return 'assets/[name]-[hash][extname]';

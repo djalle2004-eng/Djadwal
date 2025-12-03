@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { useAssignments } from './AssignmentContext';
 
 // Define the Assignment interface (should match AssignmentContext)
@@ -32,6 +32,10 @@ interface SandboxContextType {
     commitChanges: () => Promise<void>;
     discardChanges: () => void;
     hasChanges: boolean;
+    undo: () => void;
+    redo: () => void;
+    canUndo: boolean;
+    canRedo: boolean;
 }
 
 const SandboxContext = createContext<SandboxContextType | undefined>(undefined);
@@ -42,20 +46,60 @@ export const SandboxProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const [sandboxAssignments, setSandboxAssignments] = useState<Assignment[]>([]);
     const [hasChanges, setHasChanges] = useState(false);
 
+    const [history, setHistory] = useState<Assignment[][]>([]);
+    const [future, setFuture] = useState<Assignment[][]>([]);
+
     // Sync sandbox assignments with real assignments when entering sandbox mode
     const enterSandboxMode = () => {
         setSandboxAssignments(JSON.parse(JSON.stringify(assignments)));
         setIsSandboxMode(true);
         setHasChanges(false);
+        setHistory([]);
+        setFuture([]);
     };
 
     const exitSandboxMode = () => {
         setIsSandboxMode(false);
         setSandboxAssignments([]);
         setHasChanges(false);
+        setHistory([]);
+        setFuture([]);
     };
 
+    const addToHistory = () => {
+        setHistory(prev => [...prev, JSON.parse(JSON.stringify(sandboxAssignments))]);
+        setFuture([]); // Clear future on new action
+    };
+
+    const undo = () => {
+        if (history.length === 0) return;
+
+        const previousState = history[history.length - 1];
+        const newHistory = history.slice(0, -1);
+
+        setFuture(prev => [JSON.parse(JSON.stringify(sandboxAssignments)), ...prev]);
+        setSandboxAssignments(previousState);
+        setHistory(newHistory);
+        setHasChanges(true); // Undo is a change from current state (or maybe check against original?)
+    };
+
+    const redo = () => {
+        if (future.length === 0) return;
+
+        const nextState = future[0];
+        const newFuture = future.slice(1);
+
+        setHistory(prev => [...prev, JSON.parse(JSON.stringify(sandboxAssignments))]);
+        setSandboxAssignments(nextState);
+        setFuture(newFuture);
+        setHasChanges(true);
+    };
+
+    const canUndo = history.length > 0;
+    const canRedo = future.length > 0;
+
     const addSandboxAssignment = (assignment: Assignment) => {
+        addToHistory();
         // Generate a temporary ID for new assignments
         const tempAssignment = { ...assignment, id: -Math.floor(Math.random() * 1000000) };
         setSandboxAssignments(prev => [...prev, tempAssignment]);
@@ -63,22 +107,19 @@ export const SandboxProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     const updateSandboxAssignment = (id: number, updatedAssignment: Assignment) => {
+        addToHistory();
         setSandboxAssignments(prev => prev.map(a => a.id === id ? { ...updatedAssignment, id } : a));
         setHasChanges(true);
     };
 
     const deleteSandboxAssignment = (id: number) => {
+        addToHistory();
         setSandboxAssignments(prev => prev.filter(a => a.id !== id));
         setHasChanges(true);
     };
 
-    const deleteSandboxAssignmentByCell = (dayIndex: number, timeIndex: number, groupId: number) => {
-        // This logic needs to match how we identify assignments in the schedule
-        // We need to filter based on day, time, and group (or other unique constraints)
-        // For now, let's assume we pass the ID if possible, but if not, we filter.
-        // Actually, Schedule.tsx passes ID if available.
-        // But for new assignments in sandbox, they have negative IDs.
-        // Let's implement this helper just in case.
+    const deleteSandboxAssignmentByCell = (dayIndex: number, _timeIndex: number, groupId: number) => {
+        addToHistory();
         setSandboxAssignments(prev => prev.filter(a =>
             !(a.day_of_week === dayIndex &&
                 // We need to match time slots. Assuming start_time is enough or we need to match the exact slot logic.
@@ -93,7 +134,6 @@ export const SandboxProvider: React.FC<{ children: React.ReactNode }> = ({ child
         try {
             // 1. Identify deleted assignments
             // Assignments present in 'assignments' but not in 'sandboxAssignments' (ignoring new ones with negative IDs)
-            const originalIds = new Set(assignments.map(a => a.id));
             const sandboxIds = new Set(sandboxAssignments.map(a => a.id));
 
             const deletedIds = assignments.filter(a => !sandboxIds.has(a.id)).map(a => a.id);
@@ -156,7 +196,11 @@ export const SandboxProvider: React.FC<{ children: React.ReactNode }> = ({ child
             deleteSandboxAssignmentByCell,
             commitChanges,
             discardChanges,
-            hasChanges
+            hasChanges,
+            undo,
+            redo,
+            canUndo,
+            canRedo
         }}>
             {children}
         </SandboxContext.Provider>
