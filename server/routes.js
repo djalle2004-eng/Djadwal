@@ -866,4 +866,237 @@ router.get('/export/data', async (req, res) => {
     }
 });
 
+// --- Email Routes ---
+const emailService = require('./emailService');
+const { google } = require('googleapis');
+
+
+
+// GET /gmail-auth-url
+// GET /gmail-auth-url
+router.get('/gmail-auth-url', (req, res) => {
+    try {
+        console.log('Generating Auth URL with:', {
+            clientId: process.env.GMAIL_CLIENT_ID ? 'Set' : 'Missing',
+            redirectUri: process.env.GMAIL_REDIRECT_URI
+        });
+
+        const oauth2Client = new google.auth.OAuth2(
+            process.env.GMAIL_CLIENT_ID,
+            process.env.GMAIL_CLIENT_SECRET,
+            process.env.GMAIL_REDIRECT_URI
+        );
+
+        const scopes = [
+            'https://www.googleapis.com/auth/gmail.send',
+            'https://www.googleapis.com/auth/userinfo.email'
+        ];
+
+        const url = oauth2Client.generateAuthUrl({
+            access_type: 'offline',
+            scope: scopes,
+            prompt: 'consent'
+        });
+
+        res.json({ url });
+    } catch (error) {
+        console.error('Error generating auth URL:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /email/oauth2callback
+router.get('/email/oauth2callback', async (req, res) => {
+    const { code } = req.query;
+    if (!code) {
+        return res.status(400).send('No code provided');
+    }
+
+    try {
+        const oauth2Client = new google.auth.OAuth2(
+            process.env.GMAIL_CLIENT_ID,
+            process.env.GMAIL_CLIENT_SECRET,
+            process.env.GMAIL_REDIRECT_URI
+        );
+
+        const { tokens } = await oauth2Client.getToken(code);
+        oauth2Client.setCredentials(tokens);
+
+        // Fetch user profile to get email
+        const oauth2 = google.oauth2({
+            auth: oauth2Client,
+            version: 'v2'
+        });
+        const { data } = await oauth2.userinfo.get();
+        const userEmail = data.email;
+
+        console.log('Authenticated user:', userEmail);
+
+        if (tokens.refresh_token) {
+            await executeQuery(
+                `UPDATE email_settings 
+         SET gmail_refresh_token = ?, app_email = ?, is_authenticated = 1, last_auth_date = datetime('now'), updated_at = datetime('now')
+         WHERE id = 1`,
+                [tokens.refresh_token, userEmail]
+            );
+            console.log('Successfully authenticated and saved refresh token');
+        } else {
+            await executeQuery(
+                `UPDATE email_settings 
+         SET app_email = ?, is_authenticated = 1, last_auth_date = datetime('now'), updated_at = datetime('now')
+         WHERE id = 1`,
+                [userEmail]
+            );
+            console.warn('Authenticated but no refresh token returned (already authorized?)');
+        }
+
+        // Send a script to close the popup
+        res.send(`
+            <html>
+                <body>
+                    <h1>Authentication Successful!</h1>
+                    <p>Connected as: <strong>${userEmail}</strong></p>
+                    <p>You can close this window now.</p>
+                    <script>
+                        window.close();
+                    </script>
+                </body>
+            </html>
+        `);
+
+    } catch (error) {
+        console.error('Error in OAuth callback:', error);
+        res.status(500).send(`Authentication failed: ${error.message}`);
+    }
+});
+
+// POST /gmail-auth-code
+router.post('/gmail-auth-code', async (req, res) => {
+    try {
+        const { code } = req.body;
+
+        const oauth2Client = new google.auth.OAuth2(
+            process.env.GMAIL_CLIENT_ID,
+            process.env.GMAIL_CLIENT_SECRET,
+            process.env.GMAIL_REDIRECT_URI
+        );
+
+        const { tokens } = await oauth2Client.getToken(code);
+
+        if (tokens.refresh_token) {
+            await executeQuery(
+                `UPDATE email_settings 
+         SET gmail_refresh_token = ?, is_authenticated = 1, last_auth_date = datetime('now'), updated_at = datetime('now')
+         WHERE id = 1`,
+                [tokens.refresh_token]
+            );
+            res.json({ success: true });
+        } else {
+            // If no refresh token returned (user already authorized), try to use existing one or fail
+            // Usually Google only returns refresh token on first consent or if prompt='consent'
+            res.json({ success: true, note: 'No refresh token returned, assuming existing one is valid' });
+        }
+    } catch (error) {
+        console.error('Error exchanging code:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /gmail-auth-status
+router.get('/gmail-auth-status', async (req, res) => {
+    try {
+        const result = await executeQuery(
+            'SELECT is_authenticated FROM email_settings WHERE id = 1'
+        );
+        res.json({ authenticated: !!result[0]?.is_authenticated });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST /send-professor-schedule
+router.post('/send-professor-schedule', async (req, res) => {
+    try {
+        console.log('🔵 ROUTE HIT: /send-professor-schedule');
+        const { professorId, pdfBase64, semester } = req.body;
+
+        if (!professorId || !pdfBase64) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // 1. Get professor details
+        const professors = await executeQuery('SELECT * FROM professors WHERE id = ?', [professorId]);
+        if (professors.length === 0) {
+            return res.status(404).json({ error: 'Professor not found' });
+        }
+        const professor = professors[0];
+
+        if (!professor.email) {
+            return res.status(400).json({ error: 'Professor has no email address' });
+        }
+
+        // 2. Get email settings (refresh token)
+        const settings = await executeQuery('SELECT * FROM email_settings WHERE id = 1');
+
+        console.log('DEBUG: Full email settings:', JSON.stringify(settings, null, 2));
+
+        if (settings.length === 0 || !settings[0].gmail_refresh_token) {
+            return res.status(401).json({ error: 'Gmail not authenticated' });
+        }
+
+        console.log('DEBUG: Email settings retrieved:', settings[0]);
+
+        const userEmail = settings[0].app_email;
+        console.log('DEBUG: Using email from DB:', userEmail);
+        if (!userEmail) {
+            return res.status(401).json({ error: 'Sender email not found. Please reconnect Gmail.' });
+        }
+
+        // 3. Initialize email service
+        await emailService.initialize(settings[0].gmail_refresh_token, userEmail);
+
+        // 4. Convert base64 to buffer
+        const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+
+        // 5. Send email
+        const info = await emailService.sendProfessorSchedule(professor, pdfBuffer, semester);
+
+        // 6. Log email
+        await executeQuery(
+            `INSERT INTO email_logs (professor_id, recipient_email, subject, status, sent_at)
+       VALUES (?, ?, ?, 'sent', datetime('now'))`,
+            [professor.id, professor.email, `جدولك الدراسي - ${semester}`]
+        );
+
+        res.json({ success: true, messageId: info.messageId });
+
+    } catch (error) {
+        console.error('❌ Error in /send-professor-schedule:', error);
+        console.error('Stack trace:', error.stack);
+
+        // Log failure
+        if (req.body.professorId) {
+            const professors = await executeQuery('SELECT email FROM professors WHERE id = ?', [req.body.professorId]);
+            const email = professors.length > 0 ? professors[0].email : 'unknown';
+            await executeQuery(
+                `INSERT INTO email_logs (professor_id, recipient_email, subject, status, error_message, sent_at)
+         VALUES (?, ?, ?, 'failed', ?, datetime('now'))`,
+                [req.body.professorId, email, `جدولك الدراسي - ${req.body.semester}`, error.message]
+            );
+        }
+
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Debug route
+router.get('/debug/email-settings', async (req, res) => {
+    try {
+        const settings = await executeQuery('SELECT * FROM email_settings');
+        res.json(settings);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

@@ -9,6 +9,19 @@
   line-height: 1.5;
   font-weight: 400;
   font-display: swap;
+  
+  /* Dark mode colors */
+  --bg-primary: #ffffff;
+  --text-primary: #1a1a1a;
+  --bg-secondary: #f3f4f6;
+  --border-color: #e5e7eb;
+}
+
+:root.dark {
+  --bg-primary: #1a1a1a;
+  --text-primary: #f3f4f6;
+  --bg-secondary: #2d2d2d;
+  --border-color: #404040;
 }
 
 body {
@@ -16,6 +29,38 @@ body {
   min-width: 320px;
   min-height: 100vh;
   direction: rtl;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.dark body {
+  background-color: #111827; /* gray-900 */
+  color: #f3f4f6; /* gray-100 */
+}
+
+.dark .bg-white {
+  background-color: #1f2937; /* gray-800 */
+}
+
+.dark .text-gray-900 {
+  color: #f3f4f6; /* gray-100 */
+}
+
+.dark .text-gray-500 {
+  color: #9ca3af; /* gray-400 */
+}
+
+.dark .border-gray-200 {
+  border-color: #374151; /* gray-700 */
+}
+
+.dark .bg-gray-100 {
+  background-color: #111827; /* gray-900 */
+}
+
+.dark .hover\:bg-gray-50:hover {
+  background-color: #374151; /* gray-700 */
 }
 
 /* تحسين مظهر الجداول */

@@ -316,5 +316,12 @@ export const webDataUtils = {
     },
     getAuditLogs: () => {
         return fetchApi('/audit-logs', { method: 'GET' });
+    },
+
+    // --- Backup/Restore ---
+    restoreBackup: async (file: File) => {
+        console.warn('Restore backup not implemented yet');
+        // Placeholder for future implementation
+        return { success: false, message: 'Not implemented' };
     }
 };

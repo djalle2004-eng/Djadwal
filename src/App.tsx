@@ -1,5 +1,6 @@
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
-import { Calendar, Users, BookOpen, DoorOpen, Users2, CalendarClock, BookCheck, Search, ClipboardList, Layers, Printer, CalendarDays, ArrowLeftRight, Move, UserCog, Database, LogOut, User, ScrollText } from "lucide-react";
+import { createBrowserRouter, RouterProvider, Navigate, useBlocker } from "react-router-dom";
+import { useEffect } from "react";
+import { Calendar, Users, BookOpen, DoorOpen, Users2, CalendarClock, BookCheck, Search, ClipboardList, Layers, Printer, CalendarDays, ArrowLeftRight, Move, UserCog, Database, LogOut, User, ScrollText, Moon, Sun } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Professors from "./pages/Professors";
@@ -17,6 +18,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { UserAuth } from "./context/AuthContext";
 import { AcademicYearProvider } from "./context/AcademicYearContext";
 import { AssignmentProvider } from "./context/AssignmentContext";
+import { SandboxProvider, useSandbox } from "./context/SandboxContext";
+import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import Schedule from './pages/Schedule';
 import GroupSchedules from './pages/GroupSchedules';
 import PrintSettings from './pages/PrintSettingsNew';
@@ -55,6 +58,37 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const { user, signOut } = UserAuth();
+  const { theme, toggleTheme } = useTheme();
+  const { isSandboxMode, hasChanges } = useSandbox();
+
+  // Warn on browser close/refresh
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isSandboxMode && hasChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isSandboxMode, hasChanges]);
+
+  // Warn on route change
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      isSandboxMode && hasChanges && currentLocation.pathname !== nextLocation.pathname
+  );
+
+  useEffect(() => {
+    if (blocker.state === "blocked") {
+      const confirm = window.confirm("لديك تغييرات غير محفوظة في وضع التجربة. هل تريد المغادرة وفقدان التغييرات؟");
+      if (confirm) {
+        blocker.proceed();
+      } else {
+        blocker.reset();
+      }
+    }
+  }, [blocker]);
 
   if (!user) {
     return <Navigate to="/login" />;
@@ -88,6 +122,15 @@ const Layout = ({ children }: LayoutProps) => {
                   </p>
                 </div>
               </div>
+            </div>
+            <div className="flex items-center space-x-2 space-x-reverse">
+              <button
+                onClick={toggleTheme}
+                className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors dark:text-gray-400 dark:hover:bg-gray-700"
+                title={theme === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}
+              >
+                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
               <button
                 onClick={handleLogout}
                 className="flex items-center space-x-2 space-x-reverse px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
@@ -97,7 +140,7 @@ const Layout = ({ children }: LayoutProps) => {
               </button>
             </div>
           </header>
-          
+
           {/* Main Content */}
           <main className="flex-1 p-8">
             <TestLucide />
@@ -275,7 +318,11 @@ function App() {
   return (
     <AcademicYearProvider>
       <AssignmentProvider>
-        <RouterProvider router={router} />
+        <SandboxProvider>
+          <ThemeProvider>
+            <RouterProvider router={router} />
+          </ThemeProvider>
+        </SandboxProvider>
       </AssignmentProvider>
     </AcademicYearProvider>
   );

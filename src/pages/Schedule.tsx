@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useRef, useMemo } from 'react';
 import DatabaseErrorAlert from '../components/DatabaseErrorAlert';
 import { AcademicYearContext } from '../context/AcademicYearContext';
 import { useAssignments } from '../context/AssignmentContext';
+import { useSandbox } from '../context/SandboxContext';
 import { printContent } from '../utils/printUtils';
 import { jsPDF } from 'jspdf';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
@@ -228,6 +229,7 @@ export default function Schedule() {
 
   // استخدام السياق للتعامل مع التكاليف
   const { assignments: contextAssignments, refreshAssignments, addAssignment, updateAssignment, deleteAssignment } = useAssignments();
+  const { isSandboxMode, enterSandboxMode, exitSandboxMode, sandboxAssignments, addSandboxAssignment, updateSandboxAssignment, deleteSandboxAssignment, commitChanges, discardChanges, hasChanges } = useSandbox();
 
   // Helper function to check if a professor is temporary
   const isProfessorTemporary = (professor: Professor) => {
@@ -307,17 +309,19 @@ export default function Schedule() {
     }
   }, [currentYear, currentSemester]);
 
-  // Update schedule data when contextAssignments changes
+  // Update schedule data when contextAssignments or sandboxAssignments changes
   useEffect(() => {
-    if (contextAssignments.length >= 0 && currentYear && currentSemester) {
-      prepareScheduleData(contextAssignments);
+    const assignmentsToUse = isSandboxMode ? sandboxAssignments : contextAssignments;
+    if (assignmentsToUse.length >= 0 && currentYear && currentSemester) {
+      prepareScheduleData(assignmentsToUse);
     }
-  }, [contextAssignments, currentYear, currentSemester, selectedSpecialization]);
+  }, [contextAssignments, sandboxAssignments, isSandboxMode, currentYear, currentSemester, selectedSpecialization]);
 
   // Update schedule data when specialization changes
   useEffect(() => {
-    if (selectedSpecialization && contextAssignments.length > 0) {
-      prepareScheduleData(contextAssignments);
+    const assignmentsToUse = isSandboxMode ? sandboxAssignments : contextAssignments;
+    if (selectedSpecialization && assignmentsToUse.length > 0) {
+      prepareScheduleData(assignmentsToUse);
     }
   }, [selectedSpecialization]);
 
@@ -364,7 +368,8 @@ export default function Schedule() {
       await refreshAssignments();
 
       // تجهيز بيانات الجدول
-      prepareScheduleData(contextAssignments);
+      const assignmentsToUse = isSandboxMode ? sandboxAssignments : contextAssignments;
+      prepareScheduleData(assignmentsToUse);
     } catch (error) {
       console.error("Error fetching data:", error);
       setError(error instanceof Error ? error : new Error("خطأ أثناء جلب البيانات"));
@@ -524,6 +529,20 @@ export default function Schedule() {
       );
 
       try {
+        // إذا كان في وضع التجربة (Sandbox Mode)
+        if (isSandboxMode) {
+          if (existingAssignment && existingAssignment.id) {
+            updateSandboxAssignment(existingAssignment.id, assignment);
+            console.log(`تم تحديث التكليف في وضع التجربة`);
+          } else {
+            addSandboxAssignment(assignment);
+            console.log("تم إضافة تكليف جديد في وضع التجربة");
+          }
+          setIsLoading(false);
+          setIsCellModalOpen(false);
+          return;
+        }
+
         // إذا كان هناك تكليف سابق، قم بتحديثه، وإلا قم بإضافة تكليف جديد
         if (existingAssignment && existingAssignment.id) {
           await updateAssignment(existingAssignment.id, assignment);
@@ -589,13 +608,17 @@ export default function Schedule() {
         // Delete all assignments in this cell
         for (const assignment of cellData.assignments) {
           if (assignment.id) {
-            await deleteAssignment(assignment.id);
+            if (isSandboxMode) {
+              deleteSandboxAssignment(assignment.id);
+            } else {
+              await deleteAssignment(assignment.id);
+            }
             console.log(`تم حذف التكليف رقم ${assignment.id}`);
           }
         }
       } else {
         // Find the assignment by day, time, and group_id
-        const assignment = contextAssignments.find((a: Assignment) =>
+        const assignment = (isSandboxMode ? sandboxAssignments : contextAssignments).find((a: Assignment) =>
           a.day_of_week === dayIndex &&
           a.start_time === timeSlots[timeIndex].start &&
           a.end_time === timeSlots[timeIndex].end &&
@@ -605,7 +628,11 @@ export default function Schedule() {
         );
 
         if (assignment && assignment.id) {
-          await deleteAssignment(assignment.id);
+          if (isSandboxMode) {
+            deleteSandboxAssignment(assignment.id);
+          } else {
+            await deleteAssignment(assignment.id);
+          }
           console.log(`تم حذف التكليف رقم ${assignment.id}`);
         } else {
           console.log("لم يتم العثور على التكليف المطلوب حذفه");
@@ -623,7 +650,9 @@ export default function Schedule() {
       setScheduleData(newScheduleData);
 
       // Refresh the assignments
-      await refreshAssignments();
+      if (!isSandboxMode) {
+        await refreshAssignments();
+      }
     } catch (error) {
       console.error("Error deleting cell:", error);
       setError(error instanceof Error ? error : new Error("خطأ أثناء حذف التكليف"));
@@ -2134,10 +2163,62 @@ export default function Schedule() {
 
   return (
     <div className="container mx-auto p-4">
+      {/* Sandbox Mode Banner */}
+      {isSandboxMode && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r shadow-sm">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3 mr-3">
+                <h3 className="text-lg leading-6 font-medium text-yellow-800">وضع التجربة (Sandbox Mode)</h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>أنت الآن في وضع التجربة. يمكنك إجراء تغييرات دون التأثير على الجدول الفعلي.</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex space-x-2 space-x-reverse">
+              <button
+                onClick={commitChanges}
+                disabled={!hasChanges}
+                className={`px-4 py-2 rounded-md text-white font-medium ${hasChanges ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}
+              >
+                حفظ التغييرات
+              </button>
+              <button
+                onClick={discardChanges}
+                className="px-4 py-2 rounded-md text-yellow-700 bg-yellow-100 hover:bg-yellow-200 font-medium"
+              >
+                إلغاء التغييرات
+              </button>
+              <button
+                onClick={exitSandboxMode}
+                className="px-4 py-2 rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium"
+              >
+                خروج
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">جدول المحاضرات</h1>
 
         <div className="flex space-x-2">
+          {!isSandboxMode && (
+            <button
+              onClick={enterSandboxMode}
+              className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md flex items-center"
+            >
+              <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+              وضع التجربة
+            </button>
+          )}
           {/* Bouton de nettoyage des doublons */}
           <button
             onClick={() => cleanDuplicateAssignments()}

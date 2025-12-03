@@ -343,6 +343,112 @@ export const generatePDFFromHTML = (content: string, options: PrintOptions): voi
 };
 
 /**
+ * توليد PDF Blob من HTML
+ * @param content Contenu HTML
+ * @param options Options d'impression
+ * @returns Promise<Blob>
+ */
+export const getPDFBlobFromHTML = async (content: string, options: PrintOptions): Promise<Blob> => {
+  // إنشاء عنصر مؤقت
+  const element = document.createElement('div');
+
+  // حساب scale بناءً على حجم الصفحة والهوامش
+  const pageSize = options.pageSize || 'A4';
+  const isLandscape = options.orientation === 'landscape';
+
+  // حساب الهوامش
+  const marginTop = options.pageMarginTop || 5;
+  const marginBottom = options.pageMarginBottom || 5;
+  const marginLeft = options.pageMarginLeft || 5;
+  const marginRight = options.pageMarginRight || 5;
+
+  // إضافة header و footer إذا كانا موجودين
+  const headerHTML = options.showHeader !== false && options.headerContent
+    ? `<div style="text-align: center; margin-bottom: 15px; font-size: 12pt;">${options.headerContent}</div>`
+    : '';
+
+  const footerHTML = options.showFooter !== false && options.footerContent
+    ? `<div style="text-align: center; margin-top: 15px; font-size: 10pt; border-top: 1px solid #ddd; padding-top: 10px;">${options.footerContent}</div>`
+    : '';
+
+  element.innerHTML = `
+    <div style="
+      direction: rtl; 
+      font-family: 'Arial', 'Helvetica', sans-serif; 
+      font-size: ${options.fontSize || '10pt'};
+      padding: ${typeof options.cellPadding === 'number' ? options.cellPadding + 'px' : (options.cellPadding || '5px')};
+      background: white;
+      color: #000;
+      box-sizing: border-box;
+      width: 100%;
+      line-height: ${options.lineHeight || 1.4};
+      ${options.watermark ? `position: relative;` : ''}
+    ">
+      ${options.watermark ? `
+        <div style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(-45deg);
+          font-size: 72pt;
+          color: rgba(0, 0, 0, ${options.watermarkOpacity || 0.1});
+          pointer-events: none;
+          z-index: 0;
+          white-space: nowrap;
+        ">${options.watermark}</div>
+      ` : ''}
+      <div style="position: relative; z-index: 1;">
+        ${headerHTML}
+        ${content}
+        ${footerHTML}
+      </div>
+    </div>
+  `;
+
+  // إعدادات html2pdf
+  const opt = {
+    margin: [marginTop, marginRight, marginBottom, marginLeft],
+    filename: `${options.title}.pdf`,
+    image: {
+      type: 'jpeg',
+      quality: 0.95
+    },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      letterRendering: true,
+      allowTaint: true,
+      logging: false,
+      scrollY: 0,
+      scrollX: 0,
+      windowWidth: isLandscape ? 4000 : 2800,
+      windowHeight: isLandscape ? 2800 : 4000,
+      backgroundColor: '#ffffff'
+    },
+    jsPDF: {
+      unit: 'mm',
+      format: pageSize.toLowerCase(),
+      orientation: options.orientation || 'portrait',
+      compress: true,
+      putOnlyUsedFonts: true
+    },
+    pagebreak: {
+      mode: 'avoid-all',
+      avoid: ['tr', 'td', 'th', 'table', 'div', 'thead', 'tbody']
+    },
+    enableLinks: false
+  };
+
+  try {
+    const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
+    return pdfBlob;
+  } catch (err) {
+    console.error('خطأ في توليد PDF Blob:', err);
+    throw new Error('حدث خطأ أثناء توليد ملف PDF');
+  }
+};
+
+/**
  * Génère le contenu HTML pour l'impression de la liste des séances
  * @param sessions Liste des séances à imprimer
  * @param filterType Type de filtre (extra, makeup ou all)
