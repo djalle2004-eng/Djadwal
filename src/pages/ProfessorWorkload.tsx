@@ -4,7 +4,12 @@ import html2canvas from 'html2canvas';
 import DatabaseErrorAlert from '../components/DatabaseErrorAlert';
 import { useAcademicYear } from '../context/AcademicYearContext';
 import { useAssignments } from '../context/AssignmentContext';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Box, Snackbar, Alert } from '@mui/material';
+import { Email as EmailIcon, Settings as SettingsIcon } from '@mui/icons-material';
+import { emailService, EmailStatus } from '../services/emailService';
+import EmailDialog from '../components/EmailDialog';
+import EmailStatusTracker from '../components/EmailStatusTracker';
+import { getPDFBlobFromHTML } from '../utils/printUtils';
 
 // واجهة للأستاذ
 interface Professor {
@@ -12,6 +17,7 @@ interface Professor {
   name: string;
   title?: string;       // Titre professionnel (poste)
   academic_title?: string; // Titre académique (Dr., Prof., etc.)
+  email?: string;
 }
 
 // واجهة للمقرر
@@ -20,6 +26,9 @@ interface Course {
   name: string;
   hours: number;
   specialization_id: number;
+  specialization?: string;
+  group_year?: string;
+  year?: string;
 }
 
 // واجهة للتكليف
@@ -39,7 +48,9 @@ interface Assignment {
   course_name?: string;
   professor_name?: string;
   room_name?: string;
+
   group_year?: string;  // إضافة حقل سنة المجموعة
+  year?: string;
 }
 
 // واجهة لعبء العمل
@@ -79,6 +90,7 @@ interface Group {
   id: number;
   name: string;
   year: string;
+  specialization?: string;
 }
 
 // واجهة للقاعة
@@ -137,6 +149,20 @@ const getAcademicLevel = (year: string): string => {
   return year; // إرجاع السنة كما هي إذا لم تطابق النمط المتوقع
 };
 
+const translateAcademicTitle = (title: string): string => {
+  const titles: { [key: string]: string } = {
+    'Professor': 'أستاذ',
+    'Associate Professor': 'أستاذ محاضر أ',
+    'Assistant Professor': 'أستاذ محاضر ب',
+    'Lecturer': 'أستاذ مساعد أ',
+    'Assistant Lecturer': 'أستاذ مساعد ب',
+    'Doctor': 'دكتور',
+    'Master': 'ماستر',
+    'Engineer': 'مهندس'
+  };
+  return titles[title] || title;
+};
+
 export default function ProfessorWorkload() {
   // الحالة
   const { currentYear, currentSemester, refreshCurrentSemester } = useAcademicYear();
@@ -162,6 +188,254 @@ export default function ProfessorWorkload() {
     universityLogoUrl: '',
     facultyLogoUrl: ''
   });
+
+  // Email State
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailStatusOpen, setEmailStatusOpen] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<EmailStatus[]>([]);
+  const [isGmailAuthenticated, setIsGmailAuthenticated] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' | 'warning' }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
+
+  useEffect(() => {
+    checkGmailAuth();
+  }, []);
+
+  const checkGmailAuth = async () => {
+    const authenticated = await emailService.checkAuthStatus();
+    setIsGmailAuthenticated(authenticated);
+  };
+
+  const handleGmailSetup = async () => {
+    try {
+      const url = await emailService.initiateGmailAuth();
+      const width = 500;
+      const height = 600;
+      const left = window.screen.width / 2 - width / 2;
+      const top = window.screen.height / 2 - height / 2;
+
+      window.open(
+        url,
+        'Gmail Auth',
+        `width=${width},height=${height},top=${top},left=${left}`
+      );
+
+      const interval = setInterval(async () => {
+        const authenticated = await emailService.checkAuthStatus();
+        if (authenticated) {
+          setIsGmailAuthenticated(true);
+          clearInterval(interval);
+          setSnackbar({
+            open: true,
+            message: 'تم ربط Gmail بنجاح',
+            severity: 'success'
+          });
+        }
+      }, 2000);
+
+      setTimeout(() => clearInterval(interval), 120000);
+    } catch (error) {
+      console.error('Error initiating Gmail auth:', error);
+      setSnackbar({
+        open: true,
+        message: 'فشل في بدء عملية الربط',
+        severity: 'error'
+      });
+    }
+  };
+
+  const generateProfessorSchedulePDF = async (professorId: number): Promise<Blob | null> => {
+    const professor = professors.find(p => p.id === professorId);
+    if (!professor) return null;
+
+    const allDays = [
+      { id: 0, name: 'السبت' },
+      { id: 1, name: 'الأحد' },
+      { id: 2, name: 'الاثنين' },
+      { id: 3, name: 'الثلاثاء' },
+      { id: 4, name: 'الأربعاء' },
+      { id: 5, name: 'الخميس' },
+      { id: 6, name: 'الجمعة' }
+    ];
+
+    const timeSlots = [
+      { start: '08:00', end: '09:30' },
+      { start: '09:30', end: '11:00' },
+      { start: '11:00', end: '12:30' },
+      { start: '12:30', end: '14:00' },
+      { start: '14:00', end: '15:30' },
+      { start: '15:30', end: '17:00' }
+    ];
+
+    const professorAssignments = assignments.filter(a => a.professor_id === professor.id);
+
+    const activeDays = allDays.filter(day =>
+      professorAssignments.some(a => a.day_of_week === day.id)
+    );
+
+    const activeTimeSlots = timeSlots.filter(timeSlot =>
+      professorAssignments.some(a =>
+        a.start_time === timeSlot.start && a.end_time === timeSlot.end
+      )
+    );
+
+    if (activeDays.length === 0 || activeTimeSlots.length === 0) {
+      return null;
+    }
+
+    let scheduleContent = `
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th>التوقيت</th>
+            ${activeDays.map(day => `<th>${day.name}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    activeTimeSlots.forEach(timeSlot => {
+      scheduleContent += `<tr><td class="time-slot">${timeSlot.start} - ${timeSlot.end}</td>`;
+
+      activeDays.forEach(day => {
+        const assignment = professorAssignments.find(a =>
+          a.day_of_week === day.id &&
+          a.start_time === timeSlot.start && a.end_time === timeSlot.end
+        );
+
+        if (assignment) {
+          const course = courses.find(c => c.id === assignment.course_id);
+          const group = groups.find(g => g.id === assignment.group_id);
+          const room = rooms.find(r => r.id === assignment.room_id);
+
+          scheduleContent += `
+            <td class="assignment-cell">
+              <div class="course-name">${course?.name || 'مقياس غير محدد'}</div>
+              <div class="group-info">${assignment.group_name || group?.name || 'مجموعة غير محددة'}</div>
+              <div class="room-info">القاعة: ${room?.name || 'غير محددة'}</div>
+              <div class="specialization-info">التخصص: ${assignment.specialization || group?.specialization || 'غير محدد'}</div>
+            </td>
+          `;
+        } else {
+          scheduleContent += '<td class="empty-cell">-</td>';
+        }
+      });
+
+      scheduleContent += '</tr>';
+    });
+
+    scheduleContent += `
+        </tbody>
+      </table>
+    `;
+
+    const htmlContent = `
+      <div class="professor-page">
+        <div class="header">
+          <div class="header-text">
+            <p>${printSettings.universityName}</p>
+            <p>${printSettings.facultyName}</p>
+            <p>قسم: علوم التسيير</p>
+          </div>
+        </div>
+        
+        <div class="title">جدول توقيت الأستاذ: ${professor.name}</div>
+        <div class="subtitle">
+          ${professor.academic_title ? `الرتبة: ${translateAcademicTitle(professor.academic_title)}` : ''}
+          ${professor.title ? ` - الصفة: ${professor.title}` : ''}
+        </div>
+        
+        ${scheduleContent}
+        
+        <div class="footer">
+          <div class="date-signature">
+            حرر بتاريخ: ${new Date().toLocaleDateString('ar-DZ')}
+          </div>
+          <div class="signature">
+            رئيس القسم
+          </div>
+        </div>
+      </div>
+    `;
+
+    return await getPDFBlobFromHTML(htmlContent, {
+      title: `جدول_${professor.name}`,
+      orientation: 'landscape',
+      pageSize: 'A4',
+      pageMarginTop: 10,
+      pageMarginBottom: 10,
+      pageMarginLeft: 10,
+      pageMarginRight: 10,
+      customCSS: `
+        .schedule-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .schedule-table th, .schedule-table td { border: 1px solid #000; padding: 5px; text-align: center; }
+        .schedule-table th { background-color: #f0f0f0; font-weight: bold; }
+        .assignment-cell { font-size: 11px; }
+        .course-name { font-weight: bold; margin-bottom: 2px; }
+        .group-info, .room-info, .specialization-info { font-size: 10px; }
+        .title { font-size: 18px; font-weight: bold; text-align: center; margin: 15px 0; }
+        .subtitle { font-size: 14px; text-align: center; margin-bottom: 15px; }
+        .header { display: flex; justify-content: center; margin-bottom: 20px; text-align: center; }
+        .footer { margin-top: 30px; display: flex; justify-content: space-between; }
+      `
+    });
+  };
+
+  const handleSendEmails = async (selectedIds: number[]) => {
+    setIsSending(true);
+    setEmailDialogOpen(false);
+    setEmailStatusOpen(true);
+
+    const statuses: EmailStatus[] = selectedIds.map(id => ({
+      professorId: id,
+      professorName: professors.find(p => p.id === id)?.name || '',
+      email: professors.find(p => p.id === id)?.email || '',
+      status: 'pending'
+    }));
+
+    setEmailStatus(statuses);
+
+    for (let i = 0; i < selectedIds.length; i++) {
+      const profId = selectedIds[i];
+
+      setEmailStatus(prev => prev.map(s =>
+        s.professorId === profId ? { ...s, status: 'sending' } : s
+      ));
+
+      try {
+        const pdfBlob = await generateProfessorSchedulePDF(profId);
+        if (!pdfBlob) {
+          throw new Error('فشل في توليد ملف PDF (قد لا يوجد جدول)');
+        }
+
+        await emailService.sendProfessorSchedule(
+          profId,
+          pdfBlob,
+          currentSemester?.semester_name || ''
+        );
+
+        setEmailStatus(prev => prev.map(s =>
+          s.professorId === profId ? { ...s, status: 'sent' } : s
+        ));
+      } catch (error: any) {
+        setEmailStatus(prev => prev.map(s =>
+          s.professorId === profId
+            ? { ...s, status: 'failed', error: error.message || 'خطأ غير معروف' }
+            : s
+        ));
+      }
+
+      if (i < selectedIds.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+
+    setIsSending(false);
+  };
 
   // دوال البحث والفلترة للمقاييس
   const handleCourseSearch = (searchTerm: string) => {
@@ -252,7 +526,7 @@ export default function ProfessorWorkload() {
 
       // Log détaillé de chaque groupe pour voir les champs disponibles
       if (groupsData && groupsData.length > 0) {
-        console.log(`Premier groupe:`, {
+        console.log(`Premier groupe: `, {
           id: groupsData[0].id,
           name: groupsData[0].name,
           year: groupsData[0].year,
@@ -263,7 +537,7 @@ export default function ProfessorWorkload() {
 
       // Log détaillé de chaque cours pour voir les champs disponibles
       if (coursesData && coursesData.length > 0) {
-        console.log(`Premier cours:`, {
+        console.log(`Premier cours: `, {
           id: coursesData[0].id,
           name: coursesData[0].name,
           specialization_id: coursesData[0].specialization_id,
@@ -303,7 +577,8 @@ export default function ProfessorWorkload() {
           id: prof.id,
           name: prof.name,
           title: prof.title || prof.Title || '',
-          academic_title: prof.academic_title || prof["Academic Title"] || ''
+          academic_title: prof.academic_title || prof["Academic Title"] || '',
+          email: prof.email || ''
         };
       });
 
@@ -454,7 +729,7 @@ export default function ProfessorWorkload() {
         const isLecture = assignment.group_name === 'محاضرة';
 
         // إنشاء مفتاح فريد يجمع بين المقرر والتخصص معاً
-        const courseSpecializationKey = `${courseId}_${specialization}`;
+        const courseSpecializationKey = `${courseId}_${specialization} `;
 
         // إضافة المقرر إلى قاموس المقررات
         if (!courseMap.has(courseSpecializationKey)) {
@@ -2239,265 +2514,331 @@ export default function ProfessorWorkload() {
         </p>
       </div>
 
-      {error && <DatabaseErrorAlert error={error} onRetry={() => { }} />}
+      {error && <DatabaseErrorAlert error={error} onRetry={async () => { }} />}
 
       {isLoading ? (
         <div className="text-center p-4">جاري التحميل...</div>
       ) : (
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="md:w-1/3 bg-white p-4 rounded shadow">
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="بحث عن أستاذ..."
-                className="w-full p-2 border rounded"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+        <>
+          <div className="flex justify-between items-center mb-4 bg-white p-4 rounded shadow">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="contained"
+                color={isGmailAuthenticated ? "success" : "warning"}
+                startIcon={<SettingsIcon />}
+                onClick={handleGmailSetup}
+                size="small"
+              >
+                {isGmailAuthenticated ? "Gmail متصل" : "ربط Gmail"}
+              </Button>
 
-            {/* فلترة المقاييس */}
-            <div className="mb-4 course-search-dropdown">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                فلترة حسب المقرر
-              </label>
-              <div className="relative">
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<EmailIcon />}
+                onClick={() => setEmailDialogOpen(true)}
+                disabled={!isGmailAuthenticated || isLoading}
+                size="small"
+              >
+                إرسال الجداول عبر الإيميل
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="md:w-1/3 bg-white p-4 rounded shadow">
+              <div className="mb-4">
                 <input
                   type="text"
-                  placeholder="ابحث عن مقرر..."
-                  className="w-full p-2 border rounded focus:border-blue-500 focus:outline-none"
-                  value={courseSearchTerm}
-                  onChange={(e) => handleCourseSearch(e.target.value)}
-                  onFocus={() => {
-                    if (courseSearchTerm.trim()) {
-                      setIsCourseDropdownOpen(true);
-                    }
-                  }}
+                  placeholder="بحث عن أستاذ..."
+                  className="w-full p-2 border rounded"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                {selectedCourse && (
-                  <button
-                    onClick={clearCourseFilter}
-                    className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    ✕
-                  </button>
-                )}
-
-                {isCourseDropdownOpen && filteredCourses.length > 0 && (
-                  <div className="absolute top-full left-0 w-full bg-white border rounded shadow-lg z-50 max-h-40 overflow-y-auto">
-                    {filteredCourses.map(course => (
-                      <div
-                        key={course.id}
-                        className="p-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                        onClick={() => selectCourse(course)}
-                      >
-                        <div className="font-medium text-sm">{course.name}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {isCourseDropdownOpen && filteredCourses.length === 0 && courseSearchTerm.trim() && (
-                  <div className="absolute top-full left-0 w-full bg-white border rounded shadow-lg z-50 p-2">
-                    <div className="text-sm text-gray-500 text-center">لا توجد مقررات مطابقة</div>
-                  </div>
-                )}
               </div>
 
-              {selectedCourse && (
-                <div className="mt-2 text-sm text-blue-600">
-                  المقرر المحدد: {allCourses.find(c => c.id === selectedCourse)?.name}
-                </div>
-              )}
-            </div>
-
-            <h2 className="text-lg font-semibold mb-2">قائمة الأساتذة ({filteredWorkloads.length})</h2>
-
-            <div className="max-h-96 overflow-y-auto">
-              {filteredWorkloads.length > 0 ? (
-                <ul className="divide-y">
-                  {filteredWorkloads.map((workload) => (
-                    <li
-                      key={workload.professor.id}
-                      className={`p-2 cursor-pointer hover:bg-gray-100 ${selectedProfessor === workload.professor.id ? 'bg-blue-100' : ''}`}
-                      onClick={() => setSelectedProfessor(workload.professor.id)}
+              {/* فلترة المقاييس */}
+              <div className="mb-4 course-search-dropdown">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  فلترة حسب المقرر
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="ابحث عن مقرر..."
+                    className="w-full p-2 border rounded focus:border-blue-500 focus:outline-none"
+                    value={courseSearchTerm}
+                    onChange={(e) => handleCourseSearch(e.target.value)}
+                    onFocus={() => {
+                      if (courseSearchTerm.trim()) {
+                        setIsCourseDropdownOpen(true);
+                      }
+                    }}
+                  />
+                  {selectedCourse && (
+                    <button
+                      onClick={clearCourseFilter}
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      <div className="font-medium">{workload.professor.name}</div>
-                      <div className="text-sm text-gray-600">
-                        الساعات: {workload.totalHours.toFixed(1)} |
-                        المقررات: {workload.courses.length}
-                      </div>
-                      <div className="mt-2">
-                        <button
-                          className="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 text-sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            exportIndividualProfessorSchedule(workload.professor.id);
-                          }}
-                          disabled={isLoading}
+                      ✕
+                    </button>
+                  )}
+
+                  {isCourseDropdownOpen && filteredCourses.length > 0 && (
+                    <div className="absolute top-full left-0 w-full bg-white border rounded shadow-lg z-50 max-h-40 overflow-y-auto">
+                      {filteredCourses.map(course => (
+                        <div
+                          key={course.id}
+                          className="p-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                          onClick={() => selectCourse(course)}
                         >
-                          طباعة الجدول الفردي
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                          <div className="font-medium text-sm">{course.name}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {isCourseDropdownOpen && filteredCourses.length === 0 && courseSearchTerm.trim() && (
+                    <div className="absolute top-full left-0 w-full bg-white border rounded shadow-lg z-50 p-2">
+                      <div className="text-sm text-gray-500 text-center">لا توجد مقررات مطابقة</div>
+                    </div>
+                  )}
+                </div>
+
+                {selectedCourse && (
+                  <div className="mt-2 text-sm text-blue-600">
+                    المقرر المحدد: {allCourses.find(c => c.id === selectedCourse)?.name}
+                  </div>
+                )}
+              </div>
+
+              <h2 className="text-lg font-semibold mb-2">قائمة الأساتذة ({filteredWorkloads.length})</h2>
+
+              <div className="max-h-96 overflow-y-auto">
+                {filteredWorkloads.length > 0 ? (
+                  <ul className="divide-y">
+                    {filteredWorkloads.map((workload) => (
+                      <li
+                        key={workload.professor.id}
+                        className={`p-2 cursor-pointer hover:bg-gray-100 ${selectedProfessor === workload.professor.id ? 'bg-blue-100' : ''}`}
+                        onClick={() => setSelectedProfessor(workload.professor.id)}
+                      >
+                        <div className="font-medium">{workload.professor.name}</div>
+                        <div className="text-sm text-gray-600">
+                          الساعات: {workload.totalHours.toFixed(1)} |
+                          المقررات: {workload.courses.length}
+                        </div>
+                        <div className="mt-2">
+                          <button
+                            className="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 text-sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              exportIndividualProfessorSchedule(workload.professor.id);
+                            }}
+                            disabled={isLoading}
+                          >
+                            طباعة الجدول الفردي
+                          </button>
+                          <button
+                            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm mr-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!isGmailAuthenticated) {
+                                setSnackbar({ open: true, message: 'يجب ربط Gmail أولاً', severity: 'warning' });
+                                return;
+                              }
+                              handleSendEmails([workload.professor.id]);
+                            }}
+                            disabled={isLoading || !workload.professor.email}
+                            title={!workload.professor.email ? 'لا يوجد بريد إلكتروني' : ''}
+                          >
+                            إرسال إيميل
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="text-center text-gray-500 p-4">
+                    {searchTerm || selectedCourse ?
+                      'لا توجد نتائج للبحث أو الفلترة المحددة' :
+                      'لا توجد أساتذة مع تكليفات'
+                    }
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="md:w-2/3 bg-white p-4 rounded shadow">
+              {selectedWorkload ? (
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold">{selectedWorkload.professor.name}</h2>
+                    <button
+                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                      onClick={exportToPDF}
+                    >
+                      تصدير PDF
+                    </button>
+                  </div>
+
+                  <div className="mb-4">
+                    <div className="text-lg font-semibold">
+                      إجمالي الساعات الأسبوعية: {selectedWorkload.totalHours.toFixed(1)} ساعة
+                    </div>
+                  </div>
+
+                  <div id="workload-table" className="border rounded overflow-hidden">
+                    <h3 className="text-lg font-semibold p-2 bg-gray-100">تفاصيل المقررات</h3>
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="p-2 border-b text-right">المقرر</th>
+                          <th className="p-2 border-b text-center">محاضرة</th>
+                          <th className="p-2 border-b text-center">أعمال موجهة</th>
+                          <th className="p-2 border-b text-center">المجموع</th>
+                          <th className="p-2 border-b text-center">التخصص</th>
+                          <th className="p-2 border-b text-center">المستوى</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedWorkload.courses.map((course, index) => (
+                          <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
+                            <td className="p-2 border-b">{course.course.name}</td>
+                            <td className="p-2 border-b text-center">{course.lectureCount}</td>
+                            <td className="p-2 border-b text-center">{course.tdCount}</td>
+                            <td className="p-2 border-b text-center">{course.count}</td>
+                            <td className="p-2 border-b text-center">{course.specialization || '-'}</td>
+                            <td className="p-2 border-b text-center">{getAcademicLevel(course.group_year || '')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    <h3 className="text-lg font-semibold p-2 bg-gray-100 mt-4">توزيع الأيام</h3>
+                    <table className="w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="p-2 border-b text-right">اليوم</th>
+                          <th className="p-2 border-b text-center">عدد الحصص</th>
+                          <th className="p-2 border-b text-center">عدد الساعات</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(selectedWorkload.days).map(([day, data], index) => (
+                          <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
+                            <td className="p-2 border-b">{day}</td>
+                            <td className="p-2 border-b text-center">{data.count}</td>
+                            <td className="p-2 border-b text-center">{data.hours.toFixed(1)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               ) : (
-                <div className="text-center text-gray-500 p-4">
-                  {searchTerm || selectedCourse ?
-                    'لا توجد نتائج للبحث أو الفلترة المحددة' :
-                    'لا توجد أساتذة مع تكليفات'
-                  }
+                <div className="text-center p-8 text-gray-500">
+                  الرجاء اختيار أستاذ لعرض تفاصيل عبء العمل
                 </div>
               )}
             </div>
           </div>
 
-          <div className="md:w-2/3 bg-white p-4 rounded shadow">
-            {selectedWorkload ? (
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold">{selectedWorkload.professor.name}</h2>
-                  <button
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                    onClick={exportToPDF}
-                  >
-                    تصدير PDF
-                  </button>
-                </div>
 
-                <div className="mb-4">
-                  <div className="text-lg font-semibold">
-                    إجمالي الساعات الأسبوعية: {selectedWorkload.totalHours.toFixed(1)} ساعة
-                  </div>
-                </div>
-
-                <div id="workload-table" className="border rounded overflow-hidden">
-                  <h3 className="text-lg font-semibold p-2 bg-gray-100">تفاصيل المقررات</h3>
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="p-2 border-b text-right">المقرر</th>
-                        <th className="p-2 border-b text-center">محاضرة</th>
-                        <th className="p-2 border-b text-center">أعمال موجهة</th>
-                        <th className="p-2 border-b text-center">المجموع</th>
-                        <th className="p-2 border-b text-center">التخصص</th>
-                        <th className="p-2 border-b text-center">المستوى</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedWorkload.courses.map((course, index) => (
-                        <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
-                          <td className="p-2 border-b">{course.course.name}</td>
-                          <td className="p-2 border-b text-center">{course.lectureCount}</td>
-                          <td className="p-2 border-b text-center">{course.tdCount}</td>
-                          <td className="p-2 border-b text-center">{course.count}</td>
-                          <td className="p-2 border-b text-center">{course.specialization || '-'}</td>
-                          <td className="p-2 border-b text-center">{getAcademicLevel(course.group_year || '')}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-
-                  <h3 className="text-lg font-semibold p-2 bg-gray-100 mt-4">توزيع الأيام</h3>
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="p-2 border-b text-right">اليوم</th>
-                        <th className="p-2 border-b text-center">عدد الحصص</th>
-                        <th className="p-2 border-b text-center">عدد الساعات</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(selectedWorkload.days).map(([day, data], index) => (
-                        <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
-                          <td className="p-2 border-b">{day}</td>
-                          <td className="p-2 border-b text-center">{data.count}</td>
-                          <td className="p-2 border-b text-center">{data.hours.toFixed(1)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center p-8 text-gray-500">
-                الرجاء اختيار أستاذ لعرض تفاصيل عبء العمل
-              </div>
-            )}
+          {/* Boutons de filtre et d'export */}
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <input
+                type="text"
+                placeholder="ابحث عن أستاذ..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="px-4 py-2 border rounded"
+              />
+            </div>
+            <div>
+              {/* Bouton pour exporter toutes les affectations */}
+              <button
+                onClick={exportAllToPDF}
+                className="mx-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center"
+                disabled={isLoading || !workloads || workloads.length === 0}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                تصدير كل التكاليف
+              </button>
+              {/* Bouton pour exporter les professeurs sans affectations */}
+              <button
+                onClick={exportProfessorsWithoutAssignments}
+                className="mx-2 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 flex items-center"
+                disabled={isLoading || !professors || professors.length === 0}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                تصدير الأساتذة بدون تكليفات
+              </button>
+              {/* Bouton pour exporter le classement des professeurs */}
+              <button
+                onClick={exportWorkloadRanking}
+                className="mx-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center"
+                disabled={isLoading || !workloads || workloads.length === 0}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                تصدير ترتيب الأساتذة
+              </button>
+              {/* Bouton pour exporter les professeurs par spécialité */}
+              <button
+                onClick={exportProfessorSchedules}
+                className="mx-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
+                disabled={isLoading || !workloads || workloads.length === 0}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                طباعة جداول التوقيت
+              </button>
+              {/* Bouton pour exporter les professeurs sans noms temporaires */}
+              <button
+                onClick={exportProfessorSchedulesWithoutTemporary}
+                className="mx-2 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 flex items-center"
+                disabled={isLoading || !workloads || workloads.length === 0}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                تصدير PDF بدون أسماء مؤقتين
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* Boutons de filtre et d'export */}
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <input
-            type="text"
-            placeholder="ابحث عن أستاذ..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-4 py-2 border rounded"
+          <EmailDialog
+            open={emailDialogOpen}
+            onClose={() => setEmailDialogOpen(false)}
+            professors={professors}
+            onSend={handleSendEmails}
+            isSending={isSending}
           />
-        </div>
-        <div>
-          {/* Bouton pour exporter toutes les affectations */}
-          <button
-            onClick={exportAllToPDF}
-            className="mx-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center"
-            disabled={isLoading || !workloads || workloads.length === 0}
+
+          <EmailStatusTracker
+            open={emailStatusOpen}
+            onClose={() => setEmailStatusOpen(false)}
+            statuses={emailStatus}
+          />
+
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={6000}
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            تصدير كل التكاليف
-          </button>
-          {/* Bouton pour exporter les professeurs sans affectations */}
-          <button
-            onClick={exportProfessorsWithoutAssignments}
-            className="mx-2 px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 flex items-center"
-            disabled={isLoading || !professors || professors.length === 0}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            تصدير الأساتذة بدون تكليفات
-          </button>
-          {/* Bouton pour exporter le classement des professeurs */}
-          <button
-            onClick={exportWorkloadRanking}
-            className="mx-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center"
-            disabled={isLoading || !workloads || workloads.length === 0}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-            تصدير ترتيب الأساتذة
-          </button>
-          {/* Bouton pour exporter les professeurs par spécialité */}
-          <button
-            onClick={exportProfessorSchedules}
-            className="mx-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
-            disabled={isLoading || !workloads || workloads.length === 0}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            طباعة جداول التوقيت
-          </button>
-          {/* Bouton pour exporter les professeurs sans noms temporaires */}
-          <button
-            onClick={exportProfessorSchedulesWithoutTemporary}
-            className="mx-2 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 flex items-center"
-            disabled={isLoading || !workloads || workloads.length === 0}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            تصدير PDF بدون أسماء مؤقتين
-          </button>
-        </div>
-      </div>
+            <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
+        </>
+      )}
     </div>
   );
 }
