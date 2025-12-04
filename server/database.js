@@ -49,12 +49,39 @@ async function initDatabaseConnection() {
             await db.sql('SELECT 1 as test', []);
             console.log('✅ Database connected successfully');
 
+            // Ensure sandbox table exists
+            await ensureSandboxTable(db);
+
             return db;
         }
         return db;
     } catch (error) {
         console.error('❌ Database connection failed:', error.message);
         throw error;
+    }
+}
+
+// Ensure sandbox_snapshots table exists
+async function ensureSandboxTable(database) {
+    try {
+        await database.sql('SELECT 1 FROM sandbox_snapshots LIMIT 1');
+        console.log('✅ sandbox_snapshots table already exists');
+    } catch (error) {
+        if (error.message.includes('no such table') || error.message.includes('does not exist')) {
+            console.log('ℹ️ Creating sandbox_snapshots table...');
+            await database.sql(`
+                CREATE TABLE IF NOT EXISTS sandbox_snapshots (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT,
+                    data TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            console.log('✅ Created sandbox_snapshots table');
+        } else {
+            console.error('⚠️ Error checking sandbox table:', error);
+        }
     }
 }
 
