@@ -10,9 +10,9 @@ contextBridge.exposeInMainWorld('db', {
 
   // دوال المجموعات
   getGroups: () => ipcRenderer.invoke('get-groups'),
-  addGroup: (name, specialization, parent_group_id, department_id, group_type, year) => 
+  addGroup: (name, specialization, parent_group_id, department_id, group_type, year) =>
     ipcRenderer.invoke('add-group', name, specialization, parent_group_id, department_id, group_type, year),
-  updateGroup: (id, name, specialization, parent_group_id, department_id, group_type, year) => 
+  updateGroup: (id, name, specialization, parent_group_id, department_id, group_type, year) =>
     ipcRenderer.invoke('update-group', id, name, specialization, parent_group_id, department_id, group_type, year),
   deleteGroup: (id) => ipcRenderer.invoke('delete-group', id),
 
@@ -51,10 +51,10 @@ contextBridge.exposeInMainWorld('db', {
   // دوال الفصول الدراسية
   getSemesters: (academicYearId) => ipcRenderer.invoke('get-semesters', academicYearId),
   getActiveSemester: (academicYearId) => ipcRenderer.invoke('get-active-semester', academicYearId),
-  addSemester: (academicYearId, semesterName, startDate, endDate, setAsCurrent) => 
+  addSemester: (academicYearId, semesterName, startDate, endDate, setAsCurrent) =>
     ipcRenderer.invoke('add-semester', academicYearId, semesterName, startDate, endDate, setAsCurrent),
   setActiveSemester: (semesterId) => ipcRenderer.invoke('set-active-semester', semesterId),
-  updateSemester: (semesterId, semesterName, startDate, endDate) => 
+  updateSemester: (semesterId, semesterName, startDate, endDate) =>
     ipcRenderer.invoke('update-semester', semesterId, semesterName, startDate, endDate),
   deleteSemester: (semesterId) => ipcRenderer.invoke('delete-semester', semesterId),
 
@@ -96,9 +96,15 @@ contextBridge.exposeInMainWorld('db', {
   previewBackup: (backupId) => ipcRenderer.invoke('preview-backup', backupId),
   validateBackup: (backupId) => ipcRenderer.invoke('validate-backup', backupId),
 
-  // دالة استيراد البيانات من سنة دراسية سابقة
-  importDataFromPreviousYear: (sourceYearId, targetYearId, importSpecializations, importGroups, importCourses) => 
+  // دوال استيراد البيانات من سنة دراسية سابقة
+  importDataFromPreviousYear: (sourceYearId, targetYearId, importSpecializations, importGroups, importCourses) =>
     ipcRenderer.invoke('import-data-from-previous-year', sourceYearId, targetYearId, importSpecializations, importGroups, importCourses),
+
+  // دوال Sandbox (حفظ المسودات)
+  saveSandboxDraft: (name, data) => ipcRenderer.invoke('save-sandbox-draft', name, data),
+  getSandboxDrafts: () => ipcRenderer.invoke('get-sandbox-drafts'),
+  loadSandboxDraft: (id) => ipcRenderer.invoke('load-sandbox-draft', id),
+  deleteSandboxDraft: (id) => ipcRenderer.invoke('delete-sandbox-draft', id),
 
   // إضافة وظائف استيراد وتصدير البيانات إلى واجهة برمجة التطبيقات
   exportData: () => ipcRenderer.invoke('export-data'),

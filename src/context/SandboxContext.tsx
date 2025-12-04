@@ -190,22 +190,7 @@ export const SandboxProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const saveDraft = async (name: string) => {
         try {
-            const response = await fetch('http://localhost:3001/api/sandbox/save', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name,
-                    data: sandboxAssignments
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to save draft');
-            }
-
-            const result = await response.json();
+            const result = await window.db.saveSandboxDraft(name, sandboxAssignments);
             return result.id;
         } catch (error) {
             console.error('Error saving draft:', error);
@@ -215,11 +200,7 @@ export const SandboxProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const listDrafts = async () => {
         try {
-            const response = await fetch('http://localhost:3001/api/sandbox/list');
-            if (!response.ok) {
-                throw new Error('Failed to list drafts');
-            }
-            return await response.json();
+            return await window.db.getSandboxDrafts();
         } catch (error) {
             console.error('Error listing drafts:', error);
             throw error;
@@ -228,15 +209,17 @@ export const SandboxProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const loadDraft = async (id: number) => {
         try {
-            const response = await fetch(`http://localhost:3001/api/sandbox/load/${id}`);
-            if (!response.ok) {
-                throw new Error('Failed to load draft');
+            const result = await window.db.loadSandboxDraft(id);
+            if (!result) {
+                throw new Error('Draft not found');
             }
-            const result = await response.json();
+
+            // Parse data if it's a string (SQLite stores JSON as text)
+            const draftData = typeof result.data === 'string' ? JSON.parse(result.data) : result.data;
 
             // Enter sandbox mode with the loaded data
             enterSandboxMode();
-            setSandboxAssignments(result.data);
+            setSandboxAssignments(draftData);
             setHasChanges(true); // Loading a draft counts as a change from the live state
 
             return result;
@@ -248,12 +231,7 @@ export const SandboxProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const deleteDraft = async (id: number) => {
         try {
-            const response = await fetch(`http://localhost:3001/api/sandbox/${id}`, {
-                method: 'DELETE'
-            });
-            if (!response.ok) {
-                throw new Error('Failed to delete draft');
-            }
+            await window.db.deleteSandboxDraft(id);
         } catch (error) {
             console.error('Error deleting draft:', error);
             throw error;
