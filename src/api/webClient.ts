@@ -192,6 +192,15 @@ export const webClient = {
         body: JSON.stringify({ permissions: permissionsJson })
     }),
 
+    // --- Sandbox (Drafts) ---
+    saveSandboxDraft: (name: string, data: any) => fetchApi('/sandbox/save', {
+        method: 'POST',
+        body: JSON.stringify({ name, data })
+    }),
+    getSandboxDrafts: () => fetchApi('/sandbox/list'),
+    loadSandboxDraft: (id: number) => fetchApi(`/sandbox/load/${id}`),
+    deleteSandboxDraft: (id: number) => fetchApi(`/sandbox/${id}`, { method: 'DELETE' }),
+
     // --- Backup & Export (Web Implementation) ---
     createBackup: async () => {
         try {
