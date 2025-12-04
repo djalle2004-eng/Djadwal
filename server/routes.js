@@ -1099,4 +1099,77 @@ router.get('/debug/email-settings', async (req, res) => {
     }
 });
 
+
+// ==========================================
+// Sandbox API Endpoints
+// ==========================================
+
+// POST /api/sandbox/save - Save current sandbox state
+router.post('/sandbox/save', async (req, res) => {
+    try {
+        const { name, data } = req.body;
+
+        if (!data) {
+            return res.status(400).json({ error: 'Data is required' });
+        }
+
+        const result = await executeQuery(
+            'INSERT INTO sandbox_snapshots (name, data) VALUES (?, ?)',
+            [name || `Draft ${new Date().toLocaleString()}`, JSON.stringify(data)]
+        );
+
+        res.json({ success: true, id: result.lastInsertRowid });
+    } catch (error) {
+        console.error('Error saving sandbox snapshot:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/sandbox/list - List saved snapshots
+router.get('/sandbox/list', async (req, res) => {
+    try {
+        const snapshots = await executeQuery(
+            'SELECT id, name, created_at FROM sandbox_snapshots ORDER BY created_at DESC'
+        );
+        res.json(snapshots);
+    } catch (error) {
+        console.error('Error listing sandbox snapshots:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/sandbox/load/:id - Load a specific snapshot
+router.get('/sandbox/load/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const snapshot = await executeQuery(
+            'SELECT * FROM sandbox_snapshots WHERE id = ?',
+            [id]
+        );
+
+        if (!snapshot[0]) {
+            return res.status(404).json({ error: 'Snapshot not found' });
+        }
+
+        // Parse the JSON data before sending
+        const data = JSON.parse(snapshot[0].data);
+        res.json({ ...snapshot[0], data });
+    } catch (error) {
+        console.error('Error loading sandbox snapshot:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// DELETE /api/sandbox/:id - Delete a snapshot
+router.delete('/sandbox/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await executeQuery('DELETE FROM sandbox_snapshots WHERE id = ?', [id]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting sandbox snapshot:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

@@ -36,6 +36,10 @@ interface SandboxContextType {
     redo: () => void;
     canUndo: boolean;
     canRedo: boolean;
+    saveDraft: (name: string) => Promise<number>;
+    loadDraft: (id: number) => Promise<any>;
+    listDrafts: () => Promise<any[]>;
+    deleteDraft: (id: number) => Promise<void>;
 }
 
 const SandboxContext = createContext<SandboxContextType | undefined>(undefined);
@@ -184,6 +188,78 @@ export const SandboxProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
     };
 
+    const saveDraft = async (name: string) => {
+        try {
+            const response = await fetch('http://localhost:3001/api/sandbox/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name,
+                    data: sandboxAssignments
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to save draft');
+            }
+
+            const result = await response.json();
+            return result.id;
+        } catch (error) {
+            console.error('Error saving draft:', error);
+            throw error;
+        }
+    };
+
+    const listDrafts = async () => {
+        try {
+            const response = await fetch('http://localhost:3001/api/sandbox/list');
+            if (!response.ok) {
+                throw new Error('Failed to list drafts');
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error listing drafts:', error);
+            throw error;
+        }
+    };
+
+    const loadDraft = async (id: number) => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/sandbox/load/${id}`);
+            if (!response.ok) {
+                throw new Error('Failed to load draft');
+            }
+            const result = await response.json();
+
+            // Enter sandbox mode with the loaded data
+            enterSandboxMode();
+            setSandboxAssignments(result.data);
+            setHasChanges(true); // Loading a draft counts as a change from the live state
+
+            return result;
+        } catch (error) {
+            console.error('Error loading draft:', error);
+            throw error;
+        }
+    };
+
+    const deleteDraft = async (id: number) => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/sandbox/${id}`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) {
+                throw new Error('Failed to delete draft');
+            }
+        } catch (error) {
+            console.error('Error deleting draft:', error);
+            throw error;
+        }
+    };
+
     return (
         <SandboxContext.Provider value={{
             isSandboxMode,
@@ -200,7 +276,11 @@ export const SandboxProvider: React.FC<{ children: React.ReactNode }> = ({ child
             undo,
             redo,
             canUndo,
-            canRedo
+            canRedo,
+            saveDraft,
+            loadDraft,
+            listDrafts,
+            deleteDraft
         }}>
             {children}
         </SandboxContext.Provider>

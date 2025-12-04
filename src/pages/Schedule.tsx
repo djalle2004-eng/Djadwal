@@ -178,6 +178,13 @@ export default function Schedule() {
   const [filteredCoursesSearch, setFilteredCoursesSearch] = useState<Course[]>([]);
   const [filteredRooms, setFilteredRooms] = useState<Room[]>([]);
 
+  // Sandbox Save/Load State
+  const [isSaveDraftModalOpen, setIsSaveDraftModalOpen] = useState(false);
+  const [isLoadDraftModalOpen, setIsLoadDraftModalOpen] = useState(false);
+  const [draftName, setDraftName] = useState('');
+  const [savedDrafts, setSavedDrafts] = useState<any[]>([]);
+  const { saveDraft, loadDraft, listDrafts, deleteDraft } = useSandbox();
+
   // Day/time filters state (used by professors filtering)
   const [selectedDayId, setSelectedDayId] = useState<number | null>(null);
   const [selectedTimeSlotId, setSelectedTimeSlotId] = useState<number | null>(null);
@@ -2388,6 +2395,66 @@ export default function Schedule() {
     }
   }, [contextAssignments, selectedSpecialization, selectedDayId, selectedTimeSlotId, currentYear, currentSemester, groups, professors]);
 
+  // Sandbox Save/Load Handlers
+  const handleSaveDraft = async () => {
+    try {
+      setIsLoading(true);
+      await saveDraft(draftName || `مسودة ${new Date().toLocaleString('ar-EG')}`);
+      setIsSaveDraftModalOpen(false);
+      setDraftName('');
+      alert('تم حفظ المسودة بنجاح');
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      alert('حدث خطأ أثناء حفظ المسودة');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOpenLoadDraftModal = async () => {
+    try {
+      setIsLoading(true);
+      const drafts = await listDrafts();
+      setSavedDrafts(drafts);
+      setIsLoadDraftModalOpen(true);
+    } catch (error) {
+      console.error('Error listing drafts:', error);
+      alert('حدث خطأ أثناء تحميل قائمة المسودات');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLoadDraft = async (id: number) => {
+    try {
+      setIsLoading(true);
+      await loadDraft(id);
+      setIsLoadDraftModalOpen(false);
+      alert('تم تحميل المسودة بنجاح');
+    } catch (error) {
+      console.error('Error loading draft:', error);
+      alert('حدث خطأ أثناء تحميل المسودة');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteDraft = async (id: number) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذه المسودة؟')) return;
+    try {
+      setIsLoading(true);
+      await deleteDraft(id);
+      // Refresh list
+      const drafts = await listDrafts();
+      setSavedDrafts(drafts);
+    } catch (error) {
+      console.error('Error deleting draft:', error);
+      alert('حدث خطأ أثناء حذف المسودة');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
       {/* Sandbox Mode Banner */}
@@ -2409,11 +2476,17 @@ export default function Schedule() {
             </div>
             <div className="flex space-x-2 space-x-reverse">
               <button
+                onClick={() => setIsSaveDraftModalOpen(true)}
+                className="px-4 py-2 rounded-md text-white font-medium bg-blue-600 hover:bg-blue-700"
+              >
+                حفظ مسودة
+              </button>
+              <button
                 onClick={commitChanges}
                 disabled={!hasChanges}
                 className={`px-4 py-2 rounded-md text-white font-medium ${hasChanges ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}
               >
-                حفظ التغييرات
+                تطبيق التغييرات
               </button>
               <button
                 onClick={undo}
@@ -2452,15 +2525,26 @@ export default function Schedule() {
 
         <div className="flex space-x-2">
           {!isSandboxMode && (
-            <button
-              onClick={enterSandboxMode}
-              className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md flex items-center"
-            >
-              <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-              </svg>
-              وضع التجربة
-            </button>
+            <>
+              <button
+                onClick={enterSandboxMode}
+                className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md flex items-center"
+              >
+                <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
+                وضع التجربة
+              </button>
+              <button
+                onClick={handleOpenLoadDraftModal}
+                className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md flex items-center"
+              >
+                <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                تحميل مسودة
+              </button>
+            </>
           )}
           {/* Bouton de nettoyage des doublons */}
           <button
@@ -2919,6 +3003,85 @@ export default function Schedule() {
         groups={groups}
         rooms={rooms}
       />
+      {/* Save Draft Modal */}
+      {isSaveDraftModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-96">
+            <h3 className="text-lg font-bold mb-4">حفظ مسودة التجربة</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">اسم المسودة</label>
+              <input
+                type="text"
+                value={draftName}
+                onChange={(e) => setDraftName(e.target.value)}
+                placeholder="أدخل اسمًا للمسودة (اختياري)"
+                className="w-full border rounded-md p-2"
+              />
+            </div>
+            <div className="flex justify-end space-x-2 space-x-reverse">
+              <button
+                onClick={() => setIsSaveDraftModalOpen(false)}
+                className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleSaveDraft}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                حفظ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Load Draft Modal */}
+      {isLoadDraftModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-[500px] max-h-[80vh] overflow-y-auto">
+            <h3 className="text-lg font-bold mb-4">تحميل مسودة سابقة</h3>
+            {savedDrafts.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">لا توجد مسودات محفوظة</p>
+            ) : (
+              <div className="space-y-2">
+                {savedDrafts.map((draft) => (
+                  <div key={draft.id} className="border rounded-md p-3 flex justify-between items-center hover:bg-gray-50">
+                    <div>
+                      <div className="font-medium">{draft.name}</div>
+                      <div className="text-sm text-gray-500">
+                        {new Date(draft.created_at).toLocaleString('ar-EG')}
+                      </div>
+                    </div>
+                    <div className="flex space-x-2 space-x-reverse">
+                      <button
+                        onClick={() => handleLoadDraft(draft.id)}
+                        className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 text-sm"
+                      >
+                        تحميل
+                      </button>
+                      <button
+                        onClick={() => handleDeleteDraft(draft.id)}
+                        className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm"
+                      >
+                        حذف
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setIsLoadDraftModalOpen(false)}
+                className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
