@@ -2540,552 +2540,551 @@ export default function Schedule() {
               </svg>
               وضع التجربة
             </button>
-            </>
           )}
-        {/* Bouton de nettoyage des doublons */}
-        <button
-          onClick={() => cleanDuplicateAssignments()}
-          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
-          disabled={isLoading}
-        >
-          {isLoading ? 'جاري التنظيف...' : 'تنظيف التكاليف المكررة'}
-        </button>
+          {/* Bouton de nettoyage des doublons */}
+          <button
+            onClick={() => cleanDuplicateAssignments()}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
+            disabled={isLoading}
+          >
+            {isLoading ? 'جاري التنظيف...' : 'تنظيف التكاليف المكررة'}
+          </button>
 
-        {/* Boutons existants */}
-        <button
-          onClick={() => exportToPDF()}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
-          disabled={isLoading}
-        >
-          تصدير PDF
-        </button>
+          {/* Boutons existants */}
+          <button
+            onClick={() => exportToPDF()}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+            disabled={isLoading}
+          >
+            تصدير PDF
+          </button>
 
-        <button
-          onClick={() => exportToExcel()}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
-          disabled={isLoading}
-        >
-          تصدير Excel
-        </button>
+          <button
+            onClick={() => exportToExcel()}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
+            disabled={isLoading}
+          >
+            تصدير Excel
+          </button>
 
-        <button
-          onClick={() => exportToPDFWithoutTemporaryProfessors()}
-          className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md"
-          disabled={isLoading}
-        >
-          تصدير PDF بدون أسماء مؤقتين
-        </button>
+          <button
+            onClick={() => exportToPDFWithoutTemporaryProfessors()}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md"
+            disabled={isLoading}
+          >
+            تصدير PDF بدون أسماء مؤقتين
+          </button>
 
-        <button
-          onClick={() => setIsAIAssistantOpen(true)}
-          className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md flex items-center space-x-2"
-          disabled={isLoading}
-        >
-          <span>🤖</span>
-          <span>مساعد الذكاء الاصطناعي</span>
-        </button>
-      </div>
-    </div>
-
-      {/* بطاقة معلومات السداسي والسنة الجامعية والتخصص */ }
-  <div className="bg-white p-4 mb-6 rounded-lg shadow">
-    <div className="text-center mb-4">
-      <h2 className="text-lg font-semibold">
-        السنة الجامعية: <span className="text-indigo-600">{currentYear?.year_name || 'غير محدد'}</span> |
-        الفصل: <span className="text-indigo-600">{currentSemester?.semester_name || 'غير محدد'}</span>
-      </h2>
-      <p className="text-sm text-gray-500">
-        يمكنك تحديد السنة الجامعية والفصل من صفحة الإعدادات
-      </p>
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* اختيار القسم */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">القسم</label>
-        <select
-          className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-          value={selectedDepartment}
-          onChange={(e) => {
-            const deptId = Number(e.target.value);
-            setSelectedDepartment(deptId);
-            setSelectedSpecialization('');
-          }}
-        >
-          <option value={0}>-- اختر القسم --</option>
-          {departments.map((dept) => (
-            <option key={`dept-${dept.id}`} value={dept.id}>{dept.name}</option>
-          ))}
-        </select>
+          <button
+            onClick={() => setIsAIAssistantOpen(true)}
+            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md flex items-center space-x-2"
+            disabled={isLoading}
+          >
+            <span>🤖</span>
+            <span>مساعد الذكاء الاصطناعي</span>
+          </button>
+        </div>
       </div>
 
-      {/* اختيار التخصص */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">التخصص</label>
-        <select
-          className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-          value={selectedSpecialization}
-          onChange={(e) => setSelectedSpecialization(e.target.value)}
-          disabled={!selectedDepartment}
-        >
-          <option value="">-- اختر التخصص --</option>
-          {getDepartmentSpecializations(selectedDepartment).map((spec, index) => (
-            <option key={`spec-${index}`} value={spec}>{spec}</option>
-          ))}
-        </select>
-      </div>
-    </div>
-
-    {/* عرض المعلومات المختارة */}
-    <div className="mt-4 p-3 bg-gray-50 rounded text-center">
-      <h2 className="text-lg font-semibold">
-        جدول محاضرات {selectedSpecialization || 'جميع التخصصات'} | {getSelectedSemesterName()} | السنة الجامعية {currentYear?.year_name || 'غير محدد'}
-      </h2>
-    </div>
-  </div>
-
-  {
-    error && (
-      <DatabaseErrorAlert error={error} onRetry={() => fetchData()} />
-    )
-  }
-
-  {
-    isLoading ? (
-      <div className="text-center py-4">جاري التحميل...</div>
-    ) : (
-      <div>
-        {/* Filters for day and time slot with assigned professors list */}
-        <div className="mb-4 bg-white p-4 rounded-lg shadow">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">اليوم</label>
-              <select
-                className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                value={selectedDayId ?? ''}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setSelectedDayId(v === '' ? null : Number(v));
-                }}
-              >
-                <option value="">اختر اليوم</option>
-                {days.map(d => (
-                  <option key={`day-${d.id}`} value={d.id}>{d.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">المدة الزمنية</label>
-              <select
-                className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                value={selectedTimeSlotId ?? ''}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setSelectedTimeSlotId(v === '' ? null : Number(v));
-                }}
-              >
-                <option value="">اختر المدة</option>
-                {timeSlots.map(ts => (
-                  <option key={`slot-${ts.id}`} value={ts.id}>{ts.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الأساتذة المعيّنون</label>
-              <div className="text-sm">
-                {(selectedDayId == null || selectedTimeSlotId == null) ? (
-                  <span className="text-gray-500">اختر اليوم والمدة الزمنية لعرض الأساتذة</span>
-                ) : (
-                  filteredAssignedProfessors.length > 0 ? (
-                    <ul className="list-disc pl-5">
-                      {filteredAssignedProfessors.map(p => (
-                        <li key={`prof-${p.id}`}>{p.name}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <span className="text-red-600">لا يوجد أساتذة معيّنون لهذا التخصص في هذا التوقيت</span>
-                  )
-                )}
-              </div>
-            </div>
-          </div>
+      {/* بطاقة معلومات السداسي والسنة الجامعية والتخصص */}
+      <div className="bg-white p-4 mb-6 rounded-lg shadow">
+        <div className="text-center mb-4">
+          <h2 className="text-lg font-semibold">
+            السنة الجامعية: <span className="text-indigo-600">{currentYear?.year_name || 'غير محدد'}</span> |
+            الفصل: <span className="text-indigo-600">{currentSemester?.semester_name || 'غير محدد'}</span>
+          </h2>
+          <p className="text-sm text-gray-500">
+            يمكنك تحديد السنة الجامعية والفصل من صفحة الإعدادات
+          </p>
         </div>
 
-        {/* إعدادات تصميم الجدول */}
-        <div className="mb-4 bg-white p-4 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-3">إعدادات تصميم الجدول</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* لون خلفية الخلايا المملوءة */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">لون خلفية الخلايا المملوءة</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="color"
-                  value={scheduleStyle.filledCellColor}
-                  onChange={(e) => setScheduleStyle({ ...scheduleStyle, filledCellColor: e.target.value })}
-                  className="w-10 h-8 border border-gray-300 rounded cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={scheduleStyle.filledCellColor}
-                  onChange={(e) => setScheduleStyle({ ...scheduleStyle, filledCellColor: e.target.value })}
-                  className="flex-1 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="#dbeafe"
-                />
-              </div>
-            </div>
-
-            {/* حدود سميكة بين الفترات الزمنية */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">حدود سميكة بين الفترات الزمنية</label>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={scheduleStyle.showThickTimeBorders}
-                  onChange={(e) => setScheduleStyle({ ...scheduleStyle, showThickTimeBorders: e.target.checked })}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <span className="ml-2 text-sm text-gray-700">تفعيل الحدود السميكة</span>
-              </div>
-            </div>
-
-            {/* حدود مزدوجة بين أعمدة الأيام */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">حدود مزدوجة بين أعمدة الأيام</label>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={scheduleStyle.showDoubleDayBorders}
-                  onChange={(e) => setScheduleStyle({ ...scheduleStyle, showDoubleDayBorders: e.target.checked })}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <span className="ml-2 text-sm text-gray-700">تفعيل الحدود المزدوجة</span>
-              </div>
-            </div>
-          </div>
-
-          {/* أزرار إعادة تعيين */}
-          <div className="mt-3 flex space-x-2">
-            <button
-              onClick={() => setScheduleStyle({
-                filledCellColor: '#dbeafe',
-                showThickTimeBorders: false,
-                showDoubleDayBorders: false
-              })}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-md"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* اختيار القسم */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">القسم</label>
+            <select
+              className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              value={selectedDepartment}
+              onChange={(e) => {
+                const deptId = Number(e.target.value);
+                setSelectedDepartment(deptId);
+                setSelectedSpecialization('');
+              }}
             >
-              إعادة تعيين الإعدادات
-            </button>
+              <option value={0}>-- اختر القسم --</option>
+              {departments.map((dept) => (
+                <option key={`dept-${dept.id}`} value={dept.id}>{dept.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* اختيار التخصص */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">التخصص</label>
+            <select
+              className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              value={selectedSpecialization}
+              onChange={(e) => setSelectedSpecialization(e.target.value)}
+              disabled={!selectedDepartment}
+            >
+              <option value="">-- اختر التخصص --</option>
+              {getDepartmentSpecializations(selectedDepartment).map((spec, index) => (
+                <option key={`spec-${index}`} value={spec}>{spec}</option>
+              ))}
+            </select>
           </div>
         </div>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCorners}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="overflow-x-auto">
-            <table id="schedule-table" className="min-w-full border-collapse">
-              <thead>
-                <tr>
-                  <th className="border p-2 bg-gray-100 w-20">الوقت / اليوم</th>
-                  {daysOfWeek.map((day, index) => (
-                    <th key={index} className="border p-2 bg-gray-100">{day}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {timeSlots.map((slot, timeIndex) => (
-                  <tr key={timeIndex}>
-                    <td className="border p-2 bg-gray-50 text-center">
-                      {slot.start} - {slot.end}
-                    </td>
-                    {daysOfWeek.map((_, dayIndex) => (
-                      <td key={dayIndex} className="border p-0 align-top h-24">
-                        {renderCell(dayIndex, timeIndex)}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <DragOverlay>
-            {activeId && activeAssignment ? (
-              <div className="bg-blue-100 p-2 rounded shadow-lg border border-blue-300 opacity-90 w-40 h-20 overflow-hidden text-xs">
-                <div className="font-bold">{groups.find(g => g.id === activeAssignment.group_id)?.name}</div>
-                <div>{courses.find(c => c.id === activeAssignment.course_id)?.name}</div>
-                <div>{professors.find(p => p.id === activeAssignment.professor_id)?.name}</div>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+        {/* عرض المعلومات المختارة */}
+        <div className="mt-4 p-3 bg-gray-50 rounded text-center">
+          <h2 className="text-lg font-semibold">
+            جدول محاضرات {selectedSpecialization || 'جميع التخصصات'} | {getSelectedSemesterName()} | السنة الجامعية {currentYear?.year_name || 'غير محدد'}
+          </h2>
+        </div>
+      </div>
 
-        {isCellModalOpen && selectedCell && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-              <h2 className="text-xl font-bold mb-4">
-                {scheduleData[selectedCell.dayIndex]?.[selectedCell.timeIndex] ? 'تعديل تكليف' : 'إضافة تكليف جديد'}
-              </h2>
+      {
+        error && (
+          <DatabaseErrorAlert error={error} onRetry={() => fetchData()} />
+        )
+      }
 
-              <div className="grid grid-cols-1 gap-4 mb-4">
-                {/* المجموعة */}
+      {
+        isLoading ? (
+          <div className="text-center py-4">جاري التحميل...</div>
+        ) : (
+          <div>
+            {/* Filters for day and time slot with assigned professors list */}
+            <div className="mb-4 bg-white p-4 rounded-lg shadow">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">المجموعة</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">اليوم</label>
                   <select
                     className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                    value={selectedCell.group_id}
-                    onChange={(e) => setSelectedCell({ ...selectedCell, group_id: parseInt(e.target.value) })}
+                    value={selectedDayId ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setSelectedDayId(v === '' ? null : Number(v));
+                    }}
                   >
-                    <option value={0}>اختر المجموعة</option>
-                    {filteredGroupsBySpecialization.map(group => (
-                      <option key={`group-${group.id}`} value={group.id}>{group.name}</option>
+                    <option value="">اختر اليوم</option>
+                    {days.map(d => (
+                      <option key={`day-${d.id}`} value={d.id}>{d.name}</option>
                     ))}
                   </select>
                 </div>
-
-                {/* بحث المادة */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">المادة</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="اكتب اسم المادة للبحث..."
-                      value={courseSearchTerm}
-                      onChange={handleCourseSearch}
-                      onFocus={() => courseSearchTerm && setIsCourseDropdownOpen(true)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
-                          setIsCourseDropdownOpen(false);
-                        }
-                      }}
-                    />
-                    {isCourseDropdownOpen && filteredCoursesSearch.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                        {filteredCoursesSearch.map((course, index) => (
-                          <div
-                            key={`course-${course.id}`}
-                            id={`schedule-course-${course.id}-${index}`}
-                            className={`p-2 cursor-pointer hover:bg-gray-100 ${courseNavigation.selectedIndex === index ? 'bg-blue-100' : ''
-                              }`}
-                            onClick={() => handleCourseSelect(course.id)}
-                            onMouseEnter={() => courseNavigation.setSelectedIndex(index)}
-                          >
-                            {course.name} {course.code && `(${course.code})`}
-                          </div>
-                        ))}
-                      </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">المدة الزمنية</label>
+                  <select
+                    className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    value={selectedTimeSlotId ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setSelectedTimeSlotId(v === '' ? null : Number(v));
+                    }}
+                  >
+                    <option value="">اختر المدة</option>
+                    {timeSlots.map(ts => (
+                      <option key={`slot-${ts.id}`} value={ts.id}>{ts.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">الأساتذة المعيّنون</label>
+                  <div className="text-sm">
+                    {(selectedDayId == null || selectedTimeSlotId == null) ? (
+                      <span className="text-gray-500">اختر اليوم والمدة الزمنية لعرض الأساتذة</span>
+                    ) : (
+                      filteredAssignedProfessors.length > 0 ? (
+                        <ul className="list-disc pl-5">
+                          {filteredAssignedProfessors.map(p => (
+                            <li key={`prof-${p.id}`}>{p.name}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <span className="text-red-600">لا يوجد أساتذة معيّنون لهذا التخصص في هذا التوقيت</span>
+                      )
                     )}
                   </div>
-                  {selectedCell.course_id > 0 && (
-                    <div className="mt-1 text-sm text-indigo-600">
-                      المقرر المحدد: {courses.find(c => c.id === selectedCell.course_id)?.name || 'غير محدد'}
-                    </div>
-                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* إعدادات تصميم الجدول */}
+            <div className="mb-4 bg-white p-4 rounded-lg shadow">
+              <h3 className="text-lg font-semibold mb-3">إعدادات تصميم الجدول</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* لون خلفية الخلايا المملوءة */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">لون خلفية الخلايا المملوءة</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={scheduleStyle.filledCellColor}
+                      onChange={(e) => setScheduleStyle({ ...scheduleStyle, filledCellColor: e.target.value })}
+                      className="w-10 h-8 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={scheduleStyle.filledCellColor}
+                      onChange={(e) => setScheduleStyle({ ...scheduleStyle, filledCellColor: e.target.value })}
+                      className="flex-1 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="#dbeafe"
+                    />
+                  </div>
                 </div>
 
-                {/* بحث الأستاذ */}
+                {/* حدود سميكة بين الفترات الزمنية */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">الأستاذ</label>
-                  <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">حدود سميكة بين الفترات الزمنية</label>
+                  <div className="flex items-center">
                     <input
-                      type="text"
-                      className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="اكتب اسم الأستاذ للبحث..."
-                      value={professorSearchTerm}
-                      onChange={handleProfessorSearch}
-                      onFocus={() => professorSearchTerm && setIsProfessorDropdownOpen(true)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
-                          setIsProfessorDropdownOpen(false);
-                        }
-                      }}
+                      type="checkbox"
+                      checked={scheduleStyle.showThickTimeBorders}
+                      onChange={(e) => setScheduleStyle({ ...scheduleStyle, showThickTimeBorders: e.target.checked })}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                     />
-                    {isProfessorDropdownOpen && filteredProfessors.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                        {filteredProfessors.map((professor, index) => (
-                          <div
-                            key={`professor-${professor.id}`}
-                            id={`schedule-professor-${professor.id}-${index}`}
-                            className={`p-2 cursor-pointer hover:bg-gray-100 ${professorNavigation.selectedIndex === index ? 'bg-blue-100' : ''
-                              } ${isProfessorTemporary(professor) ? 'text-red-600' : ''}`}
-                            onClick={() => handleProfessorSelect(professor.id)}
-                            onMouseEnter={() => professorNavigation.setSelectedIndex(index)}
-                          >
-                            {professor.name}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <span className="ml-2 text-sm text-gray-700">تفعيل الحدود السميكة</span>
                   </div>
-                  {selectedCell.professor_id > 0 && (
-                    <div className="mt-1 text-sm text-indigo-600">
-                      الأستاذ المحدد: {professors.find(p => p.id === selectedCell.professor_id)?.name || 'غير محدد'}
-                    </div>
-                  )}
                 </div>
 
-                {/* بحث القاعة */}
+                {/* حدود مزدوجة بين أعمدة الأيام */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">القاعة</label>
-                  <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">حدود مزدوجة بين أعمدة الأيام</label>
+                  <div className="flex items-center">
                     <input
-                      type="text"
-                      className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="اكتب اسم القاعة للبحث..."
-                      value={roomSearchTerm}
-                      onChange={handleRoomSearch}
-                      onFocus={() => roomSearchTerm && setIsRoomDropdownOpen(true)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
-                          setIsRoomDropdownOpen(false);
-                        }
-                      }}
+                      type="checkbox"
+                      checked={scheduleStyle.showDoubleDayBorders}
+                      onChange={(e) => setScheduleStyle({ ...scheduleStyle, showDoubleDayBorders: e.target.checked })}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                     />
-                    {isRoomDropdownOpen && filteredRooms.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                        {filteredRooms.map((room, index) => (
-                          <div
-                            key={`room-${room.id}`}
-                            id={`schedule-room-${room.id}-${index}`}
-                            className={`p-2 cursor-pointer hover:bg-gray-100 ${roomNavigation.selectedIndex === index ? 'bg-blue-100' : ''
-                              }`}
-                            onClick={() => handleRoomSelect(room.id)}
-                            onMouseEnter={() => roomNavigation.setSelectedIndex(index)}
-                          >
-                            {room.name}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <span className="ml-2 text-sm text-gray-700">تفعيل الحدود المزدوجة</span>
                   </div>
-                  {selectedCell.room_id > 0 && (
-                    <div className="mt-1 text-sm text-indigo-600">
-                      القاعة المحددة: {rooms.find(r => r.id === selectedCell.room_id)?.name || 'غير محدد'}
-                    </div>
-                  )}
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2">
+              {/* أزرار إعادة تعيين */}
+              <div className="mt-3 flex space-x-2">
                 <button
-                  className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 ml-2"
-                  onClick={() => setIsCellModalOpen(false)}
+                  onClick={() => setScheduleStyle({
+                    filledCellColor: '#dbeafe',
+                    showThickTimeBorders: false,
+                    showDoubleDayBorders: false
+                  })}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-md"
+                >
+                  إعادة تعيين الإعدادات
+                </button>
+              </div>
+            </div>
+
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCorners}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="overflow-x-auto">
+                <table id="schedule-table" className="min-w-full border-collapse">
+                  <thead>
+                    <tr>
+                      <th className="border p-2 bg-gray-100 w-20">الوقت / اليوم</th>
+                      {daysOfWeek.map((day, index) => (
+                        <th key={index} className="border p-2 bg-gray-100">{day}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {timeSlots.map((slot, timeIndex) => (
+                      <tr key={timeIndex}>
+                        <td className="border p-2 bg-gray-50 text-center">
+                          {slot.start} - {slot.end}
+                        </td>
+                        {daysOfWeek.map((_, dayIndex) => (
+                          <td key={dayIndex} className="border p-0 align-top h-24">
+                            {renderCell(dayIndex, timeIndex)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <DragOverlay>
+                {activeId && activeAssignment ? (
+                  <div className="bg-blue-100 p-2 rounded shadow-lg border border-blue-300 opacity-90 w-40 h-20 overflow-hidden text-xs">
+                    <div className="font-bold">{groups.find(g => g.id === activeAssignment.group_id)?.name}</div>
+                    <div>{courses.find(c => c.id === activeAssignment.course_id)?.name}</div>
+                    <div>{professors.find(p => p.id === activeAssignment.professor_id)?.name}</div>
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+
+            {isCellModalOpen && selectedCell && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+                  <h2 className="text-xl font-bold mb-4">
+                    {scheduleData[selectedCell.dayIndex]?.[selectedCell.timeIndex] ? 'تعديل تكليف' : 'إضافة تكليف جديد'}
+                  </h2>
+
+                  <div className="grid grid-cols-1 gap-4 mb-4">
+                    {/* المجموعة */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">المجموعة</label>
+                      <select
+                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        value={selectedCell.group_id}
+                        onChange={(e) => setSelectedCell({ ...selectedCell, group_id: parseInt(e.target.value) })}
+                      >
+                        <option value={0}>اختر المجموعة</option>
+                        {filteredGroupsBySpecialization.map(group => (
+                          <option key={`group-${group.id}`} value={group.id}>{group.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* بحث المادة */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">المادة</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="اكتب اسم المادة للبحث..."
+                          value={courseSearchTerm}
+                          onChange={handleCourseSearch}
+                          onFocus={() => courseSearchTerm && setIsCourseDropdownOpen(true)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
+                              setIsCourseDropdownOpen(false);
+                            }
+                          }}
+                        />
+                        {isCourseDropdownOpen && filteredCoursesSearch.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                            {filteredCoursesSearch.map((course, index) => (
+                              <div
+                                key={`course-${course.id}`}
+                                id={`schedule-course-${course.id}-${index}`}
+                                className={`p-2 cursor-pointer hover:bg-gray-100 ${courseNavigation.selectedIndex === index ? 'bg-blue-100' : ''
+                                  }`}
+                                onClick={() => handleCourseSelect(course.id)}
+                                onMouseEnter={() => courseNavigation.setSelectedIndex(index)}
+                              >
+                                {course.name} {course.code && `(${course.code})`}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {selectedCell.course_id > 0 && (
+                        <div className="mt-1 text-sm text-indigo-600">
+                          المقرر المحدد: {courses.find(c => c.id === selectedCell.course_id)?.name || 'غير محدد'}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* بحث الأستاذ */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">الأستاذ</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="اكتب اسم الأستاذ للبحث..."
+                          value={professorSearchTerm}
+                          onChange={handleProfessorSearch}
+                          onFocus={() => professorSearchTerm && setIsProfessorDropdownOpen(true)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
+                              setIsProfessorDropdownOpen(false);
+                            }
+                          }}
+                        />
+                        {isProfessorDropdownOpen && filteredProfessors.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                            {filteredProfessors.map((professor, index) => (
+                              <div
+                                key={`professor-${professor.id}`}
+                                id={`schedule-professor-${professor.id}-${index}`}
+                                className={`p-2 cursor-pointer hover:bg-gray-100 ${professorNavigation.selectedIndex === index ? 'bg-blue-100' : ''
+                                  } ${isProfessorTemporary(professor) ? 'text-red-600' : ''}`}
+                                onClick={() => handleProfessorSelect(professor.id)}
+                                onMouseEnter={() => professorNavigation.setSelectedIndex(index)}
+                              >
+                                {professor.name}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {selectedCell.professor_id > 0 && (
+                        <div className="mt-1 text-sm text-indigo-600">
+                          الأستاذ المحدد: {professors.find(p => p.id === selectedCell.professor_id)?.name || 'غير محدد'}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* بحث القاعة */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">القاعة</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="اكتب اسم القاعة للبحث..."
+                          value={roomSearchTerm}
+                          onChange={handleRoomSearch}
+                          onFocus={() => roomSearchTerm && setIsRoomDropdownOpen(true)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
+                              setIsRoomDropdownOpen(false);
+                            }
+                          }}
+                        />
+                        {isRoomDropdownOpen && filteredRooms.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                            {filteredRooms.map((room, index) => (
+                              <div
+                                key={`room-${room.id}`}
+                                id={`schedule-room-${room.id}-${index}`}
+                                className={`p-2 cursor-pointer hover:bg-gray-100 ${roomNavigation.selectedIndex === index ? 'bg-blue-100' : ''
+                                  }`}
+                                onClick={() => handleRoomSelect(room.id)}
+                                onMouseEnter={() => roomNavigation.setSelectedIndex(index)}
+                              >
+                                {room.name}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {selectedCell.room_id > 0 && (
+                        <div className="mt-1 text-sm text-indigo-600">
+                          القاعة المحددة: {rooms.find(r => r.id === selectedCell.room_id)?.name || 'غير محدد'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-2">
+                    <button
+                      className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 ml-2"
+                      onClick={() => setIsCellModalOpen(false)}
+                    >
+                      إلغاء
+                    </button>
+                    <button
+                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                      onClick={() => {
+                        handleSaveCell(selectedCell.dayIndex, selectedCell.timeIndex, selectedCell);
+                        setIsCellModalOpen(false);
+                      }}
+                    >
+                      حفظ
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      }
+
+      {/* AI Assistant Modal */}
+      <AIAssistant
+        isOpen={isAIAssistantOpen}
+        onClose={() => setIsAIAssistantOpen(false)}
+        assignments={contextAssignments}
+        professors={professors}
+        courses={courses}
+        groups={groups}
+        rooms={rooms}
+      />
+      {/* Save Draft Modal */}
+      {
+        isSaveDraftModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl w-96">
+              <h3 className="text-lg font-bold mb-4">حفظ مسودة التجربة</h3>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">اسم المسودة</label>
+                <input
+                  type="text"
+                  value={draftName}
+                  onChange={(e) => setDraftName(e.target.value)}
+                  placeholder="أدخل اسمًا للمسودة (اختياري)"
+                  className="w-full border rounded-md p-2"
+                />
+              </div>
+              <div className="flex justify-end space-x-2 space-x-reverse">
+                <button
+                  onClick={() => setIsSaveDraftModalOpen(false)}
+                  className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
                 >
                   إلغاء
                 </button>
                 <button
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  onClick={() => {
-                    handleSaveCell(selectedCell.dayIndex, selectedCell.timeIndex, selectedCell);
-                    setIsCellModalOpen(false);
-                  }}
+                  onClick={handleSaveDraft}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >
                   حفظ
                 </button>
               </div>
             </div>
           </div>
-        )}
-      </div>
-    )
-  }
+        )
+      }
 
-  {/* AI Assistant Modal */ }
-  <AIAssistant
-    isOpen={isAIAssistantOpen}
-    onClose={() => setIsAIAssistantOpen(false)}
-    assignments={contextAssignments}
-    professors={professors}
-    courses={courses}
-    groups={groups}
-    rooms={rooms}
-  />
-  {/* Save Draft Modal */ }
-  {
-    isSaveDraftModalOpen && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-lg shadow-xl w-96">
-          <h3 className="text-lg font-bold mb-4">حفظ مسودة التجربة</h3>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">اسم المسودة</label>
-            <input
-              type="text"
-              value={draftName}
-              onChange={(e) => setDraftName(e.target.value)}
-              placeholder="أدخل اسمًا للمسودة (اختياري)"
-              className="w-full border rounded-md p-2"
-            />
-          </div>
-          <div className="flex justify-end space-x-2 space-x-reverse">
-            <button
-              onClick={() => setIsSaveDraftModalOpen(false)}
-              className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
-            >
-              إلغاء
-            </button>
-            <button
-              onClick={handleSaveDraft}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              حفظ
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  {/* Load Draft Modal */ }
-  {
-    isLoadDraftModalOpen && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-lg shadow-xl w-[500px] max-h-[80vh] overflow-y-auto">
-          <h3 className="text-lg font-bold mb-4">تحميل مسودة سابقة</h3>
-          {savedDrafts.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">لا توجد مسودات محفوظة</p>
-          ) : (
-            <div className="space-y-2">
-              {savedDrafts.map((draft) => (
-                <div key={draft.id} className="border rounded-md p-3 flex justify-between items-center hover:bg-gray-50">
-                  <div>
-                    <div className="font-medium">{draft.name}</div>
-                    <div className="text-sm text-gray-500">
-                      {new Date(draft.created_at).toLocaleString('ar-EG')}
+      {/* Load Draft Modal */}
+      {
+        isLoadDraftModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl w-[500px] max-h-[80vh] overflow-y-auto">
+              <h3 className="text-lg font-bold mb-4">تحميل مسودة سابقة</h3>
+              {savedDrafts.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">لا توجد مسودات محفوظة</p>
+              ) : (
+                <div className="space-y-2">
+                  {savedDrafts.map((draft) => (
+                    <div key={draft.id} className="border rounded-md p-3 flex justify-between items-center hover:bg-gray-50">
+                      <div>
+                        <div className="font-medium">{draft.name}</div>
+                        <div className="text-sm text-gray-500">
+                          {new Date(draft.created_at).toLocaleString('ar-EG')}
+                        </div>
+                      </div>
+                      <div className="flex space-x-2 space-x-reverse">
+                        <button
+                          onClick={() => handleLoadDraft(draft.id)}
+                          className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 text-sm"
+                        >
+                          تحميل
+                        </button>
+                        <button
+                          onClick={() => handleDeleteDraft(draft.id)}
+                          className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm"
+                        >
+                          حذف
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex space-x-2 space-x-reverse">
-                    <button
-                      onClick={() => handleLoadDraft(draft.id)}
-                      className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 text-sm"
-                    >
-                      تحميل
-                    </button>
-                    <button
-                      onClick={() => handleDeleteDraft(draft.id)}
-                      className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm"
-                    >
-                      حذف
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              )}
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={() => setIsLoadDraftModalOpen(false)}
+                  className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+                >
+                  إغلاق
+                </button>
+              </div>
             </div>
-          )}
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={() => setIsLoadDraftModalOpen(false)}
-              className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
-            >
-              إغلاق
-            </button>
           </div>
-        </div>
-      </div>
-    )
-  }
+        )
+      }
     </div >
   );
 }
