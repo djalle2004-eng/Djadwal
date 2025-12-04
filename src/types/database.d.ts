@@ -120,7 +120,7 @@ interface Database {
   updateAssignment: (id: number, assignment: Assignment) => Promise<any>;
   deleteAssignment: (id: number) => Promise<any>;
   checkConflicts: (assignment: Assignment) => Promise<ConflictResult>;
-  
+
   // دوال الحصص الإضافية
   getExtraSessions: () => Promise<ExtraSession[]>;
   createExtraSession: (session: ExtraSession) => Promise<number>;
@@ -139,6 +139,12 @@ interface Database {
   resetPassword: (userId: number, newPassword: string) => Promise<{ success: boolean; message: string }>;
   toggleUserStatus: (userId: number, isActive: boolean) => Promise<{ success: boolean }>;
   getAuditLogs: (filters?: any) => Promise<any[]>;
+
+  // دوال Sandbox (حفظ المسودات)
+  saveSandboxDraft: (name: string, data: any) => Promise<any>;
+  getSandboxDrafts: () => Promise<any[]>;
+  loadSandboxDraft: (id: number) => Promise<any>;
+  deleteSandboxDraft: (id: number) => Promise<boolean>;
 
   // دوال النسخ الاحتياطي
   createBackup: (options: any) => Promise<any>;

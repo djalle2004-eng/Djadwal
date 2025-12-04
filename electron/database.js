@@ -19,11 +19,11 @@ try {
 function getDatabaseConfig() {
   const configManager = getConfigManager();
   const dbConfig = configManager.getDatabaseConfig();
-  
+
   console.log('🔧 getDatabaseConfig() called');
   console.log('   - useTurso:', dbConfig.useTurso);
   console.log('   - Turso URL:', dbConfig.turso?.url);
-  
+
   return {
     useTurso: dbConfig.useTurso || false,
     turso: dbConfig.turso
@@ -65,7 +65,7 @@ function closeConnection() {
     }
     db = null;
   }
-  
+
   // Clear health check interval
   if (connectionHealthInterval) {
     clearInterval(connectionHealthInterval);
@@ -76,7 +76,7 @@ function closeConnection() {
 // Fonction pour vérifier la santé de la connexion
 async function checkConnectionHealth() {
   if (!db) return false;
-  
+
   try {
     await db.sql('SELECT 1 as health_check', []);
     return true;
@@ -91,7 +91,7 @@ function startConnectionMonitoring() {
   if (connectionHealthInterval) {
     clearInterval(connectionHealthInterval);
   }
-  
+
   connectionHealthInterval = setInterval(async () => {
     const isHealthy = await checkConnectionHealth();
     if (!isHealthy) {
@@ -99,7 +99,7 @@ function startConnectionMonitoring() {
       await reconnectDatabase();
     }
   }, HEALTH_CHECK_INTERVAL);
-  
+
   console.log(`🔍 Started connection monitoring (every ${HEALTH_CHECK_INTERVAL}ms)`);
 }
 
@@ -137,6 +137,30 @@ async function ensurePermissionsColumn() {
   }
 }
 
+// Fonction pour s'assurer que la table sandbox_snapshots existe
+async function ensureSandboxTable() {
+  try {
+    await executeQuery('SELECT 1 FROM sandbox_snapshots LIMIT 1');
+    console.log('✅ sandbox_snapshots table already exists');
+  } catch (error) {
+    if (error.message.includes('no such table') || error.message.includes('does not exist')) {
+      console.log('ℹ️ Creating sandbox_snapshots table...');
+      await executeQuery(`
+        CREATE TABLE IF NOT EXISTS sandbox_snapshots (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT,
+          data TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      console.log('✅ Created sandbox_snapshots table');
+    } else {
+      throw error;
+    }
+  }
+}
+
 // Fonction pour s'assurer que la table audit_log existe
 async function ensureAuditLogTable() {
   try {
@@ -166,30 +190,54 @@ async function ensureAuditLogTable() {
   }
 }
 
+// Fonction pour s'assurer que la table sandbox_snapshots existe
+async function ensureSandboxTable() {
+  try {
+    await executeQuery('SELECT 1 FROM sandbox_snapshots LIMIT 1');
+    console.log('✅ sandbox_snapshots table already exists');
+  } catch (error) {
+    if (error.message.includes('no such table') || error.message.includes('does not exist')) {
+      console.log('ℹ️ Creating sandbox_snapshots table...');
+      await executeQuery(`
+        CREATE TABLE IF NOT EXISTS sandbox_snapshots (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT,
+          data TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      console.log('✅ Created sandbox_snapshots table');
+    } else {
+      throw error;
+    }
+  }
+}
+
 // Initialiser la connexion à la base de données avec retry logic
 async function initDatabaseConnection(retryCount = 0) {
   const MAX_RETRIES = 3;
   const TIMEOUT_MS = 30000; // 30 seconds
-  
+
   try {
     if (!db) {
       const config = getDbConfig();
-      
+
       console.log('🔍 Config received:', JSON.stringify(config, null, 2));
-      
+
       if (!config.useTurso || !config.turso) {
         throw new Error('Turso configuration is missing! useTurso: ' + config.useTurso + ', turso: ' + JSON.stringify(config.turso));
       }
-      
+
       // Turso only - Multi-user mode via HTTPS (Port 443)
       console.log(`🚀 Initializing Turso connection... (Attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
       console.log(`⏱️ Connecting to: ${config.turso.url}`);
-      
+
       const tursoClient = createClient({
         url: config.turso.url,
         authToken: config.turso.authToken
       });
-      
+
       // Wrap Turso client to match expected API
       db = {
         sql: async (query, params = []) => {
@@ -202,43 +250,46 @@ async function initDatabaseConnection(retryCount = 0) {
         close: () => tursoClient.close(),
         raw: tursoClient
       };
-      
+
       // Test connection
       const testPromise = db.sql('SELECT 1 as test', []);
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Connection timeout')), 5000)
       );
-      
+
       await Promise.race([testPromise, timeoutPromise]);
       console.log('✅ Database connected successfully');
-      
+
       // Ensure the last_login column exists
       await ensureLastLoginColumn();
-      
+
       // Ensure the permissions column exists
       await ensurePermissionsColumn();
-      
+
       // Ensure the audit_log table exists
       await ensureAuditLogTable();
-      
+
+      // Ensure the sandbox_snapshots table exists
+      await ensureSandboxTable();
+
       reconnectAttempts = 0;
       isReconnecting = false;
-      
+
       return db;
     }
     return db;
   } catch (error) {
     console.error(`❌ Database connection failed (Attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, error.message);
     closeConnection();
-    
+
     // Retry logic
     if (retryCount < MAX_RETRIES) {
       const delayMs = (retryCount + 1) * 2000; // 2s, 4s, 6s
-      console.log(`⏳ Retrying in ${delayMs/1000} seconds...`);
+      console.log(`⏳ Retrying in ${delayMs / 1000} seconds...`);
       await new Promise(resolve => setTimeout(resolve, delayMs));
       return initDatabaseConnection(retryCount + 1);
     }
-    
+
     // After all retries failed
     throw new Error(`فشل الاتصال بقاعدة البيانات بعد ${MAX_RETRIES + 1} محاولات: ${error.message}`);
   }
@@ -247,18 +298,18 @@ async function initDatabaseConnection(retryCount = 0) {
 // Fonction pour reconnecter automatiquement
 async function reconnectDatabase() {
   if (isReconnecting) return;
-  
+
   isReconnecting = true;
   reconnectAttempts++;
-  
+
   if (reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
     console.error('❌ Max reconnection attempts reached');
     isReconnecting = false;
     return;
   }
-  
+
   console.log(`🔄 Attempting reconnection (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
-  
+
   try {
     closeConnection();
     await new Promise(resolve => setTimeout(resolve, RECONNECT_DELAY));
@@ -268,7 +319,7 @@ async function reconnectDatabase() {
     console.error('❌ Reconnection failed:', error.message);
     setTimeout(() => reconnectDatabase(), RECONNECT_DELAY);
   }
-  
+
   isReconnecting = false;
 }
 
@@ -278,11 +329,11 @@ async function executeQuery(query, params = []) {
     if (!db) {
       await initDatabaseConnection();
     }
-    
+
     // Convert PostgreSQL placeholders ($1, $2, ...) to SQLite placeholders (?)
     let sqliteQuery = query;
     const cleanParams = params.map(p => p === undefined ? null : p);
-    
+
     // Replace $1, $2, etc. with ?
     if (query.includes('$')) {
       let index = 1;
@@ -291,14 +342,14 @@ async function executeQuery(query, params = []) {
         index++;
       }
     }
-    
+
     const result = await db.sql(sqliteQuery, cleanParams);
     return result;
   } catch (error) {
     console.error('❌ Query execution failed:', error.message);
     console.error('📝 Query:', query);
     console.error('📝 Params:', params);
-    
+
     // Try to reconnect and retry once
     if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
       console.log('🔄 Attempting reconnection and retry...');
@@ -321,7 +372,7 @@ async function executeQuery(query, params = []) {
         throw retryError;
       }
     }
-    
+
     throw error;
   }
 }
@@ -535,37 +586,37 @@ async function getAssignments(academicYear = null, semester = null, specializati
     LEFT JOIN rooms r ON a.room_id = r.id
     LEFT JOIN groups g ON a.group_id = g.id
   `;
-  
+
   const conditions = [];
   const params = [];
-  
+
   // إضافة فلترة حسب السنة الأكاديمية
   if (academicYear) {
     conditions.push('a.academic_year = $' + (params.length + 1));
     params.push(academicYear);
   }
-  
+
   // إضافة فلترة حسب الفصل الدراسي
   if (semester) {
     conditions.push('a.semester = $' + (params.length + 1));
     params.push(semester);
   }
-  
+
   // إضافة فلترة حسب التخصص
   if (specialization) {
     conditions.push('g.specialization = $' + (params.length + 1));
     params.push(specialization);
   }
-  
+
   // إضافة الشروط إلى الاستعلام
   if (conditions.length > 0) {
     query += ' WHERE ' + conditions.join(' AND ');
   }
-  
+
   query += ' ORDER BY a.day_of_week, a.start_time';
-  
+
   console.log('getAssignments query:', { query, params, academicYear, semester, specialization });
-  
+
   return await executeQuery(query, params);
 }
 
@@ -623,7 +674,7 @@ async function getActiveAcademicYear() {
 async function setCurrentAcademicYear(yearId) {
   // D'abord, désactiver toutes les années
   await executeQuery('UPDATE academic_years SET is_current = 0');
-  
+
   // Ensuite, activer l'année sélectionnée
   const query = 'UPDATE academic_years SET is_current = 1 WHERE id = $1 RETURNING *';
   const result = await executeQuery(query, [yearId]);
@@ -643,12 +694,12 @@ async function addAcademicYear(yearName, setAsCurrent) {
     RETURNING *
   `;
   const result = await executeQuery(query, [yearName, setAsCurrent ? 1 : 0]);
-  
+
   if (setAsCurrent) {
     // Désactiver toutes les autres années
     await executeQuery('UPDATE academic_years SET is_current = 0 WHERE id != $1', [result[0].id]);
   }
-  
+
   return result[0];
 }
 
@@ -686,7 +737,7 @@ async function getActiveSemester(academicYearId) {
 async function setCurrentSemester(semesterId) {
   // D'abord, désactiver tous les semestres
   await executeQuery('UPDATE semesters SET is_current = 0');
-  
+
   // Ensuite, activer le semestre sélectionné
   const query = 'UPDATE semesters SET is_current = 1 WHERE id = $1 RETURNING *';
   const result = await executeQuery(query, [semesterId]);
@@ -706,18 +757,18 @@ async function addSemester(academicYearId, semesterName, startDate, endDate, set
     RETURNING *
   `;
   const result = await executeQuery(query, [
-    academicYearId, 
-    semesterName, 
-    startDate, 
-    endDate, 
+    academicYearId,
+    semesterName,
+    startDate,
+    endDate,
     setAsCurrent ? 1 : 0
   ]);
-  
+
   if (setAsCurrent) {
     // Désactiver tous les autres semestres
     await executeQuery('UPDATE semesters SET is_current = 0 WHERE id != $1', [result[0].id]);
   }
-  
+
   return result[0];
 }
 
@@ -785,12 +836,12 @@ async function changePassword(userId, oldPassword, newPassword) {
   if (!user[0]) {
     throw new Error('Utilisateur non trouvé');
   }
-  
+
   const isValid = await bcrypt.compare(oldPassword, user[0].password_hash);
   if (!isValid) {
     throw new Error('Ancien mot de passe incorrect');
   }
-  
+
   const newPasswordHash = await bcrypt.hash(newPassword, 10);
   await executeQuery('UPDATE users SET password_hash = $1 WHERE id = $2', [newPasswordHash, userId]);
   return true;
@@ -820,31 +871,31 @@ async function getAuditLogs(filters = {}) {
     FROM audit_log al
     LEFT JOIN users u ON al.user_id = u.id
   `;
-  
+
   const params = [];
   const conditions = [];
-  
+
   if (filters.user_id) {
     params.push(filters.user_id);
     conditions.push(`al.user_id = $${params.length}`);
   }
-  
+
   if (filters.action) {
     params.push(filters.action);
     conditions.push(`al.action = $${params.length}`);
   }
-  
+
   if (filters.entity_type) {
     params.push(filters.entity_type);
     conditions.push(`al.entity_type = $${params.length}`);
   }
-  
+
   if (conditions.length > 0) {
     query += ' WHERE ' + conditions.join(' AND ');
   }
-  
+
   query += ' ORDER BY al.created_at DESC LIMIT 100';
-  
+
   return await executeQuery(query, params);
 }
 
@@ -895,7 +946,7 @@ async function checkConflicts(assignment) {
       assignment.start_time,
       assignment.end_time
     ]);
-    
+
     return {
       count: parseInt(result[0].conflict_count),
       conflicts: result
@@ -945,7 +996,7 @@ async function ensureExamNoteColumn() {
 async function archivePastSessions() {
   try {
     const today = new Date().toISOString().split('T')[0]; // تاريخ اليوم بصيغة YYYY-MM-DD
-    
+
     // أولاً: احصل على عدد الحصص التي سيتم أرشفتها
     const countQuery = `
       SELECT COUNT(*) as count 
@@ -954,7 +1005,7 @@ async function archivePastSessions() {
     `;
     const countResult = await executeQuery(countQuery, [today]);
     const sessionsToArchive = countResult[0]?.count || 0;
-    
+
     if (sessionsToArchive > 0) {
       // ثانياً: قم بأرشفة الحصص
       const updateQuery = `
@@ -967,7 +1018,7 @@ async function archivePastSessions() {
     } else {
       console.log('✅ No past sessions to archive');
     }
-    
+
     return { archived: sessionsToArchive };
   } catch (error) {
     console.error('❌ Error archiving past sessions:', error);
@@ -979,10 +1030,10 @@ async function archivePastSessions() {
 async function getExtraSessions() {
   // التأكد من وجود عمود is_archived
   await ensureArchivedColumn();
-  
+
   // أرشفة الحصص المنتهية تلقائياً
   await archivePastSessions();
-  
+
   const query = `
     SELECT es.*, 
            p.name as professor_name,
@@ -1004,7 +1055,7 @@ async function createExtraSession(session) {
   const { room_id, professor_id, group_id, course_id, session_date, start_time, end_time, session_type, description, reason, semester, academic_year, exam_note } = session;
   await ensureArchivedColumn();
   await ensureExamNoteColumn();
-  
+
   const query = `
     INSERT INTO extra_sessions (room_id, professor_id, group_id, course_id, session_date, start_time, end_time, session_type, description, reason, semester, academic_year, exam_note, is_archived) 
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 0) 
@@ -1040,27 +1091,27 @@ async function login(username, password) {
   console.log('🔐 Login attempt:', { username, passwordLength: password.length });
   const query = 'SELECT * FROM users WHERE username = $1 AND is_active = 1';
   const users = await executeQuery(query, [username]);
-  
+
   console.log('👤 Users found:', users.length);
-  
+
   if (users.length === 0) {
     throw new Error('اسم المستخدم غير صحيح');
   }
-  
+
   const user = users[0];
   console.log('🔑 User found:', { id: user.id, username: user.username, hashPreview: user.password_hash?.substring(0, 20) });
-  
+
   const isValid = await bcrypt.compare(password, user.password_hash);
   console.log('✅ Password valid:', isValid);
-  
+
   if (!isValid) {
     throw new Error('كلمة المرور غير صحيحة [v2-updated]');
   }
-  
+
   // تحديث آخر تسجيل دخول
   const currentTime = new Date().toISOString();
   await executeQuery('UPDATE users SET last_login = $1 WHERE id = $2', [currentTime, user.id]);
-  
+
   // تسجيل النشاط
   try {
     await addAuditLog({
@@ -1074,7 +1125,7 @@ async function login(username, password) {
   } catch (auditError) {
     console.error('⚠️ Failed to log audit:', auditError);
   }
-  
+
   return user;
 }
 
@@ -1093,7 +1144,7 @@ async function logout(userId) {
   } catch (auditError) {
     console.error('⚠️ Failed to log audit:', auditError);
   }
-  
+
   return true;
 }
 
@@ -1179,5 +1230,38 @@ module.exports = {
   login,
   logout,
   getUserPermissions,
-  saveUserPermissions
+  saveUserPermissions,
+
+  // Sandbox functions
+  saveSandboxDraft,
+  getSandboxDrafts,
+  loadSandboxDraft,
+  deleteSandboxDraft
 };
+
+// ==========================================
+// Sandbox Functions
+// ==========================================
+
+async function saveSandboxDraft(name, data) {
+  const query = 'INSERT INTO sandbox_snapshots (name, data) VALUES ($1, $2) RETURNING id';
+  const result = await executeQuery(query, [name || `Draft ${new Date().toLocaleString()}`, JSON.stringify(data)]);
+  return result[0];
+}
+
+async function getSandboxDrafts() {
+  const query = 'SELECT id, name, created_at FROM sandbox_snapshots ORDER BY created_at DESC';
+  return await executeQuery(query);
+}
+
+async function loadSandboxDraft(id) {
+  const query = 'SELECT * FROM sandbox_snapshots WHERE id = $1';
+  const result = await executeQuery(query, [id]);
+  return result[0];
+}
+
+async function deleteSandboxDraft(id) {
+  const query = 'DELETE FROM sandbox_snapshots WHERE id = $1';
+  await executeQuery(query, [id]);
+  return true;
+}

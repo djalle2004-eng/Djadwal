@@ -45,7 +45,7 @@ function createWindow() {
     }
   });
 
-    // Function to show the About dialog
+  // Function to show the About dialog
   function showAboutWindow() {
     const aboutWindow = new BrowserWindow({
       width: 600,
@@ -202,7 +202,7 @@ function createWindow() {
     aboutWindow.loadURL(`data:text/html;charset=UTF-8,${encodeURIComponent(htmlContent)}`);
   }
 
-// ---> START: Menu Creation <--- 
+  // ---> START: Menu Creation <--- 
   const menuTemplate = [
     {
       label: 'ملف',
@@ -400,9 +400,9 @@ function createWindow() {
         { type: 'separator' },
         { role: 'togglefullscreen', label: 'ملء الشاشة', accelerator: 'F11' },
         { type: 'separator' },
-        { 
-          role: 'toggleDevTools', 
-          label: 'أدوات المطور', 
+        {
+          role: 'toggleDevTools',
+          label: 'أدوات المطور',
           accelerator: 'CmdOrCtrl+Shift+I',
           visible: isDev
         }
@@ -455,7 +455,7 @@ function createWindow() {
 
   console.log('Current directory:', __dirname);
   console.log('Process environment:', process.env.NODE_ENV);
-  
+
   // تحميل التطبيق من خادم التطوير أو من ملف HTML محلي في وضع الإنتاج
   if (isDev) {
     console.log('Running in development mode, loading from localhost');
@@ -465,7 +465,7 @@ function createWindow() {
     const indexPath = path.join(__dirname, '../dist/index.html');
     console.log('Running in production mode, loading from:', indexPath);
     console.log('File exists:', fs.existsSync(indexPath));
-    
+
     // استخدم بروتوكول file: بشكل صريح
     win.loadURL(url.format({
       pathname: indexPath,
@@ -473,7 +473,7 @@ function createWindow() {
       slashes: true
     }));
   }
-  
+
   // Suppression de l'ouverture automatique des DevTools en production
   // win.webContents.openDevTools();
 }
@@ -517,10 +517,10 @@ function setupIpcHandlers() {
 
   // معالجات المجموعات
   ipcMain.handle('get-groups', () => db.getGroups());
-  ipcMain.handle('add-group', (_, name, specialization, parent_group_id, department_id, group_type, year) => 
+  ipcMain.handle('add-group', (_, name, specialization, parent_group_id, department_id, group_type, year) =>
     db.addGroup(name, specialization, parent_group_id, department_id, group_type, year)
   );
-  ipcMain.handle('update-group', (_, id, name, specialization, parent_group_id, department_id, group_type, year) => 
+  ipcMain.handle('update-group', (_, id, name, specialization, parent_group_id, department_id, group_type, year) =>
     db.updateGroup(id, name, specialization, parent_group_id, department_id, group_type, year)
   );
   ipcMain.handle('delete-group', (_, id) => db.deleteGroup(id));
@@ -544,7 +544,7 @@ function setupIpcHandlers() {
   ipcMain.handle('delete-room', (_, id) => db.deleteRoom(id));
 
   // معالجات التكاليف
-  ipcMain.handle('get-assignments', (_, academicYear, semester, specialization) => 
+  ipcMain.handle('get-assignments', (_, academicYear, semester, specialization) =>
     db.getAssignments(academicYear, semester, specialization)
   );
   ipcMain.handle('add-assignment', (_, assignment) => {
@@ -574,11 +574,11 @@ function setupIpcHandlers() {
   // معالجات الفصول الدراسية
   ipcMain.handle('get-semesters', (_, academicYearId) => db.getSemesters(academicYearId));
   ipcMain.handle('get-active-semester', (_, academicYearId) => db.getActiveSemester(academicYearId));
-  ipcMain.handle('add-semester', (_, academicYearId, semesterName, startDate, endDate, setAsCurrent) => 
+  ipcMain.handle('add-semester', (_, academicYearId, semesterName, startDate, endDate, setAsCurrent) =>
     db.addSemester(academicYearId, semesterName, startDate, endDate, setAsCurrent)
   );
   ipcMain.handle('set-active-semester', (_, semesterId) => db.setActiveSemester(semesterId));
-  ipcMain.handle('update-semester', (_, semesterId, semesterName, startDate, endDate) => 
+  ipcMain.handle('update-semester', (_, semesterId, semesterName, startDate, endDate) =>
     db.updateSemester(semesterId, semesterName, startDate, endDate)
   );
   ipcMain.handle('delete-semester', (_, semesterId) => db.deleteSemester(semesterId));
@@ -587,7 +587,7 @@ function setupIpcHandlers() {
   ipcMain.handle('get-database-info', async () => {
     const USE_NEON = process.env.USE_NEON !== 'false';
     const hasConnectionString = !!process.env.NEON_CONNECTION_STRING;
-    
+
     return {
       type: USE_NEON ? 'Neon PostgreSQL' : 'SQLite',
       status: db ? 'متصل' : 'غير متصل',
@@ -603,12 +603,12 @@ function setupIpcHandlers() {
       const years = await db.getAcademicYears();
       const semesters = await db.getSemesters();
       const assignments = await db.getAssignments(null, null, null);
-      
+
       console.log('📊 DATABASE CONTENT DEBUG:');
       console.log('Academic Years:', years);
       console.log('Semesters:', semesters);
       console.log('Total Assignments:', assignments.length);
-      
+
       return {
         years,
         semesters,
@@ -657,13 +657,13 @@ function setupIpcHandlers() {
     return db.updateExtraSession(session);
   });
   ipcMain.handle('delete-extra-session', (_, id) => db.deleteExtraSession(id));
-  
+
   ipcMain.handle('archive-past-sessions', async () => {
     return await db.archivePastSessions();
   });
 
   // معالج استيراد البيانات من سنة دراسية سابقة
-  ipcMain.handle('import-data-from-previous-year', (_, sourceYearId, targetYearId, importSpecializations, importGroups, importCourses) => 
+  ipcMain.handle('import-data-from-previous-year', (_, sourceYearId, targetYearId, importSpecializations, importGroups, importCourses) =>
     db.importDataFromPreviousYear(sourceYearId, targetYearId, importSpecializations, importGroups, importCourses)
   );
 
@@ -674,7 +674,7 @@ function setupIpcHandlers() {
   ipcMain.handle('add-user', (_, userData) => db.addUser(userData));
   ipcMain.handle('update-user', (_, id, userData) => db.updateUser(id, userData));
   ipcMain.handle('delete-user', (_, id) => db.deleteUser(id));
-  ipcMain.handle('change-password', (_, userId, oldPassword, newPassword) => 
+  ipcMain.handle('change-password', (_, userId, oldPassword, newPassword) =>
     db.changePassword(userId, oldPassword, newPassword)
   );
   ipcMain.handle('reset-password', (_, userId, newPassword) => db.resetPassword(userId, newPassword));
@@ -752,6 +752,12 @@ function setupIpcHandlers() {
   ipcMain.handle('validate-backup', async (_, backupId) => {
     return { valid: true };
   });
+
+  // معالجات Sandbox (حفظ المسودات)
+  ipcMain.handle('save-sandbox-draft', (_, name, data) => db.saveSandboxDraft(name, data));
+  ipcMain.handle('get-sandbox-drafts', () => db.getSandboxDrafts());
+  ipcMain.handle('load-sandbox-draft', (_, id) => db.loadSandboxDraft(id));
+  ipcMain.handle('delete-sandbox-draft', (_, id) => db.deleteSandboxDraft(id));
 }
 
 // إضافة وظائف استيراد وتصدير البيانات
@@ -801,7 +807,7 @@ function setupDataHandlers() {
       throw error;
     }
   });
-  
+
   // حفظ الملف
   ipcMain.handle('save-to-file', async (_, data, defaultPath) => {
     try {
@@ -812,19 +818,19 @@ function setupDataHandlers() {
           { name: 'JSON Files', extensions: ['json'] }
         ]
       });
-      
+
       if (!canceled && filePath) {
         fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
         return { success: true, path: filePath };
       }
-      
+
       return { success: false, message: 'تم إلغاء العملية' };
     } catch (error) {
       console.error('Error saving file:', error);
       return { success: false, error: error.message };
     }
   });
-  
+
   // فتح الملف
   ipcMain.handle('open-from-file', async (_, defaultPath) => {
     try {
@@ -836,26 +842,26 @@ function setupDataHandlers() {
         ],
         properties: ['openFile']
       });
-      
+
       if (!canceled && filePaths.length > 0) {
         const data = JSON.parse(fs.readFileSync(filePaths[0], 'utf8'));
         return { success: true, data, path: filePaths[0] };
       }
-      
+
       return { success: false, message: 'تم إلغاء العملية' };
     } catch (error) {
       console.error('Error opening file:', error);
       return { success: false, error: error.message };
     }
   });
-  
+
   // ✅ PDF generation now handled by html2pdf.js in the frontend
   // This handler is kept for backward compatibility but returns an error
   ipcMain.handle('generate-pdf', async (_, htmlContent, options) => {
     console.warn('Legacy generate-pdf handler called. Please use html2pdf.js in the frontend instead.');
-    return { 
-      success: false, 
-      error: 'PDF generation moved to frontend. Use printContent() from printUtils.ts instead.' 
+    return {
+      success: false,
+      error: 'PDF generation moved to frontend. Use printContent() from printUtils.ts instead.'
     };
   });
 }
@@ -876,16 +882,16 @@ function ensureLogosDirectory() {
 async function saveDataUrlAsImage(dataUrl, filename) {
   const logosDir = ensureLogosDirectory();
   const filePath = path.join(logosDir, filename);
-  
+
   // Extraire les données de base64
   const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
   if (!matches || matches.length !== 3) {
     throw new Error('Invalid data URL');
   }
-  
+
   const data = Buffer.from(matches[2], 'base64');
   fs.writeFileSync(filePath, data);
-  
+
   return filePath;
 }
 
@@ -915,26 +921,26 @@ ipcMain.handle('get-print-settings', async () => {
         pageMarginRight: 5
       };
     }
-    
+
     // Lire et parser le fichier JSON
     console.log('📖 [Main] Reading settings from:', printSettingsPath);
     const settingsData = fs.readFileSync(printSettingsPath, 'utf8');
     const settings = JSON.parse(settingsData);
     console.log('📥 [Main] Loaded raw settings:', settings);
-    
+
     // Vérifier si les logos existent et les convertir en URLs de données
     if (settings.universityLogoPath && fs.existsSync(settings.universityLogoPath)) {
       const logoData = fs.readFileSync(settings.universityLogoPath);
       const extension = path.extname(settings.universityLogoPath).substring(1);
       settings.universityLogoUrl = `data:image/${extension};base64,${logoData.toString('base64')}`;
     }
-    
+
     if (settings.facultyLogoPath && fs.existsSync(settings.facultyLogoPath)) {
       const logoData = fs.readFileSync(settings.facultyLogoPath);
       const extension = path.extname(settings.facultyLogoPath).substring(1);
       settings.facultyLogoUrl = `data:image/${extension};base64,${logoData.toString('base64')}`;
     }
-    
+
     // S'assurer que les paramètres de taille ont des valeurs par défaut s'ils n'existent pas
     settings.headerFontSize = settings.headerFontSize || 16;
     settings.titleFontSize = settings.titleFontSize || 16;
@@ -950,7 +956,7 @@ ipcMain.handle('get-print-settings', async () => {
     settings.pageMarginBottom = settings.pageMarginBottom ?? 5;
     settings.pageMarginLeft = settings.pageMarginLeft ?? 5;
     settings.pageMarginRight = settings.pageMarginRight ?? 5;
-    
+
     console.log('✅ [Main] Final settings to return:', settings);
     return settings;
   } catch (error) {
@@ -963,12 +969,12 @@ ipcMain.handle('get-print-settings', async () => {
 ipcMain.handle('save-print-settings', async (event, settings) => {
   try {
     console.log('🔵 [Main] Received settings to save:', settings);
-    
+
     // حذف الشعارات القديمة إذا تم تحديث الشعارات
-    const oldSettings = fs.existsSync(printSettingsPath) 
+    const oldSettings = fs.existsSync(printSettingsPath)
       ? JSON.parse(fs.readFileSync(printSettingsPath, 'utf8'))
       : {};
-    
+
     const settingsToSave = {
       universityName: settings.universityName,
       facultyName: settings.facultyName,
@@ -1003,7 +1009,7 @@ ipcMain.handle('save-print-settings', async (event, settings) => {
       // تاريخ التحديث
       updatedAt: new Date().toISOString()
     };
-    
+
     // Sauvegarder les logos si fournis
     if (settings.universityLogoUrl && settings.universityLogoUrl.startsWith('data:')) {
       // حذف الشعار القديم
@@ -1019,7 +1025,7 @@ ipcMain.handle('save-print-settings', async (event, settings) => {
     } else if (oldSettings.universityLogoPath) {
       settingsToSave.universityLogoPath = oldSettings.universityLogoPath;
     }
-    
+
     if (settings.facultyLogoUrl && settings.facultyLogoUrl.startsWith('data:')) {
       // حذف الشعار القديم
       if (oldSettings.facultyLogoPath && fs.existsSync(oldSettings.facultyLogoPath)) {
@@ -1034,12 +1040,12 @@ ipcMain.handle('save-print-settings', async (event, settings) => {
     } else if (oldSettings.facultyLogoPath) {
       settingsToSave.facultyLogoPath = oldSettings.facultyLogoPath;
     }
-    
+
     // Écrire les paramètres dans le fichier
     console.log('💾 [Main] Writing settings to file:', settingsToSave);
     console.log('📂 [Main] File path:', printSettingsPath);
     fs.writeFileSync(printSettingsPath, JSON.stringify(settingsToSave, null, 2));
-    
+
     // تسجيل في Audit Log
     try {
       await db.addAuditLog({
@@ -1053,7 +1059,7 @@ ipcMain.handle('save-print-settings', async (event, settings) => {
     } catch (auditError) {
       console.warn('Failed to log print settings update:', auditError);
     }
-    
+
     return { success: true };
   } catch (error) {
     console.error('Error saving print settings:', error);
@@ -1082,20 +1088,20 @@ ipcMain.on('renderer-ready-for-search', (event) => {
 app.whenReady().then(async () => {
   try {
     console.log('Initializing application...');
-    
+
     // إعداد معالجات الإعدادات أولاً (لا تحتاج لـ DB)
     setupConfigHandlers();
-    
+
     // التحقق من إعدادات قاعدة البيانات
     const configManager = getConfigManager();
     const isConfigured = configManager.isDatabaseConfigured();
-    
+
     if (!isConfigured) {
       console.log('⚠️ Database not configured, opening settings page...');
-      
+
       // إنشاء النافذة وتوجيهها لصفحة الإعدادات
       createWindow();
-      
+
       // تأخير بسيط للتأكد من تحميل النافذة
       setTimeout(() => {
         const windows = BrowserWindow.getAllWindows();
@@ -1114,32 +1120,32 @@ app.whenReady().then(async () => {
           }
         }
       }, 1000);
-      
+
     } else {
       // إعداد قاعدة البيانات وتشغيل الترقيات
       try {
         console.log('📊 Initializing database connection...');
         await initDatabaseConnection();
         console.log('✅ Database connected successfully');
-        
+
         console.log('🔄 Running migrations...');
         runMigrations();
         console.log('✅ Migrations completed');
-        
+
         console.log('🌱 Seeding basic data...');
         seedBasicData();
         console.log('✅ Data seeded');
-        
+
         // إعداد معالجات IPC للبيانات (بعد تهيئة DB)
         console.log('🔌 Setting up IPC handlers...');
         setupIpcHandlers();
         setupDataHandlers();
         console.log('✅ IPC handlers ready');
-        
+
         createWindow();
       } catch (dbError) {
         console.error('❌ Database initialization failed:', dbError);
-        
+
         // فتح صفحة الإعدادات
         createWindow();
         setTimeout(() => {
@@ -1159,27 +1165,27 @@ app.whenReady().then(async () => {
             }
           }
         }, 1000);
-        
+
         // إظهار رسالة خطأ
         setTimeout(() => {
           dialog.showErrorBox(
-            'خطأ في الاتصال بقاعدة البيانات', 
+            'خطأ في الاتصال بقاعدة البيانات',
             `فشل الاتصال بقاعدة البيانات:\n\n${dbError.message}\n\nيُرجى التحقق من إعدادات الاتصال.`
           );
         }, 2000);
       }
     }
-    
+
     app.on('activate', function () {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
   } catch (error) {
     console.error('Error initializing app:', error);
     dialog.showErrorBox('خطأ في تهيئة التطبيق', `حدث خطأ أثناء تهيئة التطبيق: ${error.message}\n\nيُرجى التحقق من إعدادات قاعدة البيانات.`);
-    
+
     // إنشاء النافذة وفتح صفحة الإعدادات (بدون setupIpcHandlers لأن DB غير موجود)
     createWindow();
-    
+
     setTimeout(() => {
       const windows = BrowserWindow.getAllWindows();
       if (windows.length > 0) {
