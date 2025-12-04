@@ -1,4 +1,4 @@
-import { createClient } from '@libsql/client';
+import { createClient } from '@libsql/client/http';
 
 const url = process.env.EXPO_PUBLIC_TURSO_DB_URL;
 const authToken = process.env.EXPO_PUBLIC_TURSO_AUTH_TOKEN;
