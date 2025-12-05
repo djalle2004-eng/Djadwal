@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView, StatusBar, SafeAr
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { COLORS, SHADOWS, SPACING } from '../constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BookOpen, LogOut, ChevronLeft, Building2, CalendarClock } from 'lucide-react-native';
+import { BookOpen, LogOut, ChevronLeft, Building2, CalendarClock, Search } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import YearSemesterPicker from '../components/YearSemesterPicker';
 import { useState } from 'react';
@@ -15,6 +15,7 @@ type RootStackParamList = {
     SpecializationSchedule: { year: any, semester: any };
     AvailableRooms: { year: any, semester: any };
     Compensations: { year: any, semester: any };
+    ProfessorSearch: undefined;
 };
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Head'>;
@@ -58,6 +59,14 @@ export default function HeadScreen({ navigation }: Props) {
             color: '#F59E0B', // Amber
             screen: 'Compensations'
         },
+        {
+            id: 'professor_search',
+            title: 'بحث عن أستاذ',
+            subtitle: 'البحث عن أستاذ وعرض جدوله',
+            icon: Search,
+            color: '#DB2777', // Pink
+            screen: 'ProfessorSearch'
+        },
     ];
 
     const handleNavigation = (screen: string) => {
@@ -76,6 +85,8 @@ export default function HeadScreen({ navigation }: Props) {
                 year: selectedYear,
                 semester: selectedSemester
             });
+        } else if (screen === 'ProfessorSearch') {
+            navigation.navigate('ProfessorSearch');
         }
     };
 

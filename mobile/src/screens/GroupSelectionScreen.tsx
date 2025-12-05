@@ -6,7 +6,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, SHADOWS, SPACING } from '../constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronRight, Building2, Users, ArrowLeft, Search } from 'lucide-react-native';
+import { ChevronRight, Building2, Users, ArrowLeft, Search, GraduationCap } from 'lucide-react-native';
 
 type RootStackParamList = {
     Login: undefined;
@@ -17,11 +17,13 @@ type RootStackParamList = {
 type Props = NativeStackScreenProps<RootStackParamList, 'GroupSelection'>;
 
 export default function GroupSelectionScreen({ navigation }: Props) {
-    const [step, setStep] = useState<'department' | 'group'>('department');
+    const [step, setStep] = useState<'department' | 'specialization' | 'group'>('department');
     const [departments, setDepartments] = useState<Department[]>([]);
+    const [specializations, setSpecializations] = useState<string[]>([]);
     const [groups, setGroups] = useState<Group[]>([]);
     const [loading, setLoading] = useState(false);
     const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
+    const [selectedSpecialization, setSelectedSpecialization] = useState<string | null>(null);
 
     useEffect(() => {
         fetchDepartments();
@@ -40,12 +42,30 @@ export default function GroupSelectionScreen({ navigation }: Props) {
         }
     };
 
-    const fetchGroups = async (deptId: number) => {
+    const fetchSpecializations = async (deptId: number) => {
         setLoading(true);
         try {
             const result = await turso.execute({
-                sql: "SELECT * FROM groups WHERE department_id = ? AND name NOT LIKE '%محاضرة%' AND group_type != 'lecture_group' ORDER BY name",
+                sql: "SELECT DISTINCT specialization FROM groups WHERE department_id = ? AND specialization IS NOT NULL AND specialization != '' ORDER BY specialization",
                 args: [deptId],
+            });
+            const specs = result.rows.map((row: any) => row.specialization);
+            setSpecializations(specs);
+            setStep('specialization');
+        } catch (e) {
+            console.error(e);
+            Alert.alert('Error', 'Failed to load specializations');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchGroups = async (deptId: number, specialization: string) => {
+        setLoading(true);
+        try {
+            const result = await turso.execute({
+                sql: "SELECT * FROM groups WHERE department_id = ? AND specialization = ? AND name NOT LIKE '%محاضرة%' AND group_type != 'lecture_group' ORDER BY name",
+                args: [deptId, specialization],
             });
             setGroups(result.rows as unknown as Group[]);
             setStep('group');
@@ -59,7 +79,14 @@ export default function GroupSelectionScreen({ navigation }: Props) {
 
     const handleDepartmentSelect = (dept: Department) => {
         setSelectedDepartment(dept);
-        fetchGroups(dept.id);
+        fetchSpecializations(dept.id);
+    };
+
+    const handleSpecializationSelect = (spec: string) => {
+        setSelectedSpecialization(spec);
+        if (selectedDepartment) {
+            fetchGroups(selectedDepartment.id, spec);
+        }
     };
 
     const handleGroupSelect = async (group: Group) => {
@@ -72,30 +99,76 @@ export default function GroupSelectionScreen({ navigation }: Props) {
         }
     };
 
-    const renderItem = ({ item }: { item: Department | Group }) => {
-        const isDept = step === 'department';
-        const Icon = isDept ? Building2 : Users;
+    const handleBack = () => {
+        if (step === 'group') {
+            setStep('specialization');
+        } else if (step === 'specialization') {
+            setStep('department');
+            setSelectedDepartment(null);
+        }
+    };
+
+    const renderItem = ({ item }: { item: Department | string | Group }) => {
+        let Icon = Building2;
+        let text = '';
+        let onPress = () => { };
+        let bgColor = '#E0E7FF';
+        let iconColor = COLORS.primary;
+
+        if (step === 'department') {
+            const dept = item as Department;
+            text = dept.name;
+            onPress = () => handleDepartmentSelect(dept);
+            Icon = Building2;
+            bgColor = '#E0E7FF';
+            iconColor = COLORS.primary;
+        } else if (step === 'specialization') {
+            text = item as string;
+            onPress = () => handleSpecializationSelect(text);
+            Icon = GraduationCap;
+            bgColor = '#FEF3C7'; // Amber
+            iconColor = '#D97706';
+        } else {
+            const group = item as Group;
+            text = group.name;
+            onPress = () => handleGroupSelect(group);
+            Icon = Users;
+            bgColor = '#FCE7F3'; // Pink
+            iconColor = COLORS.secondary;
+        }
 
         return (
             <TouchableOpacity
                 style={styles.item}
-                onPress={() => {
-                    if (isDept) {
-                        handleDepartmentSelect(item as Department);
-                    } else {
-                        handleGroupSelect(item as Group);
-                    }
-                }}
+                onPress={onPress}
             >
                 <View style={styles.itemContent}>
-                    <View style={[styles.iconContainer, { backgroundColor: isDept ? '#E0E7FF' : '#FCE7F3' }]}>
-                        <Icon size={24} color={isDept ? COLORS.primary : COLORS.secondary} />
+                    <View style={[styles.iconContainer, { backgroundColor: bgColor }]}>
+                        <Icon size={24} color={iconColor} />
                     </View>
-                    <Text style={styles.itemText}>{item.name}</Text>
+                    <Text style={styles.itemText}>{text}</Text>
                 </View>
                 <ChevronRight size={20} color={COLORS.textLight} />
             </TouchableOpacity>
         );
+    };
+
+    const getTitle = () => {
+        switch (step) {
+            case 'department': return 'اختر القسم';
+            case 'specialization': return selectedDepartment?.name;
+            case 'group': return selectedSpecialization;
+            default: return '';
+        }
+    };
+
+    const getSubtitle = () => {
+        switch (step) {
+            case 'department': return 'الخطوة 1 من 3';
+            case 'specialization': return 'اختر التخصص';
+            case 'group': return 'اختر الفوج';
+            default: return '';
+        }
     };
 
     return (
@@ -107,18 +180,14 @@ export default function GroupSelectionScreen({ navigation }: Props) {
             >
                 <SafeAreaView>
                     <View style={styles.headerContent}>
-                        {step === 'group' && (
-                            <TouchableOpacity onPress={() => setStep('department')} style={styles.backButton}>
+                        {step !== 'department' && (
+                            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
                                 <ArrowLeft size={24} color={COLORS.white} />
                             </TouchableOpacity>
                         )}
-                        <View style={{ flex: 1, alignItems: step === 'group' ? 'flex-start' : 'center' }}>
-                            <Text style={styles.title}>
-                                {step === 'department' ? 'Select Department' : selectedDepartment?.name}
-                            </Text>
-                            {step === 'group' && (
-                                <Text style={styles.subtitle}>Select your group</Text>
-                            )}
+                        <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                            <Text style={styles.title}>{getTitle()}</Text>
+                            <Text style={styles.subtitle}>{getSubtitle()}</Text>
                         </View>
                     </View>
                 </SafeAreaView>
@@ -131,14 +200,18 @@ export default function GroupSelectionScreen({ navigation }: Props) {
                     </View>
                 ) : (
                     <FlatList
-                        data={step === 'department' ? departments : groups}
+                        data={step === 'department' ? departments : (step === 'specialization' ? specializations : groups)}
                         renderItem={renderItem}
-                        keyExtractor={(item) => item.id.toString()}
+                        keyExtractor={(item, index) => {
+                            if (step === 'department') return (item as Department).id.toString();
+                            if (step === 'specialization') return item as string;
+                            return (item as Group).id.toString();
+                        }}
                         contentContainerStyle={styles.list}
                         ListEmptyComponent={
                             <View style={styles.emptyContainer}>
                                 <Search size={48} color={COLORS.textLight} />
-                                <Text style={styles.emptyText}>No items found</Text>
+                                <Text style={styles.emptyText}>لا توجد عناصر</Text>
                             </View>
                         }
                     />
@@ -189,7 +262,7 @@ const styles = StyleSheet.create({
         padding: SPACING.m,
     },
     item: {
-        flexDirection: 'row',
+        flexDirection: 'row-reverse', // RTL for items
         alignItems: 'center',
         justifyContent: 'space-between',
         backgroundColor: COLORS.surface,
@@ -199,7 +272,7 @@ const styles = StyleSheet.create({
         ...SHADOWS.small,
     },
     itemContent: {
-        flexDirection: 'row',
+        flexDirection: 'row-reverse', // RTL
         alignItems: 'center',
         flex: 1,
     },
@@ -209,13 +282,14 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: SPACING.m,
+        marginLeft: SPACING.m, // Changed from marginRight
     },
     itemText: {
         fontSize: 16,
         fontWeight: '600',
         color: COLORS.text,
         flex: 1,
+        textAlign: 'right', // Align text right
     },
     centerContainer: {
         flex: 1,

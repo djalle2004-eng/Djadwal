@@ -6,7 +6,7 @@ import { turso } from '../lib/turso';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, SHADOWS, SPACING } from '../constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Clock, MapPin, User, BookOpen, Users, LogOut, Calendar } from 'lucide-react-native';
+import { Clock, MapPin, User, BookOpen, Users, LogOut, Calendar, AlertCircle } from 'lucide-react-native';
 import YearSemesterPicker from '../components/YearSemesterPicker';
 
 type RootStackParamList = {
@@ -20,12 +20,26 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Student'>;
 
 const DAYS = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
 
+interface ExtraSession {
+    id: number;
+    room_name: string;
+    professor_name: string;
+    course_name: string;
+    session_date: string;
+    start_time: string;
+    end_time: string;
+    session_type: 'extra' | 'makeup' | 'exam';
+    description?: string;
+}
+
 export default function StudentScreen({ route, navigation }: Props) {
     const { group } = route.params;
     const [assignments, setAssignments] = useState<Assignment[]>([]);
+    const [extraSessions, setExtraSessions] = useState<ExtraSession[]>([]);
     const [loading, setLoading] = useState(false);
     // Map JS getDay() (0=Sun, 6=Sat) to our DAYS array (0=Sat, 1=Sun)
     const [selectedDay, setSelectedDay] = useState<number>((new Date().getDay() + 1) % 7);
+    const [activeTab, setActiveTab] = useState<'schedule' | 'exams'>('schedule');
 
     // Year & Semester Selection
     const [selectedYear, setSelectedYear] = useState<any>(null);
@@ -33,9 +47,13 @@ export default function StudentScreen({ route, navigation }: Props) {
 
     useEffect(() => {
         if (selectedYear && selectedSemester) {
-            fetchSchedule();
+            if (activeTab === 'schedule') {
+                fetchSchedule();
+            } else {
+                fetchExtraSessions();
+            }
         }
-    }, [group.id, selectedYear, selectedSemester]);
+    }, [group.id, selectedYear, selectedSemester, activeTab]);
 
     const fetchSchedule = async () => {
         if (!selectedYear || !selectedSemester) return;
@@ -78,6 +96,34 @@ export default function StudentScreen({ route, navigation }: Props) {
         } catch (e) {
             console.error('Fetch Error:', e);
             Alert.alert('Error', 'Failed to load schedule');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchExtraSessions = async () => {
+        setLoading(true);
+        try {
+            // Fetch extra sessions and exams for this group OR parent group (specialization)
+            const sql = `
+                SELECT 
+                    es.id, es.session_date, es.start_time, es.end_time, es.session_type, es.description,
+                    c.name as course_name, r.name as room_name, p.name as professor_name
+                FROM extra_sessions es
+                LEFT JOIN courses c ON es.course_id = c.id
+                LEFT JOIN rooms r ON es.room_id = r.id
+                LEFT JOIN professors p ON es.professor_id = p.id
+                WHERE (es.group_id = ? OR es.group_id = ?)
+                AND es.session_date >= DATE('now')
+                ORDER BY es.session_date ASC
+            `;
+
+            const args = [group.id, group.parent_group_id || null];
+            const result = await turso.execute({ sql, args });
+            setExtraSessions(result.rows as unknown as ExtraSession[]);
+        } catch (e) {
+            console.error(e);
+            Alert.alert('Error', 'Failed to load extra sessions');
         } finally {
             setLoading(false);
         }
@@ -132,6 +178,50 @@ export default function StudentScreen({ route, navigation }: Props) {
         </View>
     );
 
+    const renderExtraSession = ({ item }: { item: ExtraSession }) => {
+        const isExam = item.session_type === 'exam';
+        const cardColor = isExam ? '#FEE2E2' : '#E0F2FE'; // Red for exams, Blue for extra
+        const borderColor = isExam ? '#EF4444' : '#0EA5E9';
+
+        return (
+            <View style={[styles.card, { backgroundColor: cardColor, borderLeftColor: borderColor }]}>
+                <View style={[styles.cardHeader, { flexDirection: 'row-reverse' }]}>
+                    <View style={[styles.timeContainer, { flexDirection: 'row-reverse', backgroundColor: 'rgba(255,255,255,0.5)' }]}>
+                        <Calendar size={16} color={borderColor} />
+                        <Text style={[styles.timeText, { color: borderColor, marginRight: 6 }]}>{item.session_date}</Text>
+                    </View>
+                    <View style={[styles.badge, { backgroundColor: borderColor }]}>
+                        <Text style={[styles.badgeText, { color: 'white' }]}>
+                            {isExam ? 'إمتحان' : (item.session_type === 'makeup' ? 'تعويض' : 'إضافي')}
+                        </Text>
+                    </View>
+                </View>
+
+                <Text style={[styles.courseText, { textAlign: 'right', color: '#1F2937' }]}>{item.course_name}</Text>
+
+                <View style={[styles.timeContainer, { alignSelf: 'flex-end', marginBottom: 8, backgroundColor: 'transparent', padding: 0 }]}>
+                    <Clock size={16} color={COLORS.textSecondary} />
+                    <Text style={[styles.timeText, { color: COLORS.textSecondary, marginRight: 6 }]}>
+                        {item.start_time} - {item.end_time}
+                    </Text>
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={[styles.detailsRow, { flexDirection: 'row-reverse' }]}>
+                    <View style={[styles.detailItem, { flexDirection: 'row-reverse', marginLeft: SPACING.m }]}>
+                        <MapPin size={16} color={COLORS.textSecondary} />
+                        <Text style={[styles.detailText, { marginRight: 6 }]}>{item.room_name}</Text>
+                    </View>
+                    <View style={[styles.detailItem, { flexDirection: 'row-reverse' }]}>
+                        <User size={16} color={COLORS.textSecondary} />
+                        <Text style={[styles.detailText, { marginRight: 6 }]}>{item.professor_name}</Text>
+                    </View>
+                </View>
+            </View>
+        );
+    };
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" />
@@ -154,57 +244,90 @@ export default function StudentScreen({ route, navigation }: Props) {
                         onYearChange={setSelectedYear}
                         onSemesterChange={setSelectedSemester}
                     />
+
+                    <View style={styles.tabContainer}>
+                        <TouchableOpacity
+                            style={[styles.tabButton, activeTab === 'exams' && styles.activeTab]}
+                            onPress={() => setActiveTab('exams')}
+                        >
+                            <Text style={[styles.tabText, activeTab === 'exams' && styles.activeTabText]}>الإمتحانات والإضافي</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.tabButton, activeTab === 'schedule' && styles.activeTab]}
+                            onPress={() => setActiveTab('schedule')}
+                        >
+                            <Text style={[styles.tabText, activeTab === 'schedule' && styles.activeTabText]}>الجدول الأسبوعي</Text>
+                        </TouchableOpacity>
+                    </View>
                 </SafeAreaView>
             </LinearGradient>
 
-            <View style={styles.daysContainer}>
-                <FlatList
-                    horizontal
-                    data={DAYS}
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.daysContent}
-                    keyExtractor={(item, index) => index.toString()}
-                    renderItem={({ item, index }) => (
-                        <TouchableOpacity
-                            style={[
-                                styles.dayButton,
-                                selectedDay === index && styles.selectedDayButton
-                            ]}
-                            onPress={() => setSelectedDay(index)}
-                        >
-                            <Text style={[
-                                styles.dayText,
-                                selectedDay === index && styles.selectedDayText
-                            ]}>
-                                {item}
-                            </Text>
-                        </TouchableOpacity>
-                    )}
-                />
-            </View>
+            {activeTab === 'schedule' && (
+                <View style={styles.daysContainer}>
+                    <FlatList
+                        horizontal
+                        data={DAYS}
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.daysContent}
+                        keyExtractor={(item, index) => index.toString()}
+                        renderItem={({ item, index }) => (
+                            <TouchableOpacity
+                                style={[
+                                    styles.dayButton,
+                                    selectedDay === index && styles.selectedDayButton
+                                ]}
+                                onPress={() => setSelectedDay(index)}
+                            >
+                                <Text style={[
+                                    styles.dayText,
+                                    selectedDay === index && styles.selectedDayText
+                                ]}>
+                                    {item}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                    />
+                </View>
+            )}
 
             {loading ? (
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color={COLORS.primary} />
                 </View>
             ) : (
-                <FlatList
-                    data={filteredAssignments}
-                    renderItem={renderAssignment}
-                    keyExtractor={(item, index) => item.id?.toString() || index.toString()}
-                    contentContainerStyle={styles.list}
-                    ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
-                            <Calendar size={48} color={COLORS.textLight} />
-                            <Text style={styles.emptyText}>لا توجد حصص ليوم {DAYS[selectedDay]}</Text>
-                            <Text style={styles.emptySubText}>استمتع بوقتك!</Text>
-                        </View>
-                    }
-                />
+                activeTab === 'schedule' ? (
+                    <FlatList
+                        data={filteredAssignments}
+                        renderItem={renderAssignment}
+                        keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+                        contentContainerStyle={styles.list}
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Calendar size={48} color={COLORS.textLight} />
+                                <Text style={styles.emptyText}>لا توجد حصص ليوم {DAYS[selectedDay]}</Text>
+                                <Text style={styles.emptySubText}>استمتع بوقتك!</Text>
+                            </View>
+                        }
+                    />
+                ) : (
+                    <FlatList
+                        data={extraSessions}
+                        renderItem={renderExtraSession}
+                        keyExtractor={(item) => item.id.toString()}
+                        contentContainerStyle={styles.list}
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <AlertCircle size={48} color={COLORS.textLight} />
+                                <Text style={styles.emptyText}>لا توجد إمتحانات أو حصص إضافية</Text>
+                            </View>
+                        }
+                    />
+                )
             )}
         </View>
     );
 }
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -239,6 +362,31 @@ const styles = StyleSheet.create({
         padding: SPACING.s,
         backgroundColor: 'rgba(255, 255, 255, 0.2)',
         borderRadius: 12,
+    },
+    tabContainer: {
+        flexDirection: 'row',
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 12,
+        padding: 4,
+        marginHorizontal: SPACING.l,
+        marginTop: SPACING.m,
+    },
+    tabButton: {
+        flex: 1,
+        paddingVertical: 8,
+        alignItems: 'center',
+        borderRadius: 8,
+    },
+    activeTab: {
+        backgroundColor: COLORS.white,
+    },
+    tabText: {
+        color: 'rgba(255,255,255,0.8)',
+        fontWeight: '600',
+    },
+    activeTabText: {
+        color: COLORS.primary,
+        fontWeight: 'bold',
     },
     daysContainer: {
         marginTop: SPACING.m,

@@ -9,6 +9,7 @@ import HeadScreen from './src/screens/HeadScreen';
 import SpecializationScheduleScreen from './src/screens/SpecializationScheduleScreen';
 import AvailableRoomsScreen from './src/screens/AvailableRoomsScreen';
 import CompensationsScreen from './src/screens/CompensationsScreen';
+import ProfessorSearchScreen from './src/screens/ProfessorSearchScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -19,6 +20,7 @@ export type RootStackParamList = {
   SpecializationSchedule: { year: any, semester: any };
   AvailableRooms: { year: any, semester: any };
   Compensations: { year: any, semester: any };
+  ProfessorSearch: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -35,6 +37,7 @@ export default function App() {
         <Stack.Screen name="SpecializationSchedule" component={SpecializationScheduleScreen} />
         <Stack.Screen name="AvailableRooms" component={AvailableRoomsScreen} />
         <Stack.Screen name="Compensations" component={CompensationsScreen} />
+        <Stack.Screen name="ProfessorSearch" component={ProfessorSearchScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
