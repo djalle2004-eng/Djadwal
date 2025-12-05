@@ -108,6 +108,9 @@ export default function LoginScreen({ navigation }: Props) {
                                 value={username}
                                 onChangeText={setUsername}
                                 autoCapitalize="none"
+                                textContentType="username"
+                                autoComplete="username"
+                                keyboardType="email-address"
                             />
                         </View>
 
@@ -120,6 +123,8 @@ export default function LoginScreen({ navigation }: Props) {
                                 value={password}
                                 onChangeText={setPassword}
                                 secureTextEntry
+                                textContentType="password"
+                                autoComplete="password"
                             />
                         </View>
 
