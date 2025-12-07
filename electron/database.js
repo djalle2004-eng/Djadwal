@@ -927,19 +927,25 @@ async function getTimeSlots() {
 // Fonction pour التحقق من التعارضات
 async function checkConflicts(assignment) {
   try {
-    const query = `
-      SELECT COUNT(*) as conflict_count
-      FROM assignments 
-      WHERE id != $1 
-        AND room_id = $2 
-        AND day_of_week = $3 
+    const conflicts = [];
+
+    // 1. تحقق من تعارض القاعة (Room Conflict)
+    // لا يمكن لقاعة أن تستقبل درسين في نفس الوقت
+    const roomQuery = `
+      SELECT a.*, r.name as room_name, g.name as group_name
+      FROM assignments a
+      LEFT JOIN rooms r ON a.room_id = r.id
+      LEFT JOIN groups g ON a.group_id = g.id
+      WHERE a.id != $1 
+        AND a.room_id = $2 
+        AND a.day_of_week = $3 
         AND (
-          (start_time <= $4 AND end_time > $4) OR
-          (start_time < $5 AND end_time >= $5) OR
-          (start_time >= $4 AND end_time <= $5)
+          (a.start_time <= $4 AND a.end_time > $4) OR
+          (a.start_time < $5 AND a.end_time >= $5) OR
+          (a.start_time >= $4 AND a.end_time <= $5)
         )
     `;
-    const result = await executeQuery(query, [
+    const roomConflicts = await executeQuery(roomQuery, [
       assignment.id || 0,
       assignment.room_id,
       assignment.day_of_week,
@@ -947,9 +953,96 @@ async function checkConflicts(assignment) {
       assignment.end_time
     ]);
 
+    if (roomConflicts.length > 0) {
+      conflicts.push(...roomConflicts.map(c => ({ ...c, type: 'room', message: `تعارض قاعة: ${c.room_name} مشغولة مع ${c.group_name}` })));
+    }
+
+    // 2. تحقق من تعارض الأستاذ (Professor Conflict)
+    // لا يمكن لأستاذ أن يدرس درسين في نفس الوقت
+    const profQuery = `
+      SELECT a.*, p.name as professor_name, g.name as group_name
+      FROM assignments a
+      LEFT JOIN professors p ON a.professor_id = p.id
+      LEFT JOIN groups g ON a.group_id = g.id
+      WHERE a.id != $1 
+        AND a.professor_id = $2 
+        AND a.day_of_week = $3 
+        AND (
+          (a.start_time <= $4 AND a.end_time > $4) OR
+          (a.start_time < $5 AND a.end_time >= $5) OR
+          (a.start_time >= $4 AND a.end_time <= $5)
+        )
+    `;
+    const profConflicts = await executeQuery(profQuery, [
+      assignment.id || 0,
+      assignment.professor_id,
+      assignment.day_of_week,
+      assignment.start_time,
+      assignment.end_time
+    ]);
+
+    if (profConflicts.length > 0) {
+      conflicts.push(...profConflicts.map(c => ({ ...c, type: 'professor', message: `تعارض أستاذ: ${c.professor_name} مشغول مع ${c.group_name}` })));
+    }
+
+    // 3. تحقق من منطق المحاضرة (Lecture Logic)
+    // إذا كان الفوج محاضرة، فلا يمكن لأي فوج آخر في نفس التخصص والسنة الدراسة
+    // إذا كان الفوج عادي، فلا يمكن أن تكون هناك محاضرة في نفس الوقت
+    const groupDetails = await executeQuery('SELECT * FROM groups WHERE id = $1', [assignment.group_id]);
+
+    if (groupDetails.length > 0) {
+      const group = groupDetails[0];
+      const isLecture = group.group_type === 'lecture_group' ||
+        group.name.toLowerCase().includes('lecture') ||
+        group.name.includes('محاضرة');
+
+      const lectureQuery = `
+        SELECT a.*, g.name as group_name, g.group_type
+        FROM assignments a
+        JOIN groups g ON a.group_id = g.id
+        WHERE a.id != $1
+          AND a.day_of_week = $2
+          AND (
+            (a.start_time <= $3 AND a.end_time > $3) OR
+            (a.start_time < $4 AND a.end_time >= $4) OR
+            (a.start_time >= $3 AND a.end_time <= $4)
+          )
+          AND g.specialization = $5
+          ${group.year ? 'AND g.year = $6' : ''}
+          AND (
+            -- الحالة 1: الفوج الحالي محاضرة -> تعارض مع أي فوج آخر في نفس السياق
+            ($7 = 1)
+            OR
+            -- الحالة 2: الفوج الحالي عادي -> تعارض مع أي محاضرة في نفس السياق
+            ($7 = 0 AND (g.group_type = 'lecture_group' OR g.name LIKE '%lecture%' OR g.name LIKE '%محاضرة%'))
+          )
+      `;
+
+      const params = [
+        assignment.id || 0,
+        assignment.day_of_week,
+        assignment.start_time,
+        assignment.end_time,
+        group.specialization
+      ];
+
+      if (group.year) params.push(group.year);
+      params.push(isLecture ? 1 : 0);
+
+      const lectureConflicts = await executeQuery(lectureQuery, params);
+
+      if (lectureConflicts.length > 0) {
+        if (isLecture) {
+          conflicts.push(...lectureConflicts.map(c => ({ ...c, type: 'group', message: `تعارض محاضرة: لا يمكن برمجة محاضرة في وجود أفواج أخرى (${c.group_name})` })));
+        } else {
+          conflicts.push(...lectureConflicts.map(c => ({ ...c, type: 'group', message: `تعارض فوج: توجد محاضرة مبرمجة في هذا الوقت (${c.group_name})` })));
+        }
+      }
+    }
+
     return {
-      count: parseInt(result[0].conflict_count),
-      conflicts: result
+      count: conflicts.length,
+      conflicts: conflicts
     };
   } catch (error) {
     console.error('Error checking conflicts:', error);

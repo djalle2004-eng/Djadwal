@@ -311,6 +311,44 @@ export default function Schedule() {
 
     if (!assignment) return;
 
+    // 0. Strict Lecture Conflict Check
+    const sourceGroup = groups.find(g => g.id === assignment.group_id);
+    if (sourceGroup) {
+      const isSourceLecture = sourceGroup.group_type === 'lecture_group' ||
+        sourceGroup.name?.toLowerCase().includes('lecture') ||
+        sourceGroup.name?.includes('محاضرة');
+
+      // Check against ALL assignments in the target slot
+      const targetSlotAssignments = assignmentsList.filter((a: Assignment) =>
+        a.day_of_week === newDayIndex &&
+        a.start_time === newTimeSlot.start &&
+        a.end_time === newTimeSlot.end &&
+        a.id !== assignment.id
+      );
+
+      for (const targetA of targetSlotAssignments) {
+        const targetGroup = groups.find(g => g.id === targetA.group_id);
+        // Check if in same context (Specialization & Year) - Here we mostly rely on Specialization
+        if (targetGroup && targetGroup.specialization === sourceGroup.specialization) {
+          const isTargetLecture = targetGroup.group_type === 'lecture_group' ||
+            targetGroup.name?.toLowerCase().includes('lecture') ||
+            targetGroup.name?.includes('محاضرة');
+
+          // Case 1: Source is Lecture -> Conflict with ANY group in same spec
+          if (isSourceLecture) {
+            alert(`تعارض: لا يمكن وضع محاضرة (${sourceGroup.name}) في وقت توجد فيه حصص أخرى لنفس التخصص`);
+            return;
+          }
+
+          // Case 2: Source is Subgroup -> Conflict with Lecture in same spec
+          if (isTargetLecture) {
+            alert(`تعارض: لا يمكن وضع حصة (${sourceGroup.name}) في وقت توجد فيه محاضرة (${targetGroup.name})`);
+            return;
+          }
+        }
+      }
+    }
+
     // Check for conflicts/occupancy in the target cell
     // We look for assignments in the target slot that belong to the SAME GROUP or SAME PROFESSOR or SAME ROOM
     // If we find one, we swap. If we find multiple, it's ambiguous, but we can try to swap with the one that conflicts.
