@@ -1503,6 +1503,21 @@ export default function AvailableRooms() {
         const professorName = professors.find(p => p.id === assignment.professor_id)?.name || 'أستاذ غير معروف';
         conflictMessages.push(`المجموعة ${groupName} لديها حصة بالفعل مع الأستاذ ${professorName} في هذا التوقيت (جدولة منتظمة)`);
       }
+
+      // ✅ Strict Lecture Conflict Logic
+      const currentGroup = groups.find(g => g.id === groupId);
+      const targetGroup = groups.find(g => g.id === assignment.group_id);
+
+      if (currentGroup && targetGroup && currentGroup.specialization && targetGroup.specialization && currentGroup.specialization === targetGroup.specialization) {
+        const isCurrentLecture = currentGroup.name.toLowerCase().includes('lecture') || currentGroup.name.includes('محاضرة');
+        const isTargetLecture = targetGroup.name.toLowerCase().includes('lecture') || targetGroup.name.includes('محاضرة');
+
+        if (isCurrentLecture) {
+          conflictMessages.push(`تعارض محاضرة: لا يمكن برمجة محاضرة (${currentGroup.name}) في وجود حصة أخرى لنفس التخصص (${targetGroup.name})`);
+        } else if (isTargetLecture) {
+          conflictMessages.push(`تعارض فوج: توجد محاضرة مبرمجة (${targetGroup.name}) تمنع برمجة حصة للفوج (${currentGroup.name})`);
+        }
+      }
     });
 
     // Vérification des conflits avec les séances supplémentaires existantes
@@ -1541,6 +1556,21 @@ export default function AvailableRooms() {
         const groupName = groups.find(g => g.id === groupId)?.name || 'مجموعة غير معروفة';
         const professorName = professors.find(p => p.id === session.professor_id)?.name || 'أستاذ غير معروف';
         conflictMessages.push(`المجموعة ${groupName} لديها حصة إضافية بالفعل مع الأستاذ ${professorName} في هذا التوقيت`);
+      }
+
+      // ✅ Strict Lecture Conflict Logic (Extra Sessions)
+      const currentGroup = groups.find(g => g.id === groupId);
+      const targetGroup = groups.find(g => g.id === session.group_id);
+
+      if (currentGroup && targetGroup && currentGroup.specialization && targetGroup.specialization && currentGroup.specialization === targetGroup.specialization) {
+        const isCurrentLecture = currentGroup.name.toLowerCase().includes('lecture') || currentGroup.name.includes('محاضرة');
+        const isTargetLecture = targetGroup.name.toLowerCase().includes('lecture') || targetGroup.name.includes('محاضرة');
+
+        if (isCurrentLecture) {
+          conflictMessages.push(`تعارض محاضرة: لا يمكن برمجة محاضرة (${currentGroup.name}) في وجود حصة أخرى لنفس التخصص (${targetGroup.name})`);
+        } else if (isTargetLecture) {
+          conflictMessages.push(`تعارض فوج: توجد محاضرة مبرمجة (${targetGroup.name}) تمنع برمجة حصة للفوج (${currentGroup.name})`);
+        }
       }
     });
 
