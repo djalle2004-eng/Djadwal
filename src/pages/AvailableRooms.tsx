@@ -1956,7 +1956,7 @@ export default function AvailableRooms() {
 
       // Ajout ou mise à jour dans la base de données
       if (editMode && currentSession?.id) {
-        await window.db.updateExtraSession(sessionData);
+        await window.db.updateExtraSession(currentSession.id, sessionData);
 
         // Mise à jour dans l'état local
         setExtraSessions(prev =>

@@ -124,7 +124,7 @@ interface Database {
   // دوال الحصص الإضافية
   getExtraSessions: () => Promise<ExtraSession[]>;
   createExtraSession: (session: ExtraSession) => Promise<number>;
-  updateExtraSession: (session: ExtraSession) => Promise<void>;
+  updateExtraSession: (id: number, session: ExtraSession) => Promise<void>;
   deleteExtraSession: (id: number) => Promise<void>;
   archivePastSessions: () => Promise<{ archived: number; error?: string }>;
 
