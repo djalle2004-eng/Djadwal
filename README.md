@@ -90,6 +90,21 @@
 ### 📅 Planification Avancée
 
 - **Forçage de Planification** : Nouvelle option pour ignorer les conflits lors de la création de sessions supplémentaires (utile pour les examens ou cas exceptionnels)
+- **Gestion Stricte des Conflits de Cours** : 
+    - Un cours de type "Cours Magistral" (Lecture) bloque tous les groupes de la même spécialité.
+    - Un cours de type "TD/TP" ne peut pas être placé en même temps qu'un Cours Magistral de la même spécialité.
+    - Cette logique est appliquée lors du glisser-déposer (DnD) et de la création de sessions supplémentaires.
+
+### 🧪 Mode Sandbox (Brouillons)
+
+- **Sauvegarde de brouillons** : Possibilité de sauvegarder l'état actuel de l'emploi du temps comme un "brouillon" (Sandbox).
+- **Chargement/Restauration** : Basculer entre différents scénarios de planification sans affecter la base de données principale jusqu'à validation.
+- **Gestion des snapshots** : Créer, charger et supprimer des snapshots de l'emploi du temps.
+
+### 📧 Récupération de Mot de Passe
+
+- **Integration Gmail** : Système d'envoi d'emails sécurisé pour la réinitialisation de mot de passe.
+- **Support SMTP** : Configuration flexible via variables d'environnement.
 
 ## 🏗️ Architecture Technique
 

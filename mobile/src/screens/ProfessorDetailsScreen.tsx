@@ -43,6 +43,50 @@ export default function ProfessorDetailsScreen({ navigation, route }: Props) {
         return titleMap[title] || title;
     };
 
+    const handlePhonePress = (phone: string) => {
+        Linking.openURL(`tel:${phone}`).catch(() => {
+            Alert.alert('تنبيه', 'لا يمكن فتح تطبيق الهاتف');
+        });
+    };
+
+    const handlePhoneLongPress = (phone: string) => {
+        Alert.alert(
+            'رقم الهاتف',
+            phone,
+            [
+                {
+                    text: 'اتصال',
+                    onPress: () => handlePhonePress(phone)
+                },
+                {
+                    text: 'إلغاء',
+                    style: 'cancel'
+                }
+            ]
+        );
+    };
+
+    const handleEmailPress = (email: string) => {
+        Alert.alert(
+            'البريد الإلكتروني',
+            email,
+            [
+                {
+                    text: 'إرسال بريد',
+                    onPress: () => {
+                        Linking.openURL(`mailto:${email}`).catch(() => {
+                            Alert.alert('تنبيه', 'لا يمكن فتح تطبيق البريد');
+                        });
+                    }
+                },
+                {
+                    text: 'إلغاء',
+                    style: 'cancel'
+                }
+            ]
+        );
+    };
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" />

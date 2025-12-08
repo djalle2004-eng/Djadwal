@@ -175,7 +175,30 @@ addAcademicYear(yearName, setAsCurrent)
 setActiveAcademicYear(yearId)
 addSemester(academicYearId, semesterName, startDate, endDate, setAsCurrent)
 setActiveSemester(semesterId)
+
+// Sandbox (Mode Brouillon)
+saveSandboxDraft(name, data)
+getSandboxDrafts()
+loadSandboxDraft(id)
+deleteSandboxDraft(id)
+
+// Sessions Supplémentaires
+archivePastSessions() // Endpoint: POST /extra-sessions/archive
 ```
+
+### 📧 Service Email (v08.12.25)
+Le service d'email (`src/services/emailService.ts`) gère la récupération de mot de passe via Gmail.
+Configuration requise dans `.env` :
+```env
+EMAIL_USER=votre_email@gmail.com
+EMAIL_APP_PASSWORD=votre_mot_de_passe_application
+```
+
+### 🛡️ Logique de Conflits Stricte (v08.12.25)
+La fonction `checkConflicts` dans `electron/database.js` implémente désormais une logique stricte pour les Cours Magistraux :
+1. **Lecture vs Group** : Un cours `lecture_group` bloque TOUS les groupes de la même spécialisation/année sur ce créneau.
+2. **Group vs Lecture** : Un groupe (TD/TP) ne peut pas être planifié si un `lecture_group` occupe le créneau pour sa spécialisation.
+3. **Exceptions** : L'option "Ignorer les conflits" dans `AvailableRooms.tsx` permet de contourner cette règle pour les sessions supplémentaires/examens.
 
 ## ⚛️ Architecture React
 
