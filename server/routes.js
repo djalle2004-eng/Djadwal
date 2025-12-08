@@ -488,6 +488,20 @@ router.get('/extra-sessions', async (req, res) => {
     }
 });
 
+// Archive past sessions
+router.post('/extra-sessions/archive', async (req, res) => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const result = await executeQuery(
+            'UPDATE extra_sessions SET is_archived = 1 WHERE session_date < $1 AND (is_archived = 0 OR is_archived IS NULL) RETURNING id',
+            [today]
+        );
+        res.json({ archived: result.length });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 router.post('/extra-sessions', async (req, res) => {
     try {
         const session = req.body;
