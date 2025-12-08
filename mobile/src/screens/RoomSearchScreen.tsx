@@ -4,91 +4,57 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { turso } from '../lib/turso';
 import { COLORS, SHADOWS, SPACING } from '../constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Search, User, ChevronLeft, ArrowRight } from 'lucide-react-native';
+import { Search, MapPin, ChevronLeft, ArrowRight } from 'lucide-react-native';
 import { RootStackParamList } from '../../App';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'ProfessorSearch'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'RoomSearch'>;
 
-interface Professor {
+interface Room {
     id: number;
     name: string;
-    email: string;
-    department_name?: string;
+    capacity: number;
+    type?: string;
 }
 
-export default function ProfessorSearchScreen({ navigation }: Props) {
+export default function RoomSearchScreen({ navigation }: Props) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [professors, setProfessors] = useState<Professor[]>([]);
-    const [filteredProfessors, setFilteredProfessors] = useState<Professor[]>([]);
+    const [rooms, setRooms] = useState<Room[]>([]);
+    const [filteredRooms, setFilteredRooms] = useState<Room[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchProfessors();
+        fetchRooms();
     }, []);
 
     useEffect(() => {
         if (searchQuery.trim() === '') {
-            setFilteredProfessors(professors);
+            setFilteredRooms(rooms);
         } else {
             const lowerQuery = searchQuery.toLowerCase();
-            const filtered = professors.filter(p =>
-                p.name.toLowerCase().includes(lowerQuery) ||
-                (p.email && p.email.toLowerCase().includes(lowerQuery))
+            const filtered = rooms.filter(r =>
+                r.name.toLowerCase().includes(lowerQuery)
             );
-            setFilteredProfessors(filtered);
+            setFilteredRooms(filtered);
         }
-    }, [searchQuery, professors]);
+    }, [searchQuery, rooms]);
 
-    interface Professor {
-        id: number;
-        name: string;
-        email: string;
-        metadata?: string;
-        phone?: string;
-        academic_title?: string;
-        specialization?: string;
-        title?: string;
-        weekly_hours?: number;
-    }
-
-    const fetchProfessors = async () => {
+    const fetchRooms = async () => {
         try {
-            const sql = `SELECT * FROM professors ORDER BY name ASC`;
+            const sql = `SELECT * FROM rooms ORDER BY name ASC`;
             const result = await turso.execute({ sql, args: [] });
-
-            // Parse metadata if available
-            const data = (result.rows as unknown as any[]).map(row => {
-                let extra = {};
-                if (row.metadata) {
-                    try {
-                        extra = JSON.parse(row.metadata);
-                    } catch (e) {
-                        console.log('Failed to parse metadata for', row.name);
-                    }
-                }
-                return {
-                    ...row,
-                    ...extra // Spread parsed metadata (title, phone, academic_title)
-                };
-            }) as Professor[];
-
-            setProfessors(data);
-            setFilteredProfessors(data);
+            const data = result.rows as unknown as Room[];
+            setRooms(data);
+            setFilteredRooms(data);
         } catch (e) {
             console.error(e);
+            Alert.alert('Error', 'Failed to fetch rooms');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleProfessorPress = (professor: Professor) => {
-        // Alert.alert('Debug', `Tapped: ${professor.name}`);
-        try {
-            navigation.navigate('ProfessorDetails', { professor });
-        } catch (error) {
-            console.error("Navigation error:", error);
-            Alert.alert('Error', 'Could not navigate to details');
-        }
+    const handleRoomPress = (room: Room) => {
+        navigation.navigate('RoomSchedule', { room });
     };
 
     return (
@@ -103,7 +69,7 @@ export default function ProfessorSearchScreen({ navigation }: Props) {
                         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                             <ArrowRight size={24} color={COLORS.white} />
                         </TouchableOpacity>
-                        <Text style={styles.title}>بحث عن أستاذ</Text>
+                        <Text style={styles.title}>بحث عن قاعة</Text>
                         <View style={{ width: 40 }} />
                     </View>
 
@@ -111,7 +77,7 @@ export default function ProfessorSearchScreen({ navigation }: Props) {
                         <Search size={20} color={COLORS.textSecondary} style={styles.searchIcon} />
                         <TextInput
                             style={styles.searchInput}
-                            placeholder="ابحث بالاسم..."
+                            placeholder="ابحث باسم القاعة..."
                             placeholderTextColor={COLORS.textLight}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
@@ -127,21 +93,21 @@ export default function ProfessorSearchScreen({ navigation }: Props) {
                 </View>
             ) : (
                 <FlatList
-                    data={filteredProfessors}
+                    data={filteredRooms}
                     keyExtractor={(item) => item.id.toString()}
                     contentContainerStyle={styles.list}
                     renderItem={({ item }) => (
                         <TouchableOpacity
                             style={styles.card}
-                            onPress={() => handleProfessorPress(item)}
+                            onPress={() => handleRoomPress(item)}
                         >
                             <View style={[styles.cardContent, { flexDirection: 'row-reverse' }]}>
-                                <View style={styles.avatarContainer}>
-                                    <User size={24} color={COLORS.primary} />
+                                <View style={styles.iconContainer}>
+                                    <MapPin size={24} color={COLORS.primary} />
                                 </View>
                                 <View style={{ flex: 1, alignItems: 'flex-end', marginRight: SPACING.m }}>
                                     <Text style={styles.name}>{item.name}</Text>
-                                    {item.email && <Text style={styles.email}>{item.email}</Text>}
+                                    <Text style={styles.details}>{item.capacity} مقعد</Text>
                                 </View>
                                 <ChevronLeft size={20} color={COLORS.textLight} />
                             </View>
@@ -149,7 +115,7 @@ export default function ProfessorSearchScreen({ navigation }: Props) {
                     )}
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
-                            <Text style={styles.emptyText}>لا يوجد نتائج</Text>
+                            <Text style={styles.emptyText}>لا توجد نتائج</Text>
                         </View>
                     }
                 />
@@ -227,7 +193,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
     },
-    avatarContainer: {
+    iconContainer: {
         width: 48,
         height: 48,
         borderRadius: 24,
@@ -241,7 +207,7 @@ const styles = StyleSheet.create({
         color: COLORS.text,
         marginBottom: 4,
     },
-    email: {
+    details: {
         fontSize: 14,
         color: COLORS.textSecondary,
     },

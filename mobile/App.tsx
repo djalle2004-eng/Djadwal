@@ -10,6 +10,9 @@ import SpecializationScheduleScreen from './src/screens/SpecializationScheduleSc
 import AvailableRoomsScreen from './src/screens/AvailableRoomsScreen';
 import CompensationsScreen from './src/screens/CompensationsScreen';
 import ProfessorSearchScreen from './src/screens/ProfessorSearchScreen';
+import ProfessorDetailsScreen from './src/screens/ProfessorDetailsScreen';
+import RoomSearchScreen from './src/screens/RoomSearchScreen';
+import RoomScheduleScreen from './src/screens/RoomScheduleScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -21,6 +24,9 @@ export type RootStackParamList = {
   AvailableRooms: { year: any, semester: any };
   Compensations: { year: any, semester: any };
   ProfessorSearch: undefined;
+  ProfessorDetails: { professor: any }; // Using 'any' for now to avoid circular import issues or define properly in shared types
+  RoomSearch: undefined;
+  RoomSchedule: { room: any };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -38,6 +44,9 @@ export default function App() {
         <Stack.Screen name="AvailableRooms" component={AvailableRoomsScreen} />
         <Stack.Screen name="Compensations" component={CompensationsScreen} />
         <Stack.Screen name="ProfessorSearch" component={ProfessorSearchScreen} />
+        <Stack.Screen name="ProfessorDetails" component={ProfessorDetailsScreen} />
+        <Stack.Screen name="RoomSearch" component={RoomSearchScreen} />
+        <Stack.Screen name="RoomSchedule" component={RoomScheduleScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

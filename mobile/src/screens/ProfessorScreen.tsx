@@ -18,7 +18,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Professor'>;
 
 const DAYS = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
 
-export default function ProfessorScreen({ navigation }: Props) {
+export default function ProfessorScreen({ navigation, route }: Props) {
     const [loading, setLoading] = useState(false);
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [professorName, setProfessorName] = useState('');
@@ -37,6 +37,20 @@ export default function ProfessorScreen({ navigation }: Props) {
     }, [selectedYear, selectedSemester, selectedDay]);
 
     const checkLogin = async () => {
+        // First check if user is passed via params (Search Flow)
+        if (route.params?.user) {
+            setProfessorName(route.params.user.full_name || route.params.user.username);
+
+            // Temporarily set AsyncStorage so fetchSchedule works with getItem('professorId')
+            // Or better, update fetchSchedule to use a local variable.
+            // Let's store it in state or use the param directly. 
+            // However, fetchSchedule relies on AsyncStorage.
+            // For minimal risk, I will set the AsyncStorage here.
+            await AsyncStorage.setItem('professorId', route.params.user.id.toString());
+            await AsyncStorage.setItem('professorName', route.params.user.full_name || route.params.user.username);
+            return;
+        }
+
         const id = await AsyncStorage.getItem('professorId');
         const name = await AsyncStorage.getItem('professorName');
         if (!id) {
@@ -123,8 +137,10 @@ export default function ProfessorScreen({ navigation }: Props) {
             >
                 <SafeAreaView>
                     <View style={[styles.headerContent, { flexDirection: 'row-reverse' }]}>
-                        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-                            <LogOut size={20} color={COLORS.white} />
+                        <TouchableOpacity onPress={handleLogout} style={[styles.logoutButton, !route.params?.user && { opacity: 0 }]} disabled={!!route.params?.user}>
+                            {/* Only show/enable logout if NOT in view-only mode (Search mode) */}
+                            {!route.params?.user && <LogOut size={20} color={COLORS.white} />}
+                            {route.params?.user && <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}><ArrowLeft size={24} color={COLORS.white} /></TouchableOpacity>}
                         </TouchableOpacity>
                         <View style={{ flex: 1, alignItems: 'center' }}>
                             <Text style={styles.title}>جدول الأستاذ</Text>
