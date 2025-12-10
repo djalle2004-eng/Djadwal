@@ -1096,47 +1096,51 @@ export default function Schedule() {
                     disabled={!isSandboxMode && !can('update', 'sessions')}
                   >
                     <div
-                      className={`mb-1 pb-1 ${index < (cell.assignments?.length || 0) - 1 ? 'border-b border-gray-300' : ''}`}
+                      className={`mb-1 pb-1 relative group/item ${index < (cell.assignments?.length || 0) - 1 ? 'border-b border-gray-300' : ''}`}
                     >
-                      {group && <div className="font-bold text-xs">{group.name}</div>}
-                      {course && <div className="text-xs">{course.name}</div>}
-                      {professor && (
-                        <div className={`text-xs ${isProfessorTemporary(professor) ? 'text-red-600' : ''}`}>
-                          {professor.name}
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          {group && <div className="font-bold text-xs">{group.name}</div>}
+                          {course && <div className="text-xs">{course.name}</div>}
+                          {professor && (
+                            <div className={`text-xs ${isProfessorTemporary(professor) ? 'text-red-600' : ''}`}>
+                              {professor.name}
+                            </div>
+                          )}
+                          {room && <div className="text-xs text-gray-500">{room.name}</div>}
                         </div>
-                      )}
-                      {room && <div className="text-xs text-gray-500">{room.name}</div>}
 
-                      {/* Edit/Delete Buttons for Individual Assignment */}
-                      <div className="absolute top-0 left-0 hidden group-hover:flex bg-white shadow-sm rounded border border-gray-200">
-                        {can('update', 'sessions') && (
-                          <button
-                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditAssignment(assignment);
-                            }}
-                            title="تعديل"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
-                          </button>
-                        )}
-                        {can('delete', 'sessions') && (
-                          <button
-                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (assignment.id) handleDeleteAssignment(assignment.id);
-                            }}
-                            title="حذف"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        )}
+                        {/* Edit/Delete Buttons for Individual Assignment */}
+                        <div className="flex-shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity flex gap-0.5">
+                          {can('update', 'sessions') && (
+                            <button
+                              className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditAssignment(assignment);
+                              }}
+                              title="تعديل"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </button>
+                          )}
+                          {can('delete', 'sessions') && (
+                            <button
+                              className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (assignment.id) handleDeleteAssignment(assignment.id);
+                              }}
+                              title="حذف"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </DraggableAssignment>
