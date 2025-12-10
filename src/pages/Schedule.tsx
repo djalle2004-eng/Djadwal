@@ -259,6 +259,7 @@ export default function Schedule() {
   // Drag & Drop State
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeAssignment, setActiveAssignment] = useState<Assignment | null>(null);
+  const [editingAssignmentId, setEditingAssignmentId] = useState<number | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -662,7 +663,45 @@ export default function Schedule() {
     console.log('Available groups for dropdown:', filteredGroupsBySpecialization);
     console.log('Is new assignment:', isNewAssignment);
 
+    setEditingAssignmentId(null); // Reset editing ID for new clicks on cells (unless explicitly set by edit function)
     setIsCellModalOpen(true);
+  };
+
+  // إعداد تعديل التكليف
+  const handleEditAssignment = (assignment: Assignment) => {
+    // Find time index
+    const tIndex = timeSlots.findIndex(slot => slot.start === assignment.start_time);
+
+    setSelectedCell({
+      dayIndex: assignment.day_of_week,
+      timeIndex: tIndex >= 0 ? tIndex : 0,
+      group_id: assignment.group_id,
+      course_id: assignment.course_id,
+      professor_id: assignment.professor_id,
+      room_id: assignment.room_id
+    });
+    setEditingAssignmentId(assignment.id || null);
+    setIsCellModalOpen(true);
+  };
+
+  // حذف تكليف محدد
+  const handleDeleteAssignment = async (assignmentId: number) => {
+    if (!window.confirm("هل أنت متأكد من حذف هذا التكليف؟")) return;
+    try {
+      setIsLoading(true);
+      if (isSandboxMode) {
+        deleteSandboxAssignment(assignmentId);
+      } else {
+        await deleteAssignment(assignmentId);
+        await refreshAssignments();
+      }
+      console.log(`Assignment ${assignmentId} deleted`);
+    } catch (error) {
+      console.error("Error deleting assignment:", error);
+      setError(error instanceof Error ? error : new Error("خطأ أثناء حذف التكليف"));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // حفظ بيانات الخلية
@@ -704,15 +743,28 @@ export default function Schedule() {
 
       console.log('Saving assignment:', assignment);
 
-      // التحقق من وجود تكليف سابق لهذه الخلية
-      const existingAssignment = contextAssignments.find((a: Assignment) =>
-        a.day_of_week === dayIndex &&
-        a.start_time === timeSlots[timeIndex].start &&
-        a.end_time === timeSlots[timeIndex].end &&
-        a.academic_year === (currentYear?.year_name || '') &&
-        a.semester === (currentSemester?.semester_name || '') &&
-        a.group_id === cell.group_id // Match by group_id instead of specialization
-      );
+      console.log('Saving assignment:', assignment);
+
+      // التحقق من وجود تكليف سابق (للتحديث)
+      let existingAssignment = null;
+
+      // أولوية البحث بالمعرف إذا كنا نقوم بالتعديل
+      if (editingAssignmentId) {
+        const list = isSandboxMode ? sandboxAssignments : contextAssignments;
+        existingAssignment = list.find((a: Assignment) => a.id === editingAssignmentId);
+      }
+
+      // إذا لم يتم العثور عليه بالمعرف (أو لم يكن هناك معرف)، ابحث بالطريقة القديمة (للحالات الأخرى)
+      if (!existingAssignment) {
+        existingAssignment = contextAssignments.find((a: Assignment) =>
+          a.day_of_week === dayIndex &&
+          a.start_time === timeSlots[timeIndex].start &&
+          a.end_time === timeSlots[timeIndex].end &&
+          a.academic_year === (currentYear?.year_name || '') &&
+          a.semester === (currentSemester?.semester_name || '') &&
+          a.group_id === cell.group_id // Match by group_id instead of specialization
+        );
+      }
 
       try {
         // إذا كان في وضع التجربة (Sandbox Mode)
@@ -767,6 +819,7 @@ export default function Schedule() {
     } finally {
       setIsLoading(false);
       setIsCellModalOpen(false);
+      setEditingAssignmentId(null);
     }
   };
 
@@ -1053,6 +1106,38 @@ export default function Schedule() {
                         </div>
                       )}
                       {room && <div className="text-xs text-gray-500">{room.name}</div>}
+
+                      {/* Edit/Delete Buttons for Individual Assignment */}
+                      <div className="absolute top-0 left-0 hidden group-hover:flex bg-white shadow-sm rounded border border-gray-200">
+                        {can('update', 'sessions') && (
+                          <button
+                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditAssignment(assignment);
+                            }}
+                            title="تعديل"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                        )}
+                        {can('delete', 'sessions') && (
+                          <button
+                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (assignment.id) handleDeleteAssignment(assignment.id);
+                            }}
+                            title="حذف"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </DraggableAssignment>
                 );
@@ -1165,7 +1250,18 @@ export default function Schedule() {
                 className="bg-blue-500 text-white rounded-full p-1 mx-0.5"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleCellClick(dayIndex, timeIndex);
+                  // For single assignment
+                  const assignment = (isSandboxMode ? sandboxAssignments : contextAssignments).find((a: Assignment) =>
+                    a.day_of_week === dayIndex &&
+                    a.start_time === timeSlots[timeIndex].start &&
+                    a.end_time === timeSlots[timeIndex].end &&
+                    a.group_id === cell.group_id
+                  );
+                  if (assignment) {
+                    handleEditAssignment(assignment);
+                  } else {
+                    handleCellClick(dayIndex, timeIndex);
+                  }
                 }}
                 title="تعديل التكليف"
               >
@@ -1179,11 +1275,21 @@ export default function Schedule() {
                 className="bg-red-500 text-white rounded-full p-1 mx-0.5"
                 onClick={(e) => {
                   e.stopPropagation();
-                  // handleDeleteCell will delete all assignments in this cell
-                  // For individual assignment deletion, need to implement separate function
+                  // For single assignment cell, we can find the assignment ID
+                  const assignment = (isSandboxMode ? sandboxAssignments : contextAssignments).find((a: Assignment) =>
+                    a.day_of_week === dayIndex &&
+                    a.start_time === timeSlots[timeIndex].start &&
+                    a.end_time === timeSlots[timeIndex].end &&
+                    a.group_id === cell.group_id
+                  );
+                  if (assignment && assignment.id) {
+                    handleDeleteAssignment(assignment.id);
+                  } else {
+                    // Fallback to delete cell if we can't find specific assignment (legacy)
+                    handleDeleteCell(dayIndex, timeIndex);
+                  }
                 }}
                 title="حذف التكليف"
-                disabled
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
