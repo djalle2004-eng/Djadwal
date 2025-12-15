@@ -1858,7 +1858,7 @@ export default function AvailableRooms() {
     if (!selectedCourse) errors.course = 'المقياس مطلوب';
 
     // Validation for Group(s)
-    if (sessionType === 'semester_exam' && selectedGroupIds.length > 0) {
+    if ((sessionType === 'semester_exam' || sessionType === 'exam') && selectedGroupIds.length > 0) {
       // Valid
     } else if (!selectedGroup) {
       errors.group = 'الفوج مطلوب';
@@ -1916,7 +1916,7 @@ export default function AvailableRooms() {
     // Vérification des conflits
     // For bulk operations, we need to check all selected rooms and groups
     const roomsToCheck = selectedRoomIds.length > 0 ? selectedRoomIds : [selectedRoom as number];
-    const groupsToCheck = (sessionType === 'semester_exam' && selectedGroupIds.length > 0)
+    const groupsToCheck = ((sessionType === 'semester_exam' || sessionType === 'exam') && selectedGroupIds.length > 0)
       ? selectedGroupIds
       : [selectedGroup as number];
 
@@ -2907,7 +2907,7 @@ export default function AvailableRooms() {
             </Grid>
 
             <Grid item xs={12} md={4}>
-              {sessionType === 'semester_exam' ? (
+              {sessionType === 'semester_exam' || sessionType === 'exam' ? (
                 <FormControl fullWidth error={!!formErrors.group}>
                   <InputLabel id="group-select-label">الأفواج (يمكن اختيار أكثر من فوج)</InputLabel>
                   <Select
