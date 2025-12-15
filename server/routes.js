@@ -2,8 +2,294 @@ const express = require('express');
 const router = express.Router();
 const { executeQuery } = require('./database');
 const bcrypt = require('bcrypt');
+const { SignJWT, jwtVerify } = require('jose');
+const emailService = require('./emailService');
 
-// --- Departments ---
+// --- Types & Constants ---
+const JWT_SECRET = new TextEncoder().encode(
+    process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
+);
+
+// --- Auth Helpers ---
+async function createToken(payload) {
+    return new SignJWT(payload)
+        .setProtectedHeader({ alg: 'HS256' })
+        .setExpirationTime('7d')
+        .setIssuedAt()
+        .sign(JWT_SECRET);
+}
+
+async function verifyToken(token) {
+    try {
+        const { payload } = await jwtVerify(token, JWT_SECRET);
+        return payload;
+    } catch (error) {
+        return null;
+    }
+}
+
+// Middleware to verify session
+async function requireAuth(req, res, next) {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    const user = await verifyToken(token);
+    if (!user) return res.status(401).json({ error: 'Invalid token' });
+
+    req.user = user;
+    next();
+}
+
+// --- Auth Routes ---
+
+router.post('/auth/signup', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !email.endsWith('@univ-eloued.dz')) {
+            return res.status(400).json({ error: 'Email must be @univ-eloued.dz' });
+        }
+
+        const existingUser = await executeQuery('SELECT * FROM users WHERE email = $1', [email]);
+        if (existingUser.length > 0) {
+            return res.status(400).json({ error: 'Email already exists' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create user
+        const safeEmail = String(email).trim();
+        const result = await executeQuery(
+            "INSERT INTO users (username, email, password_hash, role, is_active) VALUES (?, ?, ?, 'PROFESSOR', 1) RETURNING id, email, role",
+            [safeEmail, safeEmail, hashedPassword]
+        );
+        const user = result[0];
+
+        // Create Professor Profile Placeholder
+        // 'name' is required by legacy Djadwal schema
+        await executeQuery(
+            "INSERT INTO professors (user_id, name, professional_email, full_name_arabic, full_name_latin, academic_rank, department, primary_phone, phd_specialization) VALUES (?, ?, ?, '', '', '', '', '', '')",
+            [user.id, email.split('@')[0], email]
+        );
+
+        // Generate Token
+        const token = await createToken({ userId: user.id, email: user.email, role: user.role });
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        res.json({ user });
+    } catch (error) {
+        console.error('Signup error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/auth/signin', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        const users = await executeQuery('SELECT * FROM users WHERE email = $1', [email]);
+        const user = users[0];
+
+        if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        if (!user.is_active) {
+            return res.status(403).json({ error: 'Account is disabled' });
+        }
+
+        const token = await createToken({ userId: user.id, email: user.email, role: user.role });
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        res.json({ user: { id: user.id, email: user.email, role: user.role } });
+    } catch (error) {
+        console.error('Signin error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/auth/signout', (req, res) => {
+    res.clearCookie('token');
+    res.json({ success: true });
+});
+
+router.get('/auth/me', async (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.json({ user: null });
+
+    const payload = await verifyToken(token);
+    if (!payload) return res.json({ user: null });
+
+    const users = await executeQuery('SELECT id, email, role FROM users WHERE id = $1', [payload.userId]);
+    res.json({ user: users[0] || null });
+});
+
+router.post('/auth/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const users = await executeQuery('SELECT * FROM users WHERE email = $1', [email]);
+        const user = users[0];
+
+        if (!user) return res.json({ success: true }); // Silent fail for security
+
+        // Generate Token
+        const token = require('crypto').randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 3600000); // 1 hour
+
+        await executeQuery(
+            'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
+            [user.id, token, expiresAt.toISOString()] // ISO string for SQLite/Turso
+        );
+
+        // Send Email (if configured)
+        const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5173'}/takleef/reset-password?token=${token}`;
+
+        if (process.env.EMAIL_USER) {
+            await emailService.sendEmail(
+                email,
+                'استعادة كلمة المرور - منصة التكليف',
+                `<p>لاستعادة كلمة المرور، يرجى النقر على الرابط التالي:</p><a href="${resetLink}">${resetLink}</a>`
+            );
+        } else {
+            // For dev without email service, maybe log it or return it?
+            // Returning it in dev mode only
+            if (process.env.NODE_ENV !== 'production') {
+                return res.json({ success: true, debugToken: token, debugLink: resetLink });
+            }
+        }
+
+        res.json({ success: true });
+
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// --- Profile Routes ---
+
+router.get('/profile', requireAuth, async (req, res) => {
+    try {
+        const result = await executeQuery('SELECT * FROM professors WHERE user_id = $1', [req.user.userId]);
+        const profile = result[0];
+
+        // Return email from user record if not in profile (or sync it)
+        if (profile && !profile.professional_email) {
+            profile.professional_email = req.user.email;
+        }
+
+        res.json(profile || { user_id: req.user.userId, email: req.user.email });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/profile', requireAuth, async (req, res) => {
+    try {
+        const {
+            full_name_arabic, full_name_latin, academic_rank,
+            professional_email, personal_email, primary_phone, secondary_phone,
+            phd_specialization, field_of_research, department
+        } = req.body;
+
+        // Upsert profile
+        const existing = await executeQuery('SELECT id FROM professors WHERE user_id = $1', [req.user.userId]);
+
+        if (existing.length > 0) {
+            await executeQuery(
+                `UPDATE professors SET 
+                full_name_arabic=$1, full_name_latin=$2, academic_rank=$3, 
+                professional_email=$4, personal_email=$5, primary_phone=$6, 
+                secondary_phone=$7, phd_specialization=$8, field_of_research=$9, 
+                department=$10, profile_completed=1
+                WHERE user_id=$11`,
+                [full_name_arabic, full_name_latin, academic_rank, professional_email, personal_email, primary_phone, secondary_phone, phd_specialization, field_of_research, department, req.user.userId]
+            );
+        } else {
+            await executeQuery(
+                `INSERT INTO professors 
+                (user_id, full_name_arabic, full_name_latin, academic_rank, professional_email, personal_email, primary_phone, secondary_phone, phd_specialization, field_of_research, department, profile_completed) 
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 1)`,
+                [req.user.userId, full_name_arabic, full_name_latin, academic_rank, professional_email, personal_email, primary_phone, secondary_phone, phd_specialization, field_of_research, department]
+            );
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Profile update error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// --- Preferences Routes ---
+
+router.get('/preferences', requireAuth, async (req, res) => {
+    try {
+        const { academic_year } = req.query; // optional filter
+
+        // Get all active modules first
+        // In a real app we might filter by department/specialty
+
+        const modules = await executeQuery('SELECT * FROM modules ORDER BY semester, module_name_arabic');
+        const preferences = await executeQuery('SELECT * FROM preferences WHERE professor_id = $1', [req.user.userId]);
+
+        res.json({ modules, preferences });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/preferences', requireAuth, async (req, res) => {
+    try {
+        const { preferences, academic_year_id } = req.body; // preferences: Array of { module_id, teaching_type, priority }
+
+        if (!Array.isArray(preferences)) {
+            return res.status(400).json({ error: 'Preferences must be an array' });
+        }
+
+        // Transaction-like approach (delete all for this year then insert new ones? Or Upsert?)
+        // Takleef logic seems to be specific selections.
+        // Let's iterate and upsert.
+
+        for (const pref of preferences) {
+            // Check if exists
+            const existing = await executeQuery(
+                'SELECT id FROM preferences WHERE professor_id = $1 AND module_id = $2 AND academic_year_id = $3',
+                [req.user.userId, pref.module_id, academic_year_id || 1] // Default year 1 if not sent
+            );
+
+            if (existing.length > 0) {
+                await executeQuery(
+                    'UPDATE preferences SET teaching_type = $1, priority_level = $2 WHERE id = $3',
+                    [pref.teaching_type, pref.priority_level, existing[0].id]
+                );
+            } else {
+                await executeQuery(
+                    'INSERT INTO preferences (professor_id, module_id, academic_year_id, teaching_type, priority_level) VALUES ($1, $2, $3, $4, $5)',
+                    [req.user.userId, pref.module_id, academic_year_id || 1, pref.teaching_type, pref.priority_level]
+                );
+            }
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Preferences save error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 router.get('/departments', async (req, res) => {
     try {
         const result = await executeQuery('SELECT * FROM departments ORDER BY name');
@@ -505,10 +791,26 @@ router.post('/extra-sessions/archive', async (req, res) => {
 router.post('/extra-sessions', async (req, res) => {
     try {
         const session = req.body;
-        // Assuming session object matches DB columns
-        const columns = Object.keys(session).join(', ');
-        const placeholders = Object.keys(session).map((_, i) => `$${i + 1}`).join(', ');
-        const values = Object.values(session);
+        // Whitelist valid columns to prevent SQL errors with extra UI fields
+        const validColumns = [
+            'room_id', 'professor_id', 'group_id', 'course_id', 'session_date',
+            'start_time', 'end_time', 'session_type', 'description', 'reason',
+            'semester', 'academic_year', 'exam_note', 'is_archived'
+        ];
+
+        const filteredSession = {};
+        Object.keys(session).forEach(key => {
+            if (validColumns.includes(key)) {
+                filteredSession[key] = session[key];
+            }
+        });
+
+        // Ensure defaults if missing
+        if (!filteredSession.is_archived) filteredSession.is_archived = 0;
+
+        const columns = Object.keys(filteredSession).join(', ');
+        const placeholders = Object.keys(filteredSession).map((_, i) => `$${i + 1}`).join(', ');
+        const values = Object.values(filteredSession);
 
         const result = await executeQuery(
             `INSERT INTO extra_sessions (${columns}) VALUES (${placeholders}) RETURNING *`,
@@ -525,8 +827,21 @@ router.put('/extra-sessions/:id', async (req, res) => {
         const session = req.body;
         const { id } = req.params;
 
-        const updates = Object.keys(session).map((key, i) => `${key} = $${i + 1}`).join(', ');
-        const values = [...Object.values(session), id];
+        const validColumns = [
+            'room_id', 'professor_id', 'group_id', 'course_id', 'session_date',
+            'start_time', 'end_time', 'session_type', 'description', 'reason',
+            'semester', 'academic_year', 'exam_note', 'is_archived'
+        ];
+
+        const filteredSession = {};
+        Object.keys(session).forEach(key => {
+            if (validColumns.includes(key)) {
+                filteredSession[key] = session[key];
+            }
+        });
+
+        const updates = Object.keys(filteredSession).map((key, i) => `${key} = $${i + 1}`).join(', ');
+        const values = [...Object.values(filteredSession), id];
 
         const result = await executeQuery(
             `UPDATE extra_sessions SET ${updates} WHERE id = $${values.length} RETURNING *`,
@@ -881,7 +1196,7 @@ router.get('/export/data', async (req, res) => {
 });
 
 // --- Email Routes ---
-const emailService = require('./emailService');
+
 const { google } = require('googleapis');
 
 
