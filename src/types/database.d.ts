@@ -74,7 +74,7 @@ interface ExtraSession {
   session_date: string;
   start_time: string;
   end_time: string;
-  session_type: 'extra' | 'makeup';
+  session_type: 'extra' | 'makeup' | 'semester_exam';
   description?: string;
   is_archived?: number;
 }
