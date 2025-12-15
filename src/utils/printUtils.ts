@@ -492,17 +492,39 @@ export const generateSessionsListContent = (
         </tr>
       </thead>
       <tbody>
-        ${filteredSessions.map(session => `
+      <tbody>
+        ${(() => {
+      // تجميع الحصص المتشابهة
+      const groupedSessions = filteredSessions.reduce((acc: any[], current) => {
+        const key = `${current.session_date}-${current.start_time}-${current.end_time}-${current.room_id}-${current.course_id}-${current.professor_id}-${current.session_type}`;
+        const existing = acc.find((item: any) => item.key === key);
+
+        if (existing) {
+          if (!existing.group_names.includes(current.group_name)) {
+            existing.group_names.push(current.group_name);
+          }
+        } else {
+          acc.push({
+            ...current,
+            key,
+            group_names: [current.group_name]
+          });
+        }
+        return acc;
+      }, []);
+
+      return groupedSessions.map((session: any) => `
           <tr>
-            <td style="border: 1px solid #666; padding: 6px; text-align: center;">${session.session_type === 'extra' ? 'حصة إضافية' : 'حصة تعويض'}</td>
+            <td style="border: 1px solid #666; padding: 6px; text-align: center;">${session.session_type === 'extra' ? 'حصة إضافية' : session.session_type === 'makeup' ? 'حصة تعويض' : 'إمتحان'}</td>
             <td style="border: 1px solid #666; padding: 6px; text-align: center;">${formatDate(session.session_date)}</td>
             <td style="border: 1px solid #666; padding: 6px; text-align: center;">${session.start_time} - ${session.end_time}</td>
             <td style="border: 1px solid #666; padding: 6px; text-align: center;">${session.professor_name}</td>
             <td style="border: 1px solid #666; padding: 6px; text-align: center;">${session.course_name}</td>
-            <td style="border: 1px solid #666; padding: 6px; text-align: center;">${session.group_name}</td>
+            <td style="border: 1px solid #666; padding: 6px; text-align: center;">${Array.isArray(session.group_names) ? session.group_names.join(' + ') : session.group_name}</td>
             <td style="border: 1px solid #666; padding: 6px; text-align: center;">${session.room_name}</td>
           </tr>
-        `).join('')}
+        `).join('');
+    })()}
       </tbody>
     </table>
     
@@ -611,14 +633,33 @@ export const generateStudentAnnouncementContent = (
     titleFontSize: 18
   });
 
+  // تجميع الحصص المتشابهة (نفس التوقيت، القاعة، المقرر، الأستاذ) ودمج الأفواج
+  const groupedSessions = sessions.reduce((acc: any[], current) => {
+    const key = `${current.session_date}-${current.start_time}-${current.end_time}-${current.room_id}-${current.course_id}-${current.professor_id}-${current.session_type}`;
+    const existing = acc.find(item => item.key === key);
+
+    if (existing) {
+      if (!existing.group_names.includes(current.group_name)) {
+        existing.group_names.push(current.group_name);
+      }
+    } else {
+      acc.push({
+        ...current,
+        key,
+        group_names: [current.group_name]
+      });
+    }
+    return acc;
+  }, []);
+
   // إنشاء جدول الحصص
   const tableHeaders = ['اليوم والتاريخ', 'التوقيت', 'المقرر', 'الأستاذ', 'المجموعة', 'القاعة', 'نوع الحصة'];
-  const tableRows = sessions.map(session => [
+  const tableRows = groupedSessions.map(session => [
     `<div style="text-align: center;">${format(new Date(session.session_date), 'EEEE', { locale: arSA })}<br/>${format(new Date(session.session_date), 'dd/MM/yyyy')}</div>`,
     `${session.start_time} - ${session.end_time}`,
     session.course_name || '',
     session.professor_name || '',
-    session.group_name || '',
+    Array.isArray(session.group_names) ? session.group_names.join(' + ') : session.group_name || '',
     session.room_name || '',
     session.session_type === 'extra' ? 'إضافية' : session.session_type === 'makeup' ? 'تعويضية' : 'إمتحان الأعمال الموجهة'
   ]);
