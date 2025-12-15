@@ -69,6 +69,12 @@ export default defineConfig({
           return 'assets/[name]-[hash][extname]';
         },
       },
+      onwarn(warning, warn) {
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
+          return;
+        }
+        warn(warning);
+      },
     },
   },
   optimizeDeps: {
