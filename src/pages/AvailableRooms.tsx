@@ -186,7 +186,7 @@ export default function AvailableRooms() {
   const [selectedProfessor, setSelectedProfessor] = useState<number | ''>('');
   const [selectedCourse, setSelectedCourse] = useState<number | ''>('');
   const [selectedGroup, setSelectedGroup] = useState<number | ''>('');
-  const [selectedGroup, setSelectedGroup] = useState<number | ''>('');
+
   const [selectedRoom, setSelectedRoom] = useState<number | ''>('');
   const [selectedRoomIds, setSelectedRoomIds] = useState<number[]>([]); // For multi-room selection
   const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([]); // For multi-group selection
