@@ -1827,12 +1827,24 @@ export default function AvailableRooms() {
   };
 
   // Fonction pour ouvrir la boîte de dialogue en mode édition
-  const handleOpenEditDialog = (session: ExtraSession) => {
+  const handleOpenEditDialog = (session: ExtraSession, groupIds?: number[]) => {
     setEditMode(true);
     setCurrentSession(session);
     setSelectedProfessor(session.professor_id);
     setSelectedCourse(session.course_id);
-    setSelectedGroup(session.group_id);
+
+    // Handle multi-group selection
+    // If groupIds is passed (from grouped table), use it
+    // Otherwise default to empty array or look it up if we implemented that
+    if (groupIds && groupIds.length > 0) {
+      setSelectedGroupIds(groupIds);
+      // Set selectedGroup to the first one just for form validation/legacy support
+      setSelectedGroup(groupIds[0]);
+    } else {
+      setSelectedGroupIds([]);
+      setSelectedGroup(session.group_id);
+    }
+
     setSelectedRoom(session.room_id);
     setSessionDate(parseISO(session.session_date));
     setStartTime(session.start_time);
@@ -2710,17 +2722,40 @@ export default function AvailableRooms() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {(showArchived ? archivedSessions : extraSessions)
-                .filter(session => {
-                  // Filtrer par type si nécessaire
+              {(() => {
+                const sessionsToRender = showArchived ? archivedSessions : extraSessions;
+                const filtered = sessionsToRender.filter(session => {
                   if (sessionType && session.session_type !== sessionType) {
                     return false;
                   }
-
                   return true;
-                })
-                .map((session) => (
-                  <TableRow key={session.id}>
+                });
+
+                // Group sessions
+                const groupedSessions = filtered.reduce((acc: any[], current) => {
+                  const key = `${current.session_date}-${current.start_time}-${current.end_time}-${current.room_id}-${current.course_id}-${current.professor_id}-${current.session_type}`;
+                  const existing = acc.find((item: any) => item.key === key);
+
+                  if (existing) {
+                    if (!existing.group_names.includes(current.group_name)) {
+                      existing.group_names.push(current.group_name);
+                      existing.ids.push(current.id);
+                      existing.group_ids.push(current.group_id);
+                    }
+                  } else {
+                    acc.push({
+                      ...current,
+                      key,
+                      group_names: [current.group_name],
+                      ids: [current.id],
+                      group_ids: [current.group_id]
+                    });
+                  }
+                  return acc;
+                }, []);
+
+                return groupedSessions.map((session) => (
+                  <TableRow key={session.key}>
                     <TableCell align="right">
                       {session.session_type === 'extra' ? 'حصة إضافية' : session.session_type === 'makeup' ? 'حصة تعويض' : session.session_type === 'exam' ? 'إمتحان الأعمال' : 'إمتحان السداسي'}
                     </TableCell>
@@ -2728,33 +2763,60 @@ export default function AvailableRooms() {
                     <TableCell align="right">{`${session.start_time} - ${session.end_time}`}</TableCell>
                     <TableCell align="right">{session.professor_name}</TableCell>
                     <TableCell align="right">{session.course_name}</TableCell>
-                    <TableCell align="right">{session.group_name}</TableCell>
+                    <TableCell align="right">{session.group_names.join(' + ')}</TableCell>
                     <TableCell align="right">{session.room_name}</TableCell>
                     <TableCell align="center">
                       <IconButton
                         aria-label="edit"
                         color="primary"
-                        onClick={() => handleOpenEditDialog(session)}
+                        onClick={() => {
+                          // For edit, we open the dialog with the first session's details
+                          // But we need to make sure we select ALL groups
+                          // This requires updating handleOpenEditDialog to accept multi-groups
+                          // For now, we'll just edit the first one, but ideally we should support multi-edit
+                          // Or better: We pass the whole grouped object to a new handler
+                          handleOpenEditDialog({
+                            ...session,
+                            group_id: session.group_ids[0] // Primary group
+                          }, session.group_ids); // Pass all group IDs
+                        }}
                       >
                         <EditIcon />
                       </IconButton>
                       <IconButton
                         aria-label="delete"
                         color="error"
-                        onClick={() => handleDeleteSession(session.id!)}
+                        onClick={async () => {
+                          if (window.confirm(`هل أنت متأكد من حذف ${session.ids.length > 1 ? 'هذه الحصص المجتمعة' : 'هذه الحصة'}؟`)) {
+                            for (const id of session.ids) {
+                              await window.db.deleteExtraSession(id);
+                            }
+                            // Refresh
+                            setExtraSessions(prev => prev.filter(s => !session.ids.includes(s.id)));
+                            setSnackbar({
+                              open: true,
+                              message: "تم الحذف بنجاح",
+                              severity: 'success'
+                            });
+                          }
+                        }}
                       >
                         <DeleteIcon />
                       </IconButton>
                       <IconButton
                         aria-label="print"
                         color="primary"
-                        onClick={() => printIndividualSession(session)}
+                        onClick={() => printIndividualSession({
+                          ...session,
+                          group_name: session.group_names.join(' + ') // Pass merged name for printing
+                        })}
                       >
                         <PrintIcon />
                       </IconButton>
                     </TableCell>
                   </TableRow>
-                ))}
+                ));
+              })()}
             </TableBody>
           </Table>
         </TableContainer>
