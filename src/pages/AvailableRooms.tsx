@@ -3010,6 +3010,7 @@ export default function AvailableRooms() {
                   <MenuItem value="extra">حصة إضافية</MenuItem>
                   <MenuItem value="makeup">حصة تعويض</MenuItem>
                   <MenuItem value="exam">إمتحان الأعمال الموجهة</MenuItem>
+                  <MenuItem value="semester_exam" sx={{ color: 'purple', fontWeight: 'bold' }}>إمتحان السداسي</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
