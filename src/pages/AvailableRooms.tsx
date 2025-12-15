@@ -79,7 +79,7 @@ interface ExtraSession {
   session_date: string;
   start_time: string;
   end_time: string;
-  session_type: 'extra' | 'makeup' | 'exam';
+  session_type: 'extra' | 'makeup' | 'exam' | 'semester_exam';
   description?: string;
   exam_note?: string;
   is_archived?: number;
@@ -186,11 +186,14 @@ export default function AvailableRooms() {
   const [selectedProfessor, setSelectedProfessor] = useState<number | ''>('');
   const [selectedCourse, setSelectedCourse] = useState<number | ''>('');
   const [selectedGroup, setSelectedGroup] = useState<number | ''>('');
+  const [selectedGroup, setSelectedGroup] = useState<number | ''>('');
   const [selectedRoom, setSelectedRoom] = useState<number | ''>('');
+  const [selectedRoomIds, setSelectedRoomIds] = useState<number[]>([]); // For multi-room selection
+  const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([]); // For multi-group selection
   const [sessionDate, setSessionDate] = useState<Date | null>(new Date());
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
-  const [sessionType, setSessionType] = useState<'extra' | 'makeup' | 'exam'>('extra');
+  const [sessionType, setSessionType] = useState<'extra' | 'makeup' | 'exam' | 'semester_exam'>('extra');
   const [description, setDescription] = useState<string>('');
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [useCustomTime, setUseCustomTime] = useState<boolean>(false);
@@ -1849,38 +1852,44 @@ export default function AvailableRooms() {
   const validateForm = (): boolean => {
     const errors: FormErrors = {};
 
-    if (!selectedProfessor) {
-      errors.professor = 'Veuillez sélectionner un professeur';
+    // Validations
+    if (!sessionType) errors.sessionType = 'نوع الحصة مطلوب';
+    if (!selectedProfessor) errors.professor = 'الأستاذ مطلوب';
+    if (!selectedCourse) errors.course = 'المقياس مطلوب';
+
+    // Validation for Group(s)
+    if (sessionType === 'semester_exam' && selectedGroupIds.length > 0) {
+      // Valid
+    } else if (!selectedGroup) {
+      errors.group = 'الفوج مطلوب';
     }
 
-    if (!selectedCourse) {
-      errors.course = 'Veuillez sélectionner un cours';
-    }
-
-    if (!selectedGroup) {
-      errors.group = 'Veuillez sélectionner un groupe';
-    }
-
-    if (!selectedRoom) {
-      errors.room = 'Veuillez sélectionner une salle';
+    // Validation for Room(s)
+    if (selectedRoomIds.length > 0) {
+      // Valid (Multi-room)
+    } else if (!selectedRoom) {
+      errors.room = 'القاعة مطلوبة';
     }
 
     if (!sessionDate) {
       errors.date = 'Veuillez sélectionner une date';
     }
 
-    if (!startTime) {
+    let start = useCustomTime ? customStartTime : startTime;
+    let end = useCustomTime ? customEndTime : endTime;
+
+    if (!start) {
       errors.startTime = 'Veuillez sélectionner une heure de début';
     }
 
-    if (!endTime) {
+    if (!end) {
       errors.endTime = 'Veuillez sélectionner une heure de fin';
     }
 
     // Vérification que l'heure de début est avant l'heure de fin
-    if (startTime && endTime) {
-      const startMinutes = timeToMinutes(startTime);
-      const endMinutes = timeToMinutes(endTime);
+    if (start && end) {
+      const startMinutes = timeToMinutes(start);
+      const endMinutes = timeToMinutes(end);
 
       if (startMinutes >= endMinutes) {
         errors.time = "L'heure de fin doit être postérieure à l'heure de début";
@@ -1901,39 +1910,56 @@ export default function AvailableRooms() {
     // Formatage de la date
     const formattedDate = format(sessionDate!, 'yyyy-MM-dd');
 
-    // Vérification des conflits
-    const { hasConflict, conflictMessage } = checkForConflicts(
-      selectedProfessor as number,
-      selectedGroup as number,
-      formattedDate,
-      useCustomTime ? customStartTime : startTime,
-      useCustomTime ? customEndTime : endTime,
-      currentSession?.id,
-      selectedRoom as number,
-      sessionType
-    );
+    const actualStartTime = useCustomTime ? customStartTime : startTime;
+    const actualEndTime = useCustomTime ? customEndTime : endTime;
 
-    if (hasConflict && !ignoreConflicts) {
-      setSnackbar({
-        open: true,
-        message: conflictMessage,
-        severity: 'error'
-      });
-      return;
+    // Vérification des conflits
+    // For bulk operations, we need to check all selected rooms and groups
+    const roomsToCheck = selectedRoomIds.length > 0 ? selectedRoomIds : [selectedRoom as number];
+    const groupsToCheck = (sessionType === 'semester_exam' && selectedGroupIds.length > 0)
+      ? selectedGroupIds
+      : [selectedGroup as number];
+
+    let hasAnyConflict = false;
+    let conflictMessages: string[] = [];
+
+    for (const roomId of roomsToCheck) {
+      for (const groupId of groupsToCheck) {
+        const { hasConflict, conflictMessage } = checkForConflicts(
+          selectedProfessor as number,
+          groupId,
+          formattedDate,
+          actualStartTime,
+          actualEndTime,
+          currentSession?.id,
+          roomId,
+          sessionType
+        );
+
+        if (hasConflict) {
+          hasAnyConflict = true;
+          conflictMessages.push(`تعارض في القاعة ${rooms.find(r => r.id === roomId)?.name} والفوج ${groups.find(g => g.id === groupId)?.name}: ${conflictMessage}`);
+        }
+
+        // Check room availability for each room
+        if (!isRoomAvailable(
+          roomId,
+          formattedDate,
+          actualStartTime,
+          actualEndTime,
+          currentSession?.id,
+          selectedProfessor as number
+        )) {
+          hasAnyConflict = true;
+          conflictMessages.push(`القاعة ${rooms.find(r => r.id === roomId)?.name} غير متاحة في هذا التوقيت`);
+        }
+      }
     }
 
-    // Vérification de la disponibilité de la salle
-    if (!isRoomAvailable(
-      selectedRoom as number,
-      formattedDate,
-      useCustomTime ? customStartTime : startTime,
-      useCustomTime ? customEndTime : endTime,
-      currentSession?.id,
-      selectedProfessor as number
-    ) && !ignoreConflicts) {
+    if (hasAnyConflict && !ignoreConflicts) {
       setSnackbar({
         open: true,
-        message: "La salle sélectionnée n'est pas disponible à cette date et à cet horaire",
+        message: conflictMessages.join('\n'),
         severity: 'error'
       });
       return;
@@ -1941,36 +1967,35 @@ export default function AvailableRooms() {
 
     try {
       // Préparation des données
-      const sessionData: ExtraSession = {
-        ...(currentSession?.id ? { id: currentSession.id } : {}),
-        professor_id: selectedProfessor as number,
-        course_id: selectedCourse as number,
-        group_id: selectedGroup as number,
-        room_id: selectedRoom as number,
-        session_date: formattedDate,
-        start_time: useCustomTime ? customStartTime : startTime,
-        end_time: useCustomTime ? customEndTime : endTime,
-        session_type: sessionType,
-        description: description
-      };
-
-      // Ajout ou mise à jour dans la base de données
       if (editMode && currentSession?.id) {
+        const sessionData: ExtraSession = {
+          id: currentSession.id,
+          professor_id: selectedProfessor as number,
+          course_id: selectedCourse as number,
+          group_id: selectedGroup as number,
+          room_id: selectedRoom as number,
+          session_date: formattedDate,
+          start_time: actualStartTime,
+          end_time: actualEndTime,
+          session_type: sessionType,
+          description: description
+        };
+
         await window.db.updateExtraSession(currentSession.id, sessionData);
 
         // Mise à jour dans l'état local
         setExtraSessions(prev =>
           prev.map(s => s.id === currentSession.id ? {
             id: s.id,
-            room_id: s.room_id,
-            professor_id: s.professor_id,
-            group_id: s.group_id,
-            course_id: s.course_id,
-            session_date: s.session_date,
-            start_time: useCustomTime ? customStartTime : startTime,
-            end_time: useCustomTime ? customEndTime : endTime,
-            session_type: s.session_type,
-            description: s.description,
+            room_id: selectedRoom as number,
+            professor_id: selectedProfessor as number,
+            group_id: selectedGroup as number,
+            course_id: selectedCourse as number,
+            session_date: formattedDate,
+            start_time: actualStartTime,
+            end_time: actualEndTime,
+            session_type: sessionType,
+            description: description,
             professor_name: professors.find(p => p.id === selectedProfessor)?.name,
             course_name: courses.find(c => c.id === selectedCourse)?.name,
             group_name: groups.find(g => g.id === selectedGroup)?.name,
@@ -1984,45 +2009,57 @@ export default function AvailableRooms() {
           severity: 'success'
         });
       } else {
-        // Ajouter l'interface pour la réponse de la base de données
-        interface ExtraSessionResponse {
-          id: number;
-          room_id: number;
-          professor_id: number;
-          group_id: number;
-          course_id: number;
-          session_date: string;
-          start_time: string;
-          end_time: string;
-          session_type: 'extra' | 'makeup';
-          description?: string;
+        // Logic for creating sessions
+        const roomsToBook = selectedRoomIds.length > 0 ? selectedRoomIds : [selectedRoom as number];
+        const groupsToBook = (sessionType === 'semester_exam' && selectedGroupIds.length > 0)
+          ? selectedGroupIds
+          : [selectedGroup as number];
+
+        // We will create a session for every combination of (Room, Group)
+        // Scenario 1: Split (1 Group, N Rooms) -> Loop Rooms, use single Group
+        // Scenario 2: Merge (N Groups, 1 Room) -> Loop Groups, use single Room
+        // Scenario 3: N Groups, M Rooms -> Cross product (Create N*M sessions)
+
+        const promises = [];
+
+        for (const roomId of roomsToBook) {
+          for (const groupId of groupsToBook) {
+            const roomName = rooms.find(r => r.id === roomId)?.name;
+            const groupName = groups.find(g => g.id === groupId)?.name;
+
+            const newSession: ExtraSession = {
+              room_id: roomId,
+              room_name: roomName,
+              professor_id: selectedProfessor as number,
+              professor_name: professors.find(p => p.id === selectedProfessor)?.name,
+              group_id: groupId,
+              group_name: groupName,
+              course_id: selectedCourse as number,
+              course_name: courses.find(c => c.id === selectedCourse)?.name,
+              session_date: formattedDate,
+              start_time: actualStartTime,
+              end_time: actualEndTime,
+              session_type: sessionType as any, // Cast for new type
+              description: description,
+              is_archived: 0
+            };
+            promises.push(window.db.createExtraSession(newSession));
+          }
         }
 
-        const newSession = await window.db.createExtraSession(sessionData) as unknown as ExtraSessionResponse;
-
-        // Ajout dans l'état local avec les noms complets
-        setExtraSessions(prev => [...prev, {
-          id: newSession.id,
-          room_id: selectedRoom as number,
-          professor_id: selectedProfessor as number,
-          group_id: selectedGroup as number,
-          course_id: selectedCourse as number,
-          session_date: sessionDate ? format(sessionDate, 'yyyy-MM-dd') : '',
-          start_time: useCustomTime ? customStartTime : startTime,
-          end_time: useCustomTime ? customEndTime : endTime,
-          session_type: sessionType,
-          description: description,
-          professor_name: professors.find(p => p.id === selectedProfessor)?.name,
-          course_name: courses.find(c => c.id === selectedCourse)?.name,
-          group_name: groups.find(g => g.id === selectedGroup)?.name,
-          room_name: rooms.find(r => r.id === selectedRoom)?.name
-        }]);
+        await Promise.all(promises);
 
         setSnackbar({
           open: true,
-          message: "La séance a été ajoutée avec succès",
+          message: 'تم إضافة الحصة/الحصص بنجاح',
           severity: 'success'
         });
+
+        handleCloseDialog();
+        fetchExtraSessions();
+        // Clear selections
+        setSelectedRoomIds([]);
+        setSelectedGroupIds([]);
       }
 
       // Fermeture de la boîte de dialogue
@@ -2124,6 +2161,7 @@ export default function AvailableRooms() {
     setSelectedDepartment('');
     setSelectedSpecialization('');
     setSelectedGroup('');
+    setSelectedGroupIds([]); // Clear multi-select groups
   };
 
   const handleCourseSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -2141,6 +2179,7 @@ export default function AvailableRooms() {
     setSelectedDepartment(deptId);
     setSelectedSpecialization('');
     setSelectedGroup('');
+    setSelectedGroupIds([]); // Clear multi-select groups
     setFilteredGroups([]);
   };
 
@@ -2148,6 +2187,12 @@ export default function AvailableRooms() {
     const specId = e.target.value as number | '';
     setSelectedSpecialization(specId);
     setSelectedGroup('');
+    setSelectedGroupIds([]); // Clear multi-select groups
+  };
+
+  const handleGroupChange = (groupId: number) => {
+    setSelectedGroup(groupId);
+    setSelectedGroupIds([]); // Clear multi-select groups if single is selected
   };
 
   // تصفية الأساتذة والمقررات حسب البحث
@@ -2416,6 +2461,19 @@ export default function AvailableRooms() {
             <Table>
               <TableHead>
                 <TableRow>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      indeterminate={selectedRoomIds.length > 0 && selectedRoomIds.length < availableRooms.length}
+                      checked={availableRooms.length > 0 && selectedRoomIds.length === availableRooms.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedRoomIds(availableRooms.map(r => r.id));
+                        } else {
+                          setSelectedRoomIds([]);
+                        }
+                      }}
+                    />
+                  </TableCell>
                   <TableCell align="right">اسم القاعة</TableCell>
                   <TableCell align="right">المبنى</TableCell>
                   <TableCell align="right">الطابق</TableCell>
@@ -2425,7 +2483,18 @@ export default function AvailableRooms() {
               </TableHead>
               <TableBody>
                 {availableRooms.map((room) => (
-                  <TableRow key={room.id}>
+                  <TableRow key={room.id} selected={selectedRoomIds.includes(room.id)}>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={selectedRoomIds.includes(room.id)}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setSelectedRoomIds(prev =>
+                            checked ? [...prev, room.id] : prev.filter(id => id !== room.id)
+                          );
+                        }}
+                      />
+                    </TableCell>
                     <TableCell align="right">{room.name}</TableCell>
                     <TableCell align="right">{room.building || 'غير محدد'}</TableCell>
                     <TableCell align="right">{room.floor !== undefined ? room.floor : 'غير محدد'}</TableCell>
@@ -2508,11 +2577,12 @@ export default function AvailableRooms() {
                 labelId="session-type-filter-label"
                 value={sessionType}
                 label="نوع الحصة"
-                onChange={(e) => setSessionType(e.target.value as 'extra' | 'makeup' | 'exam')}
+                onChange={(e) => setSessionType(e.target.value as 'extra' | 'makeup' | 'exam' | 'semester_exam')}
               >
                 <MenuItem value="extra">حصة إضافية</MenuItem>
                 <MenuItem value="makeup">حصة تعويض</MenuItem>
                 <MenuItem value="exam">إمتحان الأعمال الموجهة</MenuItem>
+                <MenuItem value="semester_exam" sx={{ color: 'purple', fontWeight: 'bold' }}>إمتحان السداسي</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -2540,6 +2610,33 @@ export default function AvailableRooms() {
             </Button>
           </Grid>
         </Grid>
+
+        {/* Bulk Action Button when rooms selected */}
+        {selectedRoomIds.length > 0 && !open && (
+          <Box sx={{ mt: 2, mb: 2, display: 'flex', gap: 2, alignItems: 'center', backgroundColor: '#f3e5f5', p: 2, borderRadius: 1 }}>
+            <Typography variant="body1" color="primary" sx={{ fontWeight: 'bold' }}>
+              تم تحديد {selectedRoomIds.length} قاعات
+            </Typography>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => {
+                handleOpenCreateDialog();
+                setSessionType('semester_exam');
+                // Set time if selected
+                if (selectedDate) setSessionDate(selectedDate);
+                if (selectedTime) {
+                  const [start, end] = selectedTime.split(' - ');
+                  setStartTime(start);
+                  setEndTime(end);
+                }
+              }}
+            >
+              برمجة إمتحان سداسي جماعي
+            </Button>
+            <Button onClick={() => setSelectedRoomIds([])} size="small">إلغاء التحديد</Button>
+          </Box>
+        )}
 
         {/* عرض معلومات عن الحصص */}
         <Box sx={{ mb: 2, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
@@ -2625,7 +2722,7 @@ export default function AvailableRooms() {
                 .map((session) => (
                   <TableRow key={session.id}>
                     <TableCell align="right">
-                      {session.session_type === 'extra' ? 'حصة إضافية' : session.session_type === 'makeup' ? 'حصة تعويض' : 'إمتحان الأعمال'}
+                      {session.session_type === 'extra' ? 'حصة إضافية' : session.session_type === 'makeup' ? 'حصة تعويض' : session.session_type === 'exam' ? 'إمتحان الأعمال' : 'إمتحان السداسي'}
                     </TableCell>
                     <TableCell align="right">{format(new Date(session.session_date), 'EEEE dd/MM/yyyy', { locale: arSA })}</TableCell>
                     <TableCell align="right">{`${session.start_time} - ${session.end_time}`}</TableCell>
@@ -2810,48 +2907,82 @@ export default function AvailableRooms() {
             </Grid>
 
             <Grid item xs={12} md={4}>
-              <FormControl fullWidth error={!!formErrors.group} disabled={!selectedSpecialization || !selectedProfessor}>
-                <InputLabel id="group-select-label">المجموعة</InputLabel>
-                <Select
-                  labelId="group-select-label"
-                  id="group-select"
-                  value={selectedGroup}
-                  label="المجموعة"
-                  onChange={(e) => setSelectedGroup(e.target.value as number | '')}
-                >
-                  <MenuItem value=""><em>اختر المجموعة</em></MenuItem>
-                  {(selectedProfessor && selectedSpecialization ? filteredGroups : selectedProfessor ? professorGroups : groups).map((group) => (
-                    <MenuItem key={group.id} value={group.id}>
-                      {group.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {!selectedProfessor && (
-                  <FormHelperText>يرجى اختيار الأستاذ أولاً</FormHelperText>
-                )}
-                {formErrors.group && <FormHelperText>{formErrors.group}</FormHelperText>}
-              </FormControl>
+              {sessionType === 'semester_exam' ? (
+                <FormControl fullWidth error={!!formErrors.group}>
+                  <InputLabel id="group-select-label">الأفواج (يمكن اختيار أكثر من فوج)</InputLabel>
+                  <Select
+                    labelId="group-select-label"
+                    id="group-select"
+                    multiple
+                    value={selectedGroupIds}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedGroupIds(typeof val === 'string' ? val.split(',').map(Number) : val as number[]);
+                    }}
+                    label="الأفواج (يمكن اختيار أكثر من فوج)"
+                  >
+                    {filteredGroups.map((group) => (
+                      <MenuItem key={group.id} value={group.id}>
+                        {group.name} {group.specialization ? `(${group.specialization})` : ''}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {formErrors.group && <FormHelperText>{formErrors.group}</FormHelperText>}
+                </FormControl>
+              ) : (
+                <FormControl fullWidth error={!!formErrors.group} disabled={!selectedSpecialization || !selectedProfessor}>
+                  <InputLabel id="group-select-label">المجموعة</InputLabel>
+                  <Select
+                    labelId="group-select-label"
+                    id="group-select"
+                    value={selectedGroup}
+                    label="المجموعة"
+                    onChange={(e) => handleGroupChange(e.target.value as number)}
+                  >
+                    <MenuItem value=""><em>اختر المجموعة</em></MenuItem>
+                    {(selectedProfessor && selectedSpecialization ? filteredGroups : selectedProfessor ? professorGroups : groups).map((group) => (
+                      <MenuItem key={group.id} value={group.id}>
+                        {group.name} {group.specialization ? `(${group.specialization})` : ''}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {!selectedProfessor && (
+                    <FormHelperText>يرجى اختيار الأستاذ أولاً</FormHelperText>
+                  )}
+                  {formErrors.group && <FormHelperText>{formErrors.group}</FormHelperText>}
+                </FormControl>
+              )}
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth error={!!formErrors.room}>
-                <InputLabel id="room-select-label">القاعة</InputLabel>
-                <Select
-                  labelId="room-select-label"
-                  id="room-select"
-                  value={selectedRoom}
-                  label="القاعة"
-                  onChange={(e) => setSelectedRoom(e.target.value as number | '')}
-                >
-                  <MenuItem value=""><em>اختر القاعة</em></MenuItem>
-                  {rooms.map((room) => (
-                    <MenuItem key={room.id} value={room.id}>
-                      {room.name} {room.capacity ? `(السعة: ${room.capacity})` : ''}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {formErrors.room && <FormHelperText>{formErrors.room}</FormHelperText>}
-              </FormControl>
+              {selectedRoomIds.length > 0 ? (
+                <TextField
+                  fullWidth
+                  label="القاعات"
+                  value={`تم تحديد ${selectedRoomIds.length} قاعات`}
+                  disabled
+                  variant="filled"
+                />
+              ) : (
+                <FormControl fullWidth error={!!formErrors.room}>
+                  <InputLabel id="room-select-label">القاعة</InputLabel>
+                  <Select
+                    labelId="room-select-label"
+                    id="room-select"
+                    value={selectedRoom}
+                    label="القاعة"
+                    onChange={(e) => setSelectedRoom(e.target.value as number | '')}
+                  >
+                    <MenuItem value=""><em>اختر القاعة</em></MenuItem>
+                    {rooms.map((room) => (
+                      <MenuItem key={room.id} value={room.id}>
+                        {room.name} {room.capacity ? `(السعة: ${room.capacity})` : ''}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {formErrors.room && <FormHelperText>{formErrors.room}</FormHelperText>}
+                </FormControl>
+              )}
             </Grid>
 
             <Grid item xs={12} md={6}>
