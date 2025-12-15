@@ -1935,6 +1935,36 @@ export default function AvailableRooms() {
     let hasAnyConflict = false;
     let conflictMessages: string[] = [];
 
+    // Pre-validate references to prevent Foreign Key errors
+    const validateId = (id: number, list: any[], name: string) => {
+      if (!list.find(item => item.id === id)) {
+        return `${name} غير موجود (ربما تم حذفه). يرجى تحديث الصفحة.`;
+      }
+      return null;
+    };
+
+    // Validate Course and Professor
+    if (selectedCourse) {
+      const error = validateId(selectedCourse as number, courses, 'المقرر');
+      if (error) { setSnackbar({ open: true, message: error, severity: 'error' }); return; }
+    }
+    if (selectedProfessor) {
+      const error = validateId(selectedProfessor as number, professors, 'الأستاذ');
+      if (error) { setSnackbar({ open: true, message: error, severity: 'error' }); return; }
+    }
+
+    // Validate Groups
+    for (const gid of groupsToCheck) {
+      const error = validateId(gid, groups, `الفوج (ID: ${gid})`);
+      if (error) { setSnackbar({ open: true, message: error, severity: 'error' }); return; }
+    }
+
+    // Validate Rooms
+    for (const rid of roomsToCheck) {
+      const error = validateId(rid, rooms, `القاعة (ID: ${rid})`);
+      if (error) { setSnackbar({ open: true, message: error, severity: 'error' }); return; }
+    }
+
     for (const roomId of roomsToCheck) {
       for (const groupId of groupsToCheck) {
         const { hasConflict, conflictMessage } = checkForConflicts(
@@ -2076,11 +2106,18 @@ export default function AvailableRooms() {
 
       // Fermeture de la boîte de dialogue
       handleCloseDialog();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de l\'enregistrement de la séance:', error);
+
+      let errorMessage = `Une erreur est survenue: ${error instanceof Error ? error.message : 'Erreur inconnue'}`;
+
+      if (typeof error.message === 'string' && error.message.includes('FOREIGN KEY constraint failed')) {
+        errorMessage = 'خطأ في البيانات: يبدو أنك تحاول استخدام قاعة أو أستاذ أو فوج تم حذفه. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+      }
+
       setSnackbar({
         open: true,
-        message: `Une erreur est survenue: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
+        message: errorMessage,
         severity: 'error'
       });
     }
@@ -2788,16 +2825,25 @@ export default function AvailableRooms() {
                         color="error"
                         onClick={async () => {
                           if (window.confirm(`هل أنت متأكد من حذف ${session.ids.length > 1 ? 'هذه الحصص المجتمعة' : 'هذه الحصة'}؟`)) {
-                            for (const id of session.ids) {
-                              await window.db.deleteExtraSession(id);
+                            try {
+                              for (const id of session.ids) {
+                                await window.db.deleteExtraSession(id);
+                              }
+                              // Refresh
+                              setExtraSessions(prev => prev.filter(s => !session.ids.includes(s.id)));
+                              setSnackbar({
+                                open: true,
+                                message: "تم الحذف بنجاح",
+                                severity: 'success'
+                              });
+                            } catch (error: any) {
+                              console.error('Delete error:', error);
+                              setSnackbar({
+                                open: true,
+                                message: `خطأ أثناء الحذف: ${error.message}`,
+                                severity: 'error'
+                              });
                             }
-                            // Refresh
-                            setExtraSessions(prev => prev.filter(s => !session.ids.includes(s.id)));
-                            setSnackbar({
-                              open: true,
-                              message: "تم الحذف بنجاح",
-                              severity: 'success'
-                            });
                           }
                         }}
                       >
