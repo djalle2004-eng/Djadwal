@@ -289,8 +289,30 @@ export default function Login() {
                 fontWeight: 'bold'
               }}
             >
-              {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
             </Button>
+
+            <Box sx={{ mt: 3, textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                هل أنت أستاذ؟
+              </Typography>
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={() => navigate('/portal/login')}
+                startIcon={<PersonIcon />}
+                sx={{
+                  py: 1,
+                  borderColor: '#764ba2',
+                  color: '#764ba2',
+                  '&:hover': {
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(118, 75, 162, 0.04)'
+                  }
+                }}
+              >
+                الدخول إلى فضاء الأساتذة
+              </Button>
+            </Box>
           </form>
         </Paper>
 
