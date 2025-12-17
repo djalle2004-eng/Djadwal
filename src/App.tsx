@@ -31,6 +31,12 @@ import AuditLog from './pages/AuditLog';
 import DatabaseSettings from './pages/DatabaseSettings';
 
 
+import PortalLayout from "./pages/portal/PortalLayout";
+import PortalLogin from "./pages/portal/PortalLogin";
+import PortalRegister from "./pages/portal/PortalRegister";
+import PortalProfile from "./pages/portal/PortalProfile";
+import PortalPreferences from "./pages/portal/PortalPreferences";
+
 const navigation = [
   { name: "لوحة التحكم", href: "/", icon: Calendar, resource: null }, // الداشبورد متاح للجميع
   { name: "السنوات الدراسية", href: "/academic-years", icon: Layers, resource: "academic_years" },
@@ -153,6 +159,33 @@ const Layout = ({ children }: LayoutProps) => {
 };
 
 const routes = [
+  // Portal Routes
+  {
+    path: "/portal/login",
+    element: <PortalLogin />,
+  },
+  {
+    path: "/portal/register",
+    element: <PortalRegister />,
+  },
+  {
+    path: "/portal",
+    element: <PortalLayout />,
+    children: [
+      {
+        index: true,
+        element: <Navigate to="preferences" replace />,
+      },
+      {
+        path: "profile",
+        element: <PortalProfile />,
+      },
+      {
+        path: "preferences",
+        element: <PortalPreferences />,
+      },
+    ],
+  },
   {
     path: "/login",
     element: <Login />,

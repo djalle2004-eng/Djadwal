@@ -59,6 +59,8 @@ interface Group {
   id: number;
   name: string;
   specialization?: string;
+  department_id?: number;
+  department_name?: string;
 }
 
 interface Course {
@@ -202,7 +204,7 @@ export default function AvailableRooms() {
   const [ignoreConflicts, setIgnoreConflicts] = useState<boolean>(false);
 
   // États pour les notifications
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' | 'warning' | 'info' });
 
   // État pour le chef de département
   const [departmentHead, setDepartmentHead] = useState<string>('رئيس القسم');
@@ -955,7 +957,7 @@ export default function AvailableRooms() {
       console.log('Available days:', days);
 
       // Check if a day is selected
-      if (!selectedDay && selectedDay !== 0) {
+      if (selectedDay === '' && selectedDay !== 0) {
         setSnackbar({
           open: true,
           message: 'يرجى اختيار يوم من القائمة المنسدلة قبل إنشاء التقرير',
@@ -1410,7 +1412,7 @@ export default function AvailableRooms() {
     endTime: string,
     currentSessionId?: number,
     roomId?: number,
-    sessionType?: 'extra' | 'makeup' | 'exam'
+    sessionType?: 'extra' | 'makeup' | 'exam' | 'semester_exam'
   ): { hasConflict: boolean, conflictMessage: string } => {
     // Conversion en minutes pour comparaison
     const newStartMinutes = timeToMinutes(startTime);
@@ -1935,6 +1937,36 @@ export default function AvailableRooms() {
     let hasAnyConflict = false;
     let conflictMessages: string[] = [];
 
+    // Force fetch fresh data to ensure we are not using stale data
+    // This allows us to catch deleted items BEFORE sending to DB
+    let freshRooms: Room[] = rooms;
+    let freshGroups: Group[] = groups;
+    let freshProfessors: Professor[] = professors;
+    let freshCourses: Course[] = courses;
+
+    try {
+      console.log('Refreshing data before validation...');
+      const [r, g, p, c] = await Promise.all([
+        window.db.getRooms(),
+        window.db.getGroups(),
+        window.db.getProfessors(),
+        window.db.getCourses()
+      ]);
+      freshRooms = r;
+      freshGroups = g;
+      freshProfessors = p;
+      freshCourses = c;
+
+      // Update local state to reflect reality
+      setRooms(r);
+      setGroups(g);
+      setProfessors(p);
+      setCourses(c);
+    } catch (e) {
+      console.error('Failed to refresh data before submit:', e);
+      // Continue with local state if fetch fails (fallback)
+    }
+
     // Pre-validate references to prevent Foreign Key errors
     const validateId = (id: number, list: any[], name: string) => {
       if (!list.find(item => item.id === id)) {
@@ -1945,23 +1977,23 @@ export default function AvailableRooms() {
 
     // Validate Course and Professor
     if (selectedCourse) {
-      const error = validateId(selectedCourse as number, courses, 'المقرر');
+      const error = validateId(selectedCourse as number, freshCourses, 'المقرر');
       if (error) { setSnackbar({ open: true, message: error, severity: 'error' }); return; }
     }
     if (selectedProfessor) {
-      const error = validateId(selectedProfessor as number, professors, 'الأستاذ');
+      const error = validateId(selectedProfessor as number, freshProfessors, 'الأستاذ');
       if (error) { setSnackbar({ open: true, message: error, severity: 'error' }); return; }
     }
 
     // Validate Groups
     for (const gid of groupsToCheck) {
-      const error = validateId(gid, groups, `الفوج (ID: ${gid})`);
+      const error = validateId(gid, freshGroups, `الفوج (ID: ${gid})`);
       if (error) { setSnackbar({ open: true, message: error, severity: 'error' }); return; }
     }
 
     // Validate Rooms
     for (const rid of roomsToCheck) {
-      const error = validateId(rid, rooms, `القاعة (ID: ${rid})`);
+      const error = validateId(rid, freshRooms, `القاعة (ID: ${rid})`);
       if (error) { setSnackbar({ open: true, message: error, severity: 'error' }); return; }
     }
 
@@ -3428,7 +3460,7 @@ export default function AvailableRooms() {
                 <Select
                   value={announcementDepartment}
                   label="القسم"
-                  onChange={(e) => setAnnouncementDepartment(e.target.value)}
+                  onChange={(e) => setAnnouncementDepartment(e.target.value as number | '')}
                 >
                   <MenuItem value="">جميع الأقسام</MenuItem>
                   {departments.map(dept => (
@@ -3445,7 +3477,7 @@ export default function AvailableRooms() {
                 <Select
                   value={announcementSpecialization}
                   label="التخصص"
-                  onChange={(e) => setAnnouncementSpecialization(e.target.value)}
+                  onChange={(e) => setAnnouncementSpecialization(e.target.value as number | '')}
                 >
                   <MenuItem value="">جميع التخصصات</MenuItem>
                   {announcementSpecializations.map(spec => (
@@ -3465,7 +3497,7 @@ export default function AvailableRooms() {
                 <Select
                   value={announcementGroup}
                   label="الفوج"
-                  onChange={(e) => setAnnouncementGroup(e.target.value)}
+                  onChange={(e) => setAnnouncementGroup(e.target.value as number | '')}
                 >
                   <MenuItem value="">جميع الأفواج</MenuItem>
                   {announcementGroups.map(group => (
@@ -3485,7 +3517,7 @@ export default function AvailableRooms() {
                 <Select
                   value={announcementProfessor}
                   label="الأستاذ"
-                  onChange={(e) => setAnnouncementProfessor(e.target.value)}
+                  onChange={(e) => setAnnouncementProfessor(e.target.value as number | '')}
                 >
                   <MenuItem value="">جميع الأساتذة</MenuItem>
                   {announcementProfessors.map(prof => (
