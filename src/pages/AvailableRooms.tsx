@@ -2085,7 +2085,7 @@ export default function AvailableRooms() {
       } else {
         // Logic for creating sessions
         const roomsToBook = selectedRoomIds.length > 0 ? selectedRoomIds : [selectedRoom as number];
-        const groupsToBook = (sessionType === 'semester_exam' && selectedGroupIds.length > 0)
+        const groupsToBook = ((sessionType === 'semester_exam' || sessionType === 'exam') && selectedGroupIds.length > 0)
           ? selectedGroupIds
           : [selectedGroup as number];
 
