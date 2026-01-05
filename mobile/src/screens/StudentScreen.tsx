@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, Alert, StatusBar, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, Alert, StatusBar, SafeAreaView, Linking } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { useState, useEffect } from 'react';
 import { Group, Assignment } from '../types/shared';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -6,7 +7,7 @@ import { turso } from '../lib/turso';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, SHADOWS, SPACING } from '../constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Clock, MapPin, User, BookOpen, Users, LogOut, Calendar, AlertCircle } from 'lucide-react-native';
+import { Clock, MapPin, User, BookOpen, Users, LogOut, Calendar, AlertCircle, Megaphone, ExternalLink } from 'lucide-react-native';
 import YearSemesterPicker from '../components/YearSemesterPicker';
 
 type RootStackParamList = {
@@ -39,7 +40,7 @@ export default function StudentScreen({ route, navigation }: Props) {
     const [loading, setLoading] = useState(false);
     // Map JS getDay() (0=Sun, 6=Sat) to our DAYS array (0=Sat, 1=Sun)
     const [selectedDay, setSelectedDay] = useState<number>((new Date().getDay() + 1) % 7);
-    const [activeTab, setActiveTab] = useState<'schedule' | 'exams'>('schedule');
+    const [activeTab, setActiveTab] = useState<'schedule' | 'exams' | 'announcements'>('schedule');
 
     // Year & Semester Selection
     const [selectedYear, setSelectedYear] = useState<any>(null);
@@ -247,16 +248,22 @@ export default function StudentScreen({ route, navigation }: Props) {
 
                     <View style={styles.tabContainer}>
                         <TouchableOpacity
+                            style={[styles.tabButton, activeTab === 'announcements' && styles.activeTab]}
+                            onPress={() => setActiveTab('announcements')}
+                        >
+                            <Text style={[styles.tabText, activeTab === 'announcements' && styles.activeTabText]}>الإعلانات</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
                             style={[styles.tabButton, activeTab === 'exams' && styles.activeTab]}
                             onPress={() => setActiveTab('exams')}
                         >
-                            <Text style={[styles.tabText, activeTab === 'exams' && styles.activeTabText]}>الإمتحانات والإضافي</Text>
+                            <Text style={[styles.tabText, activeTab === 'exams' && styles.activeTabText]}>الإمتحانات</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.tabButton, activeTab === 'schedule' && styles.activeTab]}
                             onPress={() => setActiveTab('schedule')}
                         >
-                            <Text style={[styles.tabText, activeTab === 'schedule' && styles.activeTabText]}>الجدول الأسبوعي</Text>
+                            <Text style={[styles.tabText, activeTab === 'schedule' && styles.activeTabText]}>الجدول</Text>
                         </TouchableOpacity>
                     </View>
                 </SafeAreaView>
@@ -309,7 +316,7 @@ export default function StudentScreen({ route, navigation }: Props) {
                             </View>
                         }
                     />
-                ) : (
+                ) : activeTab === 'exams' ? (
                     <FlatList
                         data={extraSessions}
                         renderItem={renderExtraSession}
@@ -321,6 +328,17 @@ export default function StudentScreen({ route, navigation }: Props) {
                                 <Text style={styles.emptyText}>لا توجد إمتحانات أو حصص إضافية</Text>
                             </View>
                         }
+                    />
+                ) : (
+                    <WebView
+                        source={{ uri: 'https://faculty.univ-eloued.dz/faculty/fsecg' }}
+                        style={styles.webView}
+                        startInLoadingState={true}
+                        renderLoading={() => (
+                            <View style={styles.webViewLoading}>
+                                <ActivityIndicator size="large" color={COLORS.primary} />
+                            </View>
+                        )}
                     />
                 )
             )}
@@ -507,5 +525,18 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: COLORS.textLight,
         marginTop: SPACING.xs,
+    },
+    webView: {
+        flex: 1,
+    },
+    webViewLoading: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: COLORS.background,
     },
 });
