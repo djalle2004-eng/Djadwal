@@ -52,6 +52,9 @@ async function initDatabaseConnection() {
             // Ensure sandbox table exists
             await ensureSandboxTable(db);
 
+            // Ensure semester visibility column exists
+            await ensureSemesterPublicColumn(db);
+
             return db;
         }
         return db;
@@ -81,6 +84,24 @@ async function ensureSandboxTable(database) {
             console.log('✅ Created sandbox_snapshots table');
         } else {
             console.error('⚠️ Error checking sandbox table:', error);
+        }
+    }
+}
+
+// Ensure is_public column exists in semesters table
+async function ensureSemesterPublicColumn(database) {
+    try {
+        // Check if the column exists
+        await database.sql('SELECT is_public FROM semesters LIMIT 1');
+        console.log('✅ is_public column already exists in semesters');
+    } catch (error) {
+        if (error.message.includes('no such column') || error.message.includes('does not exist')) {
+            console.log('ℹ️ Adding is_public column to semesters table...');
+            // Add column with default value 1 (visible)
+            await database.sql('ALTER TABLE semesters ADD COLUMN is_public INTEGER DEFAULT 1');
+            console.log('✅ Added is_public column to semesters table');
+        } else {
+            console.error('⚠️ Error ensuring is_public column:', error.message);
         }
     }
 }

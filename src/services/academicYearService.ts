@@ -7,7 +7,7 @@ export const getAcademicYears = async (): Promise<AcademicYear[]> => {
   try {
     // @ts-ignore - window.db يتم تعريفه في وقت التشغيل
     const years = await window.db.getAcademicYears();
-    
+
     return years.map((year: any) => ({
       id: year.id,
       year_name: year.year_name,
@@ -27,9 +27,9 @@ export const getActiveAcademicYear = async (): Promise<AcademicYear | null> => {
   try {
     // @ts-ignore - window.db يتم تعريفه في وقت التشغيل
     const year = await window.db.getActiveAcademicYear();
-    
+
     if (!year) return null;
-    
+
     return {
       id: year.id,
       year_name: year.year_name,
@@ -49,7 +49,7 @@ export const addAcademicYear = async (yearName: string, setAsCurrent: boolean = 
   try {
     // @ts-ignore - window.db يتم تعريفه في وقت التشغيل
     const newYear = await window.db.addAcademicYear(yearName, setAsCurrent);
-    
+
     return {
       id: newYear.id,
       year_name: yearName,
@@ -82,12 +82,13 @@ export const getSemesters = async (academicYearId: number): Promise<Semester[]> 
   try {
     // @ts-ignore - window.db يتم تعريفه في وقت التشغيل
     const semesters = await window.db.getSemesters(academicYearId);
-    
+
     return semesters.map((semester: any) => ({
       id: semester.id,
       academic_year_id: semester.academic_year_id,
       semester_name: semester.semester_name,
       is_current: Boolean(semester.is_current),
+      is_public: Boolean(semester.is_public ?? true),
       start_date: semester.start_date,
       end_date: semester.end_date,
       created_at: semester.created_at
@@ -105,14 +106,15 @@ export const getActiveSemester = async (academicYearId: number): Promise<Semeste
   try {
     // @ts-ignore - window.db يتم تعريفه في وقت التشغيل
     const semester = await window.db.getActiveSemester(academicYearId);
-    
+
     if (!semester) return null;
-    
+
     return {
       id: semester.id,
       academic_year_id: academicYearId,
       semester_name: semester.semester_name,
       is_current: true,
+      is_public: Boolean(semester.is_public ?? true),
       start_date: semester.start_date,
       end_date: semester.end_date,
       created_at: semester.created_at
@@ -127,27 +129,30 @@ export const getActiveSemester = async (academicYearId: number): Promise<Semeste
  * إضافة فصل دراسي جديد
  */
 export const addSemester = async (
-  academicYearId: number, 
-  semesterName: string, 
+  academicYearId: number,
+  semesterName: string,
   startDate: string,
   endDate: string,
-  setAsCurrent: boolean = false
+  setAsCurrent: boolean = false,
+  isPublic: boolean = true
 ): Promise<Semester> => {
   try {
     // @ts-ignore - window.db يتم تعريفه في وقت التشغيل
     const newSemester = await window.db.addSemester(
-      academicYearId, 
-      semesterName, 
+      academicYearId,
+      semesterName,
       startDate,
       endDate,
-      setAsCurrent
+      setAsCurrent,
+      isPublic
     );
-    
+
     return {
       id: newSemester.id,
       academic_year_id: academicYearId,
       semester_name: semesterName,
       is_current: setAsCurrent,
+      is_public: isPublic,
       start_date: startDate,
       end_date: endDate,
       created_at: newSemester.created_at
@@ -178,7 +183,8 @@ export const updateSemester = async (
   semesterId: number,
   semesterName: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  isPublic?: boolean
 ): Promise<Semester> => {
   try {
     // @ts-ignore - window.db يتم تعريفه في وقت التشغيل
@@ -186,14 +192,16 @@ export const updateSemester = async (
       semesterId,
       semesterName,
       startDate,
-      endDate
+      endDate,
+      isPublic
     );
-    
+
     return {
       id: updatedSemester.id,
       academic_year_id: updatedSemester.academic_year_id,
       semester_name: semesterName,
       is_current: Boolean(updatedSemester.is_current),
+      is_public: Boolean(updatedSemester.is_public ?? true),
       start_date: startDate,
       end_date: endDate,
       created_at: updatedSemester.created_at

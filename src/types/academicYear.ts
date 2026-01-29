@@ -12,6 +12,7 @@ export interface Semester {
   academic_year_id: number;
   semester_name: string;
   is_current: boolean;
+  is_public: boolean;
   start_date: string;
   end_date: string;
   created_at?: string;

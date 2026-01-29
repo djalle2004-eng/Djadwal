@@ -126,16 +126,16 @@ export const webClient = {
     // --- Semesters ---
     getSemesters: (academicYearId: number) => fetchApi(`/semesters?academicYearId=${academicYearId}`),
     getActiveSemester: (academicYearId: number) => fetchApi(`/semesters/active?academicYearId=${academicYearId}`),
-    addSemester: (academicYearId: number, semesterName: string, startDate: string, endDate: string, setAsCurrent: boolean) =>
+    addSemester: (academicYearId: number, semesterName: string, startDate: string, endDate: string, setAsCurrent: boolean, isPublic: boolean) =>
         fetchApi('/semesters', {
             method: 'POST',
-            body: JSON.stringify({ academicYearId, semesterName, startDate, endDate, setAsCurrent })
+            body: JSON.stringify({ academicYearId, semesterName, startDate, endDate, setAsCurrent, isPublic })
         }),
     setActiveSemester: (semesterId: number) => fetchApi(`/semesters/${semesterId}/activate`, { method: 'POST' }),
-    updateSemester: (semesterId: number, semesterName: string, startDate: string, endDate: string) =>
+    updateSemester: (semesterId: number, semesterName: string, startDate: string, endDate: string, isPublic?: boolean) =>
         fetchApi(`/semesters/${semesterId}`, {
             method: 'PUT',
-            body: JSON.stringify({ semesterName, startDate, endDate })
+            body: JSON.stringify({ semesterName, startDate, endDate, isPublic })
         }),
     deleteSemester: (semesterId: number) => fetchApi(`/semesters/${semesterId}`, { method: 'DELETE' }),
 

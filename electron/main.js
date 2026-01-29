@@ -574,12 +574,12 @@ function setupIpcHandlers() {
   // معالجات الفصول الدراسية
   ipcMain.handle('get-semesters', (_, academicYearId) => db.getSemesters(academicYearId));
   ipcMain.handle('get-active-semester', (_, academicYearId) => db.getActiveSemester(academicYearId));
-  ipcMain.handle('add-semester', (_, academicYearId, semesterName, startDate, endDate, setAsCurrent) =>
-    db.addSemester(academicYearId, semesterName, startDate, endDate, setAsCurrent)
+  ipcMain.handle('add-semester', (_, academicYearId, semesterName, startDate, endDate, setAsCurrent, isPublic) =>
+    db.addSemester(academicYearId, semesterName, startDate, endDate, setAsCurrent, isPublic)
   );
   ipcMain.handle('set-active-semester', (_, semesterId) => db.setActiveSemester(semesterId));
-  ipcMain.handle('update-semester', (_, semesterId, semesterName, startDate, endDate) =>
-    db.updateSemester(semesterId, semesterName, startDate, endDate)
+  ipcMain.handle('update-semester', (_, semesterId, semesterName, startDate, endDate, isPublic) =>
+    db.updateSemester(semesterId, semesterName, startDate, endDate, isPublic)
   );
   ipcMain.handle('delete-semester', (_, semesterId) => db.deleteSemester(semesterId));
 
