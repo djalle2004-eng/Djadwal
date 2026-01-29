@@ -700,10 +700,10 @@ router.get('/semesters/active', async (req, res) => {
 
 router.post('/semesters', async (req, res) => {
     try {
-        const { academicYearId, semesterName, startDate, endDate, setAsCurrent } = req.body;
+        const { academicYearId, semesterName, startDate, endDate, setAsCurrent, isPublic } = req.body;
         const result = await executeQuery(
-            'INSERT INTO semesters (academic_year_id, semester_name, start_date, end_date, is_current) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [academicYearId, semesterName, startDate, endDate, setAsCurrent ? 1 : 0]
+            'INSERT INTO semesters (academic_year_id, semester_name, start_date, end_date, is_current, is_public) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            [academicYearId, semesterName, startDate, endDate, setAsCurrent ? 1 : 0, isPublic !== false ? 1 : 0]
         );
 
         if (setAsCurrent) {
@@ -718,12 +718,24 @@ router.post('/semesters', async (req, res) => {
 
 router.put('/semesters/:id', async (req, res) => {
     try {
-        const { semesterName, startDate, endDate } = req.body;
+        const { semesterName, startDate, endDate, isPublic } = req.body;
         const { id } = req.params;
-        const result = await executeQuery(
-            'UPDATE semesters SET semester_name = $1, start_date = $2, end_date = $3 WHERE id = $4 RETURNING *',
-            [semesterName, startDate, endDate, id]
-        );
+
+        // Build dynamic update query to handle optional isPublic
+        let query = 'UPDATE semesters SET semester_name = $1, start_date = $2, end_date = $3';
+        let params = [semesterName, startDate, endDate];
+
+        if (isPublic !== undefined) {
+            query += ', is_public = $4';
+            params.push(isPublic ? 1 : 0);
+            query += ' WHERE id = $5 RETURNING *';
+            params.push(id);
+        } else {
+            query += ' WHERE id = $4 RETURNING *';
+            params.push(id);
+        }
+
+        const result = await executeQuery(query, params);
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });

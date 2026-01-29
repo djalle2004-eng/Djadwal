@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { 
-  getAcademicYears, 
-  addAcademicYear, 
+import {
+  getAcademicYears,
+  addAcademicYear,
   setActiveAcademicYear,
   getSemesters,
   addSemester,
@@ -11,7 +11,7 @@ import {
 } from '../services/academicYearService';
 import { useAcademicYear } from '../context/AcademicYearContext';
 import { AcademicYear, Semester, ImportOptions } from '../types/academicYear';
-import { Plus, Check, Download, Edit2, Save, X } from 'lucide-react';
+import { Plus, Check, Download, Edit2, Save, X, Eye, EyeOff } from 'lucide-react';
 
 export default function AcademicYears() {
   const { currentYear, setCurrentYear, setCurrentSemester } = useAcademicYear();
@@ -35,6 +35,7 @@ export default function AcademicYears() {
   const [editedSemesterName, setEditedSemesterName] = useState('');
   const [editedSemesterStartDate, setEditedSemesterStartDate] = useState('');
   const [editedSemesterEndDate, setEditedSemesterEndDate] = useState('');
+  const [editedSemesterIsPublic, setEditedSemesterIsPublic] = useState(true);
 
   useEffect(() => {
     loadAcademicYears();
@@ -51,7 +52,7 @@ export default function AcademicYears() {
       setLoading(true);
       const yearsList = await getAcademicYears();
       setYears(yearsList);
-      
+
       // If we have a current year, select it
       if (currentYear) {
         setSelectedYearId(currentYear.id);
@@ -59,7 +60,7 @@ export default function AcademicYears() {
         // Otherwise select the first one
         setSelectedYearId(yearsList[0].id);
       }
-      
+
       setLoading(false);
     } catch (err) {
       setError('فشل في تحميل السنوات الدراسية');
@@ -79,7 +80,7 @@ export default function AcademicYears() {
 
   const handleAddYear = async () => {
     if (!newYearName.trim()) return;
-    
+
     try {
       await addAcademicYear(newYearName);
       setNewYearName('');
@@ -93,13 +94,13 @@ export default function AcademicYears() {
   const handleSetActiveYear = async (yearId: number) => {
     try {
       await setActiveAcademicYear(yearId);
-      
+
       // Update the context with the new current year
       const updatedYear = years.find(y => y.id === yearId);
       if (updatedYear) {
-        setCurrentYear({...updatedYear, is_current: true});
+        setCurrentYear({ ...updatedYear, is_current: true });
       }
-      
+
       // Refresh the list
       await loadAcademicYears();
     } catch (err) {
@@ -110,7 +111,7 @@ export default function AcademicYears() {
 
   const handleAddSemester = async () => {
     if (!selectedYearId || !newSemesterName.trim() || !newSemesterStartDate || !newSemesterEndDate) return;
-    
+
     try {
       await addSemester(
         selectedYearId,
@@ -118,7 +119,7 @@ export default function AcademicYears() {
         newSemesterStartDate,
         newSemesterEndDate
       );
-      
+
       setNewSemesterName('');
       setNewSemesterStartDate('');
       setNewSemesterEndDate('');
@@ -132,13 +133,13 @@ export default function AcademicYears() {
   const handleSetActiveSemester = async (semesterId: number) => {
     try {
       await setActiveSemester(semesterId);
-      
+
       // Update the context with the new current semester
       const updatedSemester = semesters.find(s => s.id === semesterId);
       if (updatedSemester) {
-        setCurrentSemester({...updatedSemester, is_current: true});
+        setCurrentSemester({ ...updatedSemester, is_current: true });
       }
-      
+
       // Refresh the list
       if (selectedYearId) {
         await loadSemesters(selectedYearId);
@@ -151,14 +152,14 @@ export default function AcademicYears() {
 
   const handleImportData = async () => {
     if (!sourceYearId || !selectedYearId) return;
-    
+
     try {
       await importDataFromPreviousYear(
         sourceYearId,
         selectedYearId,
         importOptions
       );
-      
+
       setShowImportModal(false);
       // Optionally reload data after import
     } catch (err) {
@@ -189,7 +190,7 @@ export default function AcademicYears() {
           <div className="bg-white p-6 shadow rounded-lg mb-6">
             <h2 className="text-xl font-semibold mb-4">إضافة سنة دراسية جديدة</h2>
             <div className="flex gap-4">
-              <input 
+              <input
                 type="text"
                 value={newYearName}
                 onChange={e => setNewYearName(e.target.value)}
@@ -265,7 +266,7 @@ export default function AcademicYears() {
                   <div className="mb-4 p-4 border border-gray-200 rounded-md">
                     <h3 className="text-lg font-medium mb-2">إضافة فصل دراسي جديد</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <input 
+                      <input
                         type="text"
                         value={newSemesterName}
                         onChange={e => setNewSemesterName(e.target.value)}
@@ -275,7 +276,7 @@ export default function AcademicYears() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div>
                           <label className="block text-sm text-gray-600 mb-1">تاريخ البداية</label>
-                          <input 
+                          <input
                             type="date"
                             value={newSemesterStartDate}
                             onChange={e => setNewSemesterStartDate(e.target.value)}
@@ -284,7 +285,7 @@ export default function AcademicYears() {
                         </div>
                         <div>
                           <label className="block text-sm text-gray-600 mb-1">تاريخ النهاية</label>
-                          <input 
+                          <input
                             type="date"
                             value={newSemesterEndDate}
                             onChange={e => setNewSemesterEndDate(e.target.value)}
@@ -311,20 +312,20 @@ export default function AcademicYears() {
                         <li key={semester.id} className="py-3 flex justify-between items-center">
                           {editingSemesterId === semester.id ? (
                             <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
-                              <input 
+                              <input
                                 type="text"
                                 value={editedSemesterName}
                                 onChange={e => setEditedSemesterName(e.target.value)}
                                 className="border border-gray-300 rounded-md px-2 py-1 text-sm"
                                 placeholder="اسم الفصل"
                               />
-                              <input 
+                              <input
                                 type="date"
                                 value={editedSemesterStartDate}
                                 onChange={e => setEditedSemesterStartDate(e.target.value)}
                                 className="border border-gray-300 rounded-md px-2 py-1 text-sm"
                               />
-                              <input 
+                              <input
                                 type="date"
                                 value={editedSemesterEndDate}
                                 onChange={e => setEditedSemesterEndDate(e.target.value)}
@@ -335,7 +336,7 @@ export default function AcademicYears() {
                             <div>
                               <span className="font-medium">{semester.semester_name}</span>
                               <div className="text-sm text-gray-500">
-                                {new Date(semester.start_date).toLocaleDateString()} - 
+                                {new Date(semester.start_date).toLocaleDateString()} -
                                 {new Date(semester.end_date).toLocaleDateString()}
                               </div>
                               {semester.is_current && (
@@ -355,7 +356,8 @@ export default function AcademicYears() {
                                         editingSemesterId,
                                         editedSemesterName,
                                         editedSemesterStartDate,
-                                        editedSemesterEndDate
+                                        editedSemesterEndDate,
+                                        editedSemesterIsPublic
                                       );
                                       setEditingSemesterId(null);
                                       setEditedSemesterName('');
@@ -404,11 +406,32 @@ export default function AcademicYears() {
                                     setEditedSemesterName(semester.semester_name);
                                     setEditedSemesterStartDate(semester.start_date);
                                     setEditedSemesterEndDate(semester.end_date);
+                                    setEditedSemesterIsPublic(semester.is_public);
                                   }}
                                   className="text-blue-600 hover:text-blue-800"
                                   title="تعديل الفصل"
                                 >
                                   <Edit2 className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      await updateSemester(
+                                        semester.id,
+                                        semester.semester_name,
+                                        semester.start_date,
+                                        semester.end_date,
+                                        !semester.is_public
+                                      );
+                                      if (selectedYearId) await loadSemesters(selectedYearId);
+                                    } catch (err) {
+                                      setError('فشل في تغيير حالة الظهور');
+                                    }
+                                  }}
+                                  className={`${semester.is_public ? 'text-blue-500' : 'text-gray-400'} hover:text-blue-700`}
+                                  title={semester.is_public ? 'إخفاء عن الطلبة' : 'إظهار للطلبة'}
+                                >
+                                  {semester.is_public ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                                 </button>
                               </>
                             )}
@@ -442,7 +465,7 @@ export default function AcademicYears() {
                 ))}
               </select>
             </div>
-            
+
             <div className="mb-4">
               <h3 className="text-md font-medium mb-2">خيارات الاستيراد</h3>
               <div className="space-y-2">
@@ -450,7 +473,7 @@ export default function AcademicYears() {
                   <input
                     type="checkbox"
                     checked={importOptions.importSpecializations}
-                    onChange={e => setImportOptions({...importOptions, importSpecializations: e.target.checked})}
+                    onChange={e => setImportOptions({ ...importOptions, importSpecializations: e.target.checked })}
                     className="mr-2"
                   />
                   استيراد التخصصات
@@ -459,7 +482,7 @@ export default function AcademicYears() {
                   <input
                     type="checkbox"
                     checked={importOptions.importGroups}
-                    onChange={e => setImportOptions({...importOptions, importGroups: e.target.checked})}
+                    onChange={e => setImportOptions({ ...importOptions, importGroups: e.target.checked })}
                     className="mr-2"
                   />
                   استيراد الأفواج
@@ -468,14 +491,14 @@ export default function AcademicYears() {
                   <input
                     type="checkbox"
                     checked={importOptions.importCourses}
-                    onChange={e => setImportOptions({...importOptions, importCourses: e.target.checked})}
+                    onChange={e => setImportOptions({ ...importOptions, importCourses: e.target.checked })}
                     className="mr-2"
                   />
                   استيراد المقاييس
                 </label>
               </div>
             </div>
-            
+
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowImportModal(false)}

@@ -190,29 +190,25 @@ async function ensureAuditLogTable() {
   }
 }
 
-// Fonction pour s'assurer que la table sandbox_snapshots existe
-async function ensureSandboxTable() {
+// Fonction pour s'assurer que la colonne is_public existe dans semesters
+async function ensureSemesterPublicColumn() {
   try {
-    await executeQuery('SELECT 1 FROM sandbox_snapshots LIMIT 1');
-    console.log('✅ sandbox_snapshots table already exists');
+    // Vérifier si la colonne is_public existe déjà
+    await executeQuery('SELECT is_public FROM semesters LIMIT 1');
+    console.log('✅ is_public column already exists in semesters');
   } catch (error) {
-    if (error.message.includes('no such table') || error.message.includes('does not exist')) {
-      console.log('ℹ️ Creating sandbox_snapshots table...');
-      await executeQuery(`
-        CREATE TABLE IF NOT EXISTS sandbox_snapshots (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT,
-          data TEXT NOT NULL,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      console.log('✅ Created sandbox_snapshots table');
+    if (error.message.includes('no such column') || error.message.includes('does not exist')) {
+      console.log('ℹ️ Adding is_public column to semesters table...');
+      // إضافة العمود بقيمة افتراضية 1 (مرئي)
+      await executeQuery('ALTER TABLE semesters ADD COLUMN is_public INTEGER DEFAULT 1');
+      console.log('✅ Added is_public column to semesters table');
     } else {
-      throw error;
+      console.error('Error ensuring is_public column:', error.message);
     }
   }
 }
+
+
 
 // Initialiser la connexion à la base de données avec retry logic
 async function initDatabaseConnection(retryCount = 0) {
@@ -271,6 +267,9 @@ async function initDatabaseConnection(retryCount = 0) {
 
       // Ensure the sandbox_snapshots table exists
       await ensureSandboxTable();
+
+      // Ensure that semester visibility column exists
+      await ensureSemesterPublicColumn();
 
       reconnectAttempts = 0;
       isReconnecting = false;
@@ -711,9 +710,17 @@ async function deleteAcademicYear(yearId) {
 }
 
 // Fonction pour obtenir les semestres
-async function getSemesters() {
-  const query = 'SELECT * FROM semesters ORDER BY semester_name';
-  return await executeQuery(query);
+async function getSemesters(academicYearId = null) {
+  let query = 'SELECT * FROM semesters';
+  const params = [];
+
+  if (academicYearId) {
+    query += ' WHERE academic_year_id = $1';
+    params.push(academicYearId);
+  }
+
+  query += ' ORDER BY semester_name';
+  return await executeQuery(query, params);
 }
 
 // Fonction pour obtenir le semestre courant
@@ -750,10 +757,10 @@ async function setActiveSemester(semesterId) {
 }
 
 // Fonction pour ajouter un semestre
-async function addSemester(academicYearId, semesterName, startDate, endDate, setAsCurrent) {
+async function addSemester(academicYearId, semesterName, startDate, endDate, setAsCurrent, isPublic = 1) {
   const query = `
-    INSERT INTO semesters (academic_year_id, semester_name, start_date, end_date, is_current) 
-    VALUES ($1, $2, $3, $4, $5) 
+    INSERT INTO semesters (academic_year_id, semester_name, start_date, end_date, is_current, is_public) 
+    VALUES ($1, $2, $3, $4, $5, $6) 
     RETURNING *
   `;
   const result = await executeQuery(query, [
@@ -761,7 +768,8 @@ async function addSemester(academicYearId, semesterName, startDate, endDate, set
     semesterName,
     startDate,
     endDate,
-    setAsCurrent ? 1 : 0
+    setAsCurrent ? 1 : 0,
+    isPublic ? 1 : 0
   ]);
 
   if (setAsCurrent) {
@@ -773,14 +781,22 @@ async function addSemester(academicYearId, semesterName, startDate, endDate, set
 }
 
 // Fonction pour mettre à jour un semestre
-async function updateSemester(semesterId, semesterName, startDate, endDate) {
-  const query = `
+async function updateSemester(semesterId, semesterName, startDate, endDate, isPublic = undefined) {
+  let query = `
     UPDATE semesters 
     SET semester_name = $1, start_date = $2, end_date = $3
-    WHERE id = $4 
-    RETURNING *
   `;
-  const result = await executeQuery(query, [semesterName, startDate, endDate, semesterId]);
+  const params = [semesterName, startDate, endDate];
+
+  if (isPublic !== undefined) {
+    query += `, is_public = $${params.length + 1}`;
+    params.push(isPublic ? 1 : 0);
+  }
+
+  query += ` WHERE id = $${params.length + 1} RETURNING *`;
+  params.push(semesterId);
+
+  const result = await executeQuery(query, params);
   return result[0];
 }
 
