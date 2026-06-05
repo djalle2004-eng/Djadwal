@@ -10,6 +10,8 @@ import { emailService, EmailStatus } from '../services/emailService';
 import EmailDialog from '../components/EmailDialog';
 import EmailStatusTracker from '../components/EmailStatusTracker';
 import { getPDFBlobFromHTML } from '../utils/printUtils';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 // واجهة للأستاذ
 interface Professor {
@@ -1824,6 +1826,105 @@ export default function ProfessorWorkload() {
     }
   };
 
+  // تصدير تقرير ترتيب الأساتذة حسب عبء العمل إلى Excel
+  const exportWorkloadRankingExcel = async () => {
+    try {
+      setIsLoading(true);
+
+      if (!workloads || workloads.length === 0) {
+        alert('لا توجد بيانات عبء العمل للتصدير');
+        return;
+      }
+
+      // ترتيب الأساتذة حسب عبء العمل (تنازلي)
+      const sortedWorkloads = [...workloads].sort((a, b) => b.totalHours - a.totalHours);
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('ترتيب الأساتذة', { views: [{ rightToLeft: true }] });
+
+      // Add Headers
+      worksheet.columns = [
+        { header: 'الترتيب', key: 'rank', width: 10 },
+        { header: 'اسم الأستاذ', key: 'name', width: 30 },
+        { header: 'الصفة', key: 'title', width: 15 },
+        { header: 'ساعات المحاضرات', key: 'lectureHours', width: 20 },
+        { header: 'ساعات الأعمال الموجهة', key: 'tdHours', width: 25 },
+        { header: 'إجمالي الساعات', key: 'totalHours', width: 20 },
+        { header: 'عدد المقررات', key: 'coursesCount', width: 15 },
+        { header: 'التخصص', key: 'specialization', width: 25 },
+        { header: 'المستوى', key: 'level', width: 20 },
+      ];
+
+      // Style Headers
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true, size: 12 };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFF0F0F0' },
+        };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+
+      // Add Data
+      sortedWorkloads.forEach((workload, index) => {
+        const row = worksheet.addRow({
+          rank: index + 1,
+          name: workload.professor.name,
+          title: workload.professor.title || '-',
+          lectureHours: workload.totalLectureHours,
+          tdHours: workload.totalTDHours,
+          totalHours: workload.totalHours,
+          coursesCount: workload.courses.length,
+          specialization: workload.courses[0]?.specialization || '-',
+          level: getAcademicLevel(workload.courses[0]?.group_year || ''),
+        });
+
+        row.eachCell((cell) => {
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+        });
+
+        if (index === 0) {
+          row.eachCell((cell) => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+          });
+        } else if (index === 1) {
+          row.eachCell((cell) => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF3C4' } };
+          });
+        } else if (index === 2) {
+          row.eachCell((cell) => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF8DC' } };
+          });
+        }
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const fileName = `ترتيب_الأساتذة_حسب_عبء_العمل_${currentYear?.year_name || 'السنة'}_${currentSemester?.semester_name || 'السداسي'}.xlsx`;
+      
+      saveAs(new Blob([buffer]), fileName);
+
+      console.log('تم تصدير ترتيب الأساتذة إلى Excel بنجاح');
+    } catch (error) {
+      console.error('خطأ في تصدير تقرير ترتيب الأساتذة إلى Excel:', error);
+      alert('حدث خطأ أثناء تصدير التقرير إلى Excel');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // طباعة جداول توقيت الأساتذة
   const exportProfessorSchedules = async () => {
     try {
@@ -2780,16 +2881,28 @@ export default function ProfessorWorkload() {
                 تصدير الأساتذة بدون تكليفات
               </button>
               {/* Bouton pour exporter le classement des professeurs */}
-              <button
-                onClick={exportWorkloadRanking}
-                className="mx-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center"
-                disabled={isLoading || !workloads || workloads.length === 0}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-                تصدير ترتيب الأساتذة
-              </button>
+              <div className="inline-flex gap-2 mx-2">
+                <button
+                  onClick={exportWorkloadRanking}
+                  className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center"
+                  disabled={isLoading || !workloads || workloads.length === 0}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                  ترتيب الأساتذة (PDF)
+                </button>
+                <button
+                  onClick={exportWorkloadRankingExcel}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center"
+                  disabled={isLoading || !workloads || workloads.length === 0}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  ترتيب الأساتذة (Excel)
+                </button>
+              </div>
               {/* Bouton pour exporter les professeurs par spécialité */}
               <button
                 onClick={exportProfessorSchedules}
