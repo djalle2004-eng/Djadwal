@@ -36,6 +36,11 @@ interface PeakDayStats {
   count: number;
 }
 
+interface LevelStats {
+  name: string;
+  value: number;
+}
+
 interface Stats {
   professors: number;
   courses: number;
@@ -117,6 +122,7 @@ export default function Dashboard() {
   const [overloadedProfs, setOverloadedProfs] = useState<OverloadedProfessor[]>([]);
   const [sessionTypeStats, setSessionTypeStats] = useState<SessionTypeStats[]>([]);
   const [peakDayStats, setPeakDayStats] = useState<PeakDayStats[]>([]);
+  const [levelStats, setLevelStats] = useState<LevelStats[]>([]);
 
   const COLORS = ['#4f46e5', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899'];
 
@@ -337,6 +343,8 @@ export default function Dashboard() {
         let coursCount = 0;
         let tdCount = 0;
         let tpCount = 0;
+        let licenceCount = 0;
+        let masterCount = 0;
         
         const dayCounts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
         const profHoursMap = new Map<number, number>();
@@ -356,6 +364,16 @@ export default function Dashboard() {
             tpCount++;
           } else {
             tdCount++;
+          }
+
+          const group = groupsData?.find((g: any) => g.id === assignment.group_id);
+          if (group && group.year) {
+             const yearStr = String(group.year).toUpperCase();
+             if (yearStr.startsWith('L')) {
+                licenceCount++;
+             } else if (yearStr.startsWith('M')) {
+                masterCount++;
+             }
           }
         });
 
@@ -379,6 +397,11 @@ export default function Dashboard() {
           { name: 'محاضرات (Cours)', value: coursCount },
           { name: 'أعمال موجهة (TD)', value: tdCount },
           { name: 'أعمال تطبيقية (TP)', value: tpCount }
+        ]);
+
+        setLevelStats([
+          { name: 'ليسانس', value: licenceCount },
+          { name: 'ماستر', value: masterCount }
         ]);
 
         const overloaded: OverloadedProfessor[] = [];
@@ -687,6 +710,33 @@ export default function Dashboard() {
                     ))}
                   </Pie>
                   <RechartsTooltip formatter={(value) => `${value} ساعة`} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Level Stats Pie Chart */}
+          <div className="bg-white shadow rounded-lg p-5">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">توزيع الحصص المبرمجة (ليسانس مقابل ماستر)</h2>
+            <div className="h-64 w-full" dir="ltr">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={levelStats}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#10b981"
+                    dataKey="value"
+                  >
+                    {levelStats.map((_entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip formatter={(value) => `${value} حصة`} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
