@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 // تعليق استيرادات Firebase
 // import { 
 //   collection, 
@@ -8,11 +9,32 @@ import { useState, useEffect, useContext } from 'react';
 //   getCountFromServer
 // } from 'firebase/firestore';
 // import { db } from '../lib/firebase';
-import { Users, BookOpen, DoorOpen, Users2, CalendarClock, CalendarPlus, FileText, Clock } from 'lucide-react';
+import { Users, BookOpen, DoorOpen, Users2, CalendarClock, CalendarPlus, FileText, Clock, AlertTriangle } from 'lucide-react';
 import { AcademicYearContext } from '../context/AcademicYearContext';
 import packageJson from '../../package.json';
 
 // واجهات البيانات
+
+interface ProfessorTypeStats {
+  name: string;
+  value: number;
+}
+
+interface OverloadedProfessor {
+  professorName: string;
+  totalHours: number;
+  limit: number;
+}
+
+interface SessionTypeStats {
+  name: string;
+  value: number;
+}
+
+interface PeakDayStats {
+  day: string;
+  count: number;
+}
 
 interface Stats {
   professors: number;
@@ -87,6 +109,13 @@ export default function Dashboard() {
   const [dbInfo, setDbInfo] = useState<DatabaseInfo | null>(null);
   const [showDebug, setShowDebug] = useState(false);
   const [debugData, setDebugData] = useState<any>(null);
+
+  const [profTypeStats, setProfTypeStats] = useState<ProfessorTypeStats[]>([]);
+  const [overloadedProfs, setOverloadedProfs] = useState<OverloadedProfessor[]>([]);
+  const [sessionTypeStats, setSessionTypeStats] = useState<SessionTypeStats[]>([]);
+  const [peakDayStats, setPeakDayStats] = useState<PeakDayStats[]>([]);
+
+  const COLORS = ['#4f46e5', '#ef4444', '#f59e0b', '#10b981'];
 
   const academicYearContext = useContext(AcademicYearContext);
   const currentYear = academicYearContext?.currentYear || null;
@@ -280,6 +309,84 @@ export default function Dashboard() {
         });
 
         setDepartmentStats(Array.from(departmentStatsMap.values()));
+
+        // --- New Advanced Statistics ---
+        const isProfessorTemporary = (professor: any) => {
+          return professor.title?.includes('مؤقت') || professor.title?.includes('Vacataire') || false;
+        };
+
+        let tempHours = 0;
+        let permHours = 0;
+        let coursCount = 0;
+        let tdCount = 0;
+        let tpCount = 0;
+        
+        const dayCounts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+        const profHoursMap = new Map<number, number>();
+
+        filteredAssignments.forEach((assignment: any) => {
+          const hours = 1.5;
+          const currHours = profHoursMap.get(assignment.professor_id) || 0;
+          profHoursMap.set(assignment.professor_id, currHours + hours);
+
+          if (assignment.day_of_week !== undefined) {
+            dayCounts[assignment.day_of_week] = (dayCounts[assignment.day_of_week] || 0) + 1;
+          }
+
+          if (assignment.session_type === 'lecture_group' || assignment.session_type === 'lecture') {
+            coursCount++;
+          } else if (assignment.session_type === 'tp') {
+            tpCount++;
+          } else {
+            tdCount++;
+          }
+        });
+
+        professorsData?.forEach((prof: any) => {
+          const hours = profHoursMap.get(prof.id) || 0;
+          if (hours > 0) {
+            if (isProfessorTemporary(prof)) {
+              tempHours += hours;
+            } else {
+              permHours += hours;
+            }
+          }
+        });
+
+        setProfTypeStats([
+          { name: 'أساتذة دائمين', value: Math.round(permHours * 10) / 10 },
+          { name: 'أساتذة مؤقتين', value: Math.round(tempHours * 10) / 10 }
+        ]);
+
+        setSessionTypeStats([
+          { name: 'محاضرات (Cours)', value: coursCount },
+          { name: 'أعمال موجهة (TD)', value: tdCount },
+          { name: 'أعمال تطبيقية (TP)', value: tpCount }
+        ]);
+
+        const overloaded: OverloadedProfessor[] = [];
+        professorsData?.forEach((prof: any) => {
+          if (!isProfessorTemporary(prof)) {
+            const hours = profHoursMap.get(prof.id) || 0;
+            const limit = 12; // Default legal limit
+            if (hours > limit) {
+              overloaded.push({
+                professorName: `${prof["Academic Title"] || ''} ${prof.name || prof.first_name + ' ' + prof.last_name}`.trim(),
+                totalHours: Math.round(hours * 10) / 10,
+                limit
+              });
+            }
+          }
+        });
+        setOverloadedProfs(overloaded.sort((a, b) => b.totalHours - a.totalHours));
+
+        const dayNames = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const peakStats = Object.keys(dayCounts).map(day => ({
+          day: dayNames[parseInt(day)],
+          count: dayCounts[parseInt(day)]
+        })).filter(d => d.count > 0);
+        setPeakDayStats(peakStats);
+        // --- End Advanced Statistics ---
 
         setLoading(false);
       } catch (error) {
@@ -512,6 +619,101 @@ export default function Dashboard() {
                   </dl>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Advanced Analytics Grid */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Professor Types Pie Chart */}
+          <div className="bg-white shadow rounded-lg p-5">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">توزيع ساعات التدريس (مؤقتين مقابل دائمين)</h2>
+            <div className="h-64 w-full" dir="ltr">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={profTypeStats}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {profTypeStats.map((_entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip formatter={(value) => `${value} ساعة`} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Session Types Bar Chart */}
+          <div className="bg-white shadow rounded-lg p-5">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">أنواع الجلسات المبرمجة</h2>
+            <div className="h-64 w-full" dir="ltr">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={sessionTypeStats}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <RechartsTooltip />
+                  <Bar dataKey="value" fill="#4f46e5">
+                    {sessionTypeStats.map((_entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Peak Days Heatmap (Bar Chart) */}
+          <div className="bg-white shadow rounded-lg p-5">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">أيام الذروة (حسب عدد الحصص)</h2>
+            <div className="h-64 w-full" dir="ltr">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={peakDayStats} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="day" type="category" width={80} />
+                  <RechartsTooltip formatter={(value) => `${value} حصة`} />
+                  <Bar dataKey="count" fill="#f59e0b" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Overloaded Professors List */}
+          <div className="bg-white shadow rounded-lg p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <h2 className="text-lg font-medium text-gray-900">الأساتذة متجاوزي النصاب ({'>'} 12 ساعة)</h2>
+            </div>
+            <div className="overflow-y-auto h-64 pr-2">
+              <ul className="divide-y divide-gray-200">
+                {overloadedProfs.map((prof, index) => (
+                  <li key={index} className="py-3 flex justify-between items-center">
+                    <div className="text-sm font-medium text-gray-900">{prof.professorName}</div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-24 bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-red-500 h-2.5 rounded-full" 
+                          style={{ width: `${Math.min((prof.totalHours / 20) * 100, 100)}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-bold text-red-600">{prof.totalHours} س</span>
+                    </div>
+                  </li>
+                ))}
+                {overloadedProfs.length === 0 && (
+                  <li className="py-4 text-sm text-gray-500 text-center">لا يوجد أساتذة متجاوزين للنصاب.</li>
+                )}
+              </ul>
             </div>
           </div>
         </div>
