@@ -87,6 +87,10 @@ interface DepartmentStats {
   sessionsCount: number;
   tempSessions: number;
   permSessions: number;
+  permLicence: number;
+  permMaster: number;
+  tempLicence: number;
+  tempMaster: number;
 }
 
 interface DatabaseInfo {
@@ -316,12 +320,25 @@ export default function Dashboard() {
 
           let tempS = 0;
           let permS = 0;
+          let permLicence = 0;
+          let permMaster = 0;
+          let tempLicence = 0;
+          let tempMaster = 0;
           deptAssignments.forEach((assignment: any) => {
              const prof = professorsData?.find((p: any) => p.id === assignment.professor_id);
-             if (prof && isProfessorTemporary(prof)) {
+             const grp  = groupsData?.find((g: any) => g.id === assignment.group_id);
+             const isTemp = prof ? isProfessorTemporary(prof) : false;
+             const yearStr = grp?.year ? String(grp.year).toUpperCase() : '';
+             const isLicence = yearStr.startsWith('L');
+             const isMaster  = yearStr.startsWith('M');
+             if (isTemp) {
                 tempS++;
+                if (isLicence) tempLicence++;
+                else if (isMaster) tempMaster++;
              } else {
                 permS++;
+                if (isLicence) permLicence++;
+                else if (isMaster) permMaster++;
              }
           });
 
@@ -332,7 +349,11 @@ export default function Dashboard() {
             professorsCount: professorsCount,
             sessionsCount: deptAssignments.length,
             tempSessions: tempS,
-            permSessions: permS
+            permSessions: permS,
+            permLicence,
+            permMaster,
+            tempLicence,
+            tempMaster
           });
         });
 
@@ -665,25 +686,46 @@ export default function Dashboard() {
 
         {/* Advanced Analytics Grid */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Department Sessions Chart */}
+          {/* Department Sessions Chart - by type & level */}
           <div className="bg-white shadow rounded-lg p-5 lg:col-span-2">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">الحصص المبرمجة للأساتذة (مؤقتين ودائمين) حسب القسم</h2>
-            <div className="h-72 w-full" dir="ltr">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">الحصص المبرمجة حسب القسم (مؤقتين/دائمين × ليسانس/ماستر)</h2>
+            <div className="h-80 w-full" dir="ltr">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={departmentStats} margin={{ bottom: 40 }}>
+                <BarChart data={departmentStats} margin={{ bottom: 50 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="departmentName" 
-                    tick={{fontSize: 12, fill: '#374151'}} 
-                    interval={0} 
-                    angle={-15} 
-                    textAnchor="end" 
+                  <XAxis
+                    dataKey="departmentName"
+                    tick={{ fontSize: 11, fill: '#374151' }}
+                    interval={0}
+                    angle={-15}
+                    textAnchor="end"
                   />
                   <YAxis />
-                  <RechartsTooltip formatter={(value, name) => [value + ' حصة', name === 'tempSessions' ? 'مؤقتين' : 'دائمين']} />
-                  <Legend verticalAlign="top" height={36} payload={[{ value: 'دائمين', type: 'rect', color: '#4f46e5' }, { value: 'مؤقتين', type: 'rect', color: '#f59e0b' }]} />
-                  <Bar dataKey="permSessions" fill="#4f46e5" radius={[4, 4, 0, 0]} name="permSessions" />
-                  <Bar dataKey="tempSessions" fill="#f59e0b" radius={[4, 4, 0, 0]} name="tempSessions" />
+                  <RechartsTooltip
+                    formatter={(value, name) => {
+                      const labels: Record<string, string> = {
+                        permLicence: 'دائمين – ليسانس',
+                        permMaster:  'دائمين – ماستر',
+                        tempLicence: 'مؤقتين – ليسانس',
+                        tempMaster:  'مؤقتين – ماستر',
+                      };
+                      return [`${value} حصة`, labels[name as string] ?? name];
+                    }}
+                  />
+                  <Legend
+                    verticalAlign="top"
+                    height={36}
+                    payload={[
+                      { value: 'دائمين – ليسانس', type: 'rect', color: '#4f46e5' },
+                      { value: 'دائمين – ماستر',  type: 'rect', color: '#8b5cf6' },
+                      { value: 'مؤقتين – ليسانس', type: 'rect', color: '#f59e0b' },
+                      { value: 'مؤقتين – ماستر',  type: 'rect', color: '#ef4444' },
+                    ]}
+                  />
+                  <Bar dataKey="permLicence" stackId="perm" fill="#4f46e5" name="permLicence" radius={[0,0,0,0]} />
+                  <Bar dataKey="permMaster"  stackId="perm" fill="#8b5cf6" name="permMaster"  radius={[4,4,0,0]} />
+                  <Bar dataKey="tempLicence" stackId="temp" fill="#f59e0b" name="tempLicence" radius={[0,0,0,0]} />
+                  <Bar dataKey="tempMaster"  stackId="temp" fill="#ef4444" name="tempMaster"  radius={[4,4,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
