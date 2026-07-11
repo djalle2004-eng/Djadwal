@@ -79,6 +79,7 @@ interface DepartmentStats {
   coursesCount: number;
   groupsCount: number;
   professorsCount: number;
+  sessionsCount: number;
 }
 
 interface DatabaseInfo {
@@ -115,7 +116,7 @@ export default function Dashboard() {
   const [sessionTypeStats, setSessionTypeStats] = useState<SessionTypeStats[]>([]);
   const [peakDayStats, setPeakDayStats] = useState<PeakDayStats[]>([]);
 
-  const COLORS = ['#4f46e5', '#ef4444', '#f59e0b', '#10b981'];
+  const COLORS = ['#4f46e5', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899'];
 
   const academicYearContext = useContext(AcademicYearContext);
   const currentYear = academicYearContext?.currentYear || null;
@@ -304,7 +305,8 @@ export default function Dashboard() {
             departmentName: dept.name,
             groupsCount: deptGroups.length,
             coursesCount: deptCourses.length,
-            professorsCount: professorsCount
+            professorsCount: professorsCount,
+            sessionsCount: deptAssignments.length
           });
         });
 
@@ -625,6 +627,32 @@ export default function Dashboard() {
 
         {/* Advanced Analytics Grid */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Department Sessions Chart */}
+          <div className="bg-white shadow rounded-lg p-5 lg:col-span-2">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">إجمالي الحصص المبرمجة حسب القسم</h2>
+            <div className="h-72 w-full" dir="ltr">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={departmentStats} margin={{ bottom: 40 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="departmentName" 
+                    tick={{fontSize: 12, fill: '#374151'}} 
+                    interval={0} 
+                    angle={-15} 
+                    textAnchor="end" 
+                  />
+                  <YAxis />
+                  <RechartsTooltip formatter={(value) => `${value} حصة`} />
+                  <Bar dataKey="sessionsCount" radius={[4, 4, 0, 0]}>
+                    {departmentStats.map((_entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
           {/* Professor Types Pie Chart */}
           <div className="bg-white shadow rounded-lg p-5">
             <h2 className="text-lg font-medium text-gray-900 mb-4">توزيع ساعات التدريس (مؤقتين مقابل دائمين)</h2>
