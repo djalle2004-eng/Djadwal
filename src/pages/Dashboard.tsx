@@ -80,6 +80,8 @@ interface DepartmentStats {
   groupsCount: number;
   professorsCount: number;
   sessionsCount: number;
+  tempSessions: number;
+  permSessions: number;
 }
 
 interface DatabaseInfo {
@@ -283,6 +285,11 @@ export default function Dashboard() {
 
         setProfessorWorkload(professorWorkloadStats);
 
+        // --- New Advanced Statistics ---
+        const isProfessorTemporary = (professor: any) => {
+          return professor.title?.includes('مؤقت') || professor.title?.includes('Vacataire') || false;
+        };
+
         // Calculate department statistics
         const departmentStatsMap = new Map();
 
@@ -301,21 +308,29 @@ export default function Dashboard() {
           const deptProfessorIds = new Set(deptAssignments.map((a: any) => a.professor_id));
           const professorsCount = deptProfessorIds.size;
 
+          let tempS = 0;
+          let permS = 0;
+          deptAssignments.forEach((assignment: any) => {
+             const prof = professorsData?.find((p: any) => p.id === assignment.professor_id);
+             if (prof && isProfessorTemporary(prof)) {
+                tempS++;
+             } else {
+                permS++;
+             }
+          });
+
           departmentStatsMap.set(dept.id, {
             departmentName: dept.name,
             groupsCount: deptGroups.length,
             coursesCount: deptCourses.length,
             professorsCount: professorsCount,
-            sessionsCount: deptAssignments.length
+            sessionsCount: deptAssignments.length,
+            tempSessions: tempS,
+            permSessions: permS
           });
         });
 
         setDepartmentStats(Array.from(departmentStatsMap.values()));
-
-        // --- New Advanced Statistics ---
-        const isProfessorTemporary = (professor: any) => {
-          return professor.title?.includes('مؤقت') || professor.title?.includes('Vacataire') || false;
-        };
 
         let tempHours = 0;
         let permHours = 0;
@@ -629,7 +644,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Department Sessions Chart */}
           <div className="bg-white shadow rounded-lg p-5 lg:col-span-2">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">إجمالي الحصص المبرمجة حسب القسم</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">الحصص المبرمجة للأساتذة (مؤقتين ودائمين) حسب القسم</h2>
             <div className="h-72 w-full" dir="ltr">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={departmentStats} margin={{ bottom: 40 }}>
@@ -642,12 +657,10 @@ export default function Dashboard() {
                     textAnchor="end" 
                   />
                   <YAxis />
-                  <RechartsTooltip formatter={(value) => `${value} حصة`} />
-                  <Bar dataKey="sessionsCount" radius={[4, 4, 0, 0]}>
-                    {departmentStats.map((_entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Bar>
+                  <RechartsTooltip formatter={(value, name) => [value + ' حصة', name === 'tempSessions' ? 'مؤقتين' : 'دائمين']} />
+                  <Legend verticalAlign="top" height={36} payload={[{ value: 'دائمين', type: 'rect', color: '#4f46e5' }, { value: 'مؤقتين', type: 'rect', color: '#f59e0b' }]} />
+                  <Bar dataKey="permSessions" fill="#4f46e5" radius={[4, 4, 0, 0]} name="permSessions" />
+                  <Bar dataKey="tempSessions" fill="#f59e0b" radius={[4, 4, 0, 0]} name="tempSessions" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
