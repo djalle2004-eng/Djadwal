@@ -6,9 +6,25 @@ const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api';
 
 // Helper pour les appels API
 async function fetchApi(endpoint: string, options: RequestInit = {}) {
+    const authHeaders: Record<string, string> = {};
+    try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+            const userStr = localStorage.getItem('currentUser');
+            if (userStr) {
+                const u = JSON.parse(userStr);
+                if (u?.id) authHeaders['x-user-id'] = String(u.id);
+                if (u?.username) authHeaders['x-user-name'] = encodeURIComponent(u.username);
+            }
+        }
+    } catch (e) {
+        // ignore
+    }
+
     const response = await fetch(`${API_URL}${endpoint}`, {
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
+            ...authHeaders,
             ...options.headers,
         },
         ...options,
@@ -184,8 +200,15 @@ export const webClient = {
         body: JSON.stringify({ isActive })
     }),
 
-    // --- Other ---
-    getAuditLogs: (filters = {}) => fetchApi('/audit-logs'), // Need route
+    getAuditLogs: (filters: any = {}) => {
+        const queryParams = new URLSearchParams();
+        if (filters?.user_id) queryParams.set('user_id', String(filters.user_id));
+        if (filters?.action && filters.action !== 'all') queryParams.set('action', filters.action);
+        if (filters?.entity_type && filters.entity_type !== 'all') queryParams.set('entity_type', filters.entity_type);
+        if (filters?.limit) queryParams.set('limit', String(filters.limit));
+        const qs = queryParams.toString();
+        return fetchApi(`/audit-logs${qs ? `?${qs}` : ''}`);
+    },
     getUserPermissions: (userId) => fetchApi(`/users/${userId}/permissions`), // Need route
     saveUserPermissions: (userId, permissionsJson) => fetchApi(`/users/${userId}/permissions`, { // Need route
         method: 'PUT',
@@ -322,9 +345,6 @@ export const webDataUtils = {
         }
 
         return await response.json();
-    },
-    getAuditLogs: () => {
-        return fetchApi('/audit-logs', { method: 'GET' });
     },
 
     // --- Backup/Restore ---

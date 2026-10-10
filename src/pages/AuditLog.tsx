@@ -26,7 +26,8 @@ import {
   ClipboardList,
   Search,
   User,
-  Activity
+  Activity,
+  RefreshCw
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -50,6 +51,7 @@ export default function AuditLog() {
   const [error, setError] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [loading, setLoading] = useState(false);
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,13 +67,24 @@ export default function AuditLog() {
   }, [logs, searchTerm, actionFilter, entityFilter]);
 
   const loadAuditLogs = async () => {
+    setLoading(true);
     try {
-      const data = await window.db.getAuditLogs();
-      setLogs(data || []);
+      let data: any[] = [];
+      if (typeof window !== 'undefined' && window.db && typeof window.db.getAuditLogs === 'function') {
+        data = await window.db.getAuditLogs();
+      } else {
+        const res = await fetch('/api/audit-logs');
+        if (res.ok) {
+          data = await res.json();
+        }
+      }
+      setLogs(Array.isArray(data) ? data : []);
       setError('');
     } catch (err: any) {
       console.error('Error loading audit logs:', err);
       setError('فشل تحميل سجل الأنشطة');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,6 +97,7 @@ export default function AuditLog() {
         log.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         log.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         log.entity_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.action?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         log.details?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -102,6 +116,18 @@ export default function AuditLog() {
     setPage(0);
   };
 
+  const formatDateSafely = (dateStr?: string) => {
+    if (!dateStr) return '---';
+    try {
+      const normalized = dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T');
+      const d = new Date(normalized);
+      if (isNaN(d.getTime())) return dateStr;
+      return format(d, 'PPp', { locale: ar });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -118,6 +144,10 @@ export default function AuditLog() {
       case 'create': return 'primary';
       case 'update': return 'info';
       case 'delete': return 'error';
+      case 'swap': return 'warning';
+      case 'move': return 'info';
+      case 'restore': return 'warning';
+      case 'activate': return 'success';
       default: return 'default';
     }
   };
@@ -126,9 +156,13 @@ export default function AuditLog() {
     const labels: { [key: string]: string } = {
       'login': 'تسجيل دخول',
       'logout': 'تسجيل خروج',
-      'create': 'إنشاء',
-      'update': 'تحديث',
-      'delete': 'حذف'
+      'create': 'إضافة',
+      'update': 'تعديل',
+      'delete': 'حذف',
+      'swap': 'تبديل',
+      'move': 'نقل',
+      'restore': 'استرجاع',
+      'activate': 'تفعيل'
     };
     return labels[action] || action;
   };
@@ -145,13 +179,15 @@ export default function AuditLog() {
       'department': 'قسم',
       'specialization': 'تخصص',
       'academic_year': 'سنة دراسية',
-      'semester': 'فصل'
+      'semester': 'فصل',
+      'print_settings': 'إعدادات الطباعة',
+      'sandbox': 'مسودة تجربة'
     };
     return labels[entity] || entity;
   };
 
-  const uniqueActions = Array.from(new Set(logs.map(log => log.action)));
-  const uniqueEntities = Array.from(new Set(logs.map(log => log.entity_type)));
+  const uniqueActions = Array.from(new Set(logs.map(log => log.action).filter(Boolean)));
+  const uniqueEntities = Array.from(new Set(logs.map(log => log.entity_type).filter(Boolean)));
 
   return (
     <Box sx={{ p: 3 }}>
@@ -161,6 +197,14 @@ export default function AuditLog() {
           <ClipboardList style={{ display: 'inline', marginLeft: '8px', verticalAlign: 'middle' }} />
           سجل الأنشطة
         </Typography>
+        <button
+          onClick={loadAuditLogs}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          <span>تحديث السجل</span>
+        </button>
       </Box>
 
       {/* Statistics */}
@@ -213,7 +257,7 @@ export default function AuditLog() {
               </Typography>
               <Typography variant="body2">
                 {logs.length > 0 
-                  ? format(new Date(logs[0].created_at), 'PPp', { locale: ar })
+                  ? formatDateSafely(logs[0].created_at)
                   : 'لا يوجد'
                 }
               </Typography>
@@ -307,12 +351,23 @@ export default function AuditLog() {
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap' }}>
                       <Typography variant="body2">
-                        {format(new Date(log.created_at), 'PPp', { locale: ar })}
+                        {formatDateSafely(log.created_at)}
                       </Typography>
                     </TableCell>
-                    <TableCell>{log.full_name || log.user_name || 'نظام'}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {log.full_name || log.user_name || (log.user_id ? `مستخدم #${log.user_id}` : 'نظام')}
+                        </Typography>
+                        {log.full_name && log.user_name && log.full_name !== log.user_name && (
+                          <Typography variant="caption" color="textSecondary">
+                            @{log.user_name}
+                          </Typography>
+                        )}
+                      </Box>
+                    </TableCell>
                     <TableCell>
                       <Chip
                         label={getActionLabel(log.action)}

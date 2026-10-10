@@ -73,6 +73,28 @@ function closeConnection() {
   }
 }
 
+// User tracking for audit logging
+let currentLoggedInUserId = null;
+
+function setCurrentUserId(userId) {
+  currentLoggedInUserId = userId;
+}
+
+async function safeLogAudit(action, entity_type, entity_id, details) {
+  try {
+    await addAuditLog({
+      user_id: currentLoggedInUserId || null,
+      action,
+      entity_type,
+      entity_id: entity_id ? String(entity_id) : null,
+      details,
+      ip_address: 'desktop'
+    });
+  } catch (err) {
+    console.warn('⚠️ safeLogAudit failed:', err.message);
+  }
+}
+
 // Fonction pour vérifier la santé de la connexion
 async function checkConnectionHealth() {
   if (!db) return false;
@@ -896,12 +918,12 @@ async function getAuditLogs(filters = {}) {
     conditions.push(`al.user_id = $${params.length}`);
   }
 
-  if (filters.action) {
+  if (filters.action && filters.action !== 'all') {
     params.push(filters.action);
     conditions.push(`al.action = $${params.length}`);
   }
 
-  if (filters.entity_type) {
+  if (filters.entity_type && filters.entity_type !== 'all') {
     params.push(filters.entity_type);
     conditions.push(`al.entity_type = $${params.length}`);
   }
@@ -910,7 +932,8 @@ async function getAuditLogs(filters = {}) {
     query += ' WHERE ' + conditions.join(' AND ');
   }
 
-  query += ' ORDER BY al.created_at DESC LIMIT 100';
+  const limit = parseInt(filters.limit, 10) || 1000;
+  query += ` ORDER BY al.created_at DESC LIMIT ${limit}`;
 
   return await executeQuery(query, params);
 }
@@ -1220,6 +1243,7 @@ async function login(username, password) {
   // تحديث آخر تسجيل دخول
   const currentTime = new Date().toISOString();
   await executeQuery('UPDATE users SET last_login = $1 WHERE id = $2', [currentTime, user.id]);
+  currentLoggedInUserId = user.id;
 
   // تسجيل النشاط
   try {
@@ -1240,6 +1264,7 @@ async function login(username, password) {
 
 // Fonction لتسجيل الخروج
 async function logout(userId) {
+  currentLoggedInUserId = null;
   // تسجيل النشاط
   try {
     await addAuditLog({
@@ -1338,6 +1363,7 @@ module.exports = {
   archivePastSessions,
   login,
   logout,
+  setCurrentUserId,
   getUserPermissions,
   saveUserPermissions,
 

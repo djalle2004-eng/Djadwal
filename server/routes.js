@@ -40,6 +40,40 @@ async function requireAuth(req, res, next) {
     next();
 }
 
+// Helper to record audit logs
+async function logAudit(req, { action, entity_type, entity_id = null, details = null, user_id = null }) {
+    try {
+        let finalUserId = user_id;
+        if (!finalUserId && req) {
+            if (req.user && req.user.id) {
+                finalUserId = req.user.id;
+            } else if (req.user && req.user.userId) {
+                finalUserId = req.user.userId;
+            } else if (req.headers && req.headers['x-user-id']) {
+                const parsed = parseInt(req.headers['x-user-id'], 10);
+                if (!isNaN(parsed)) finalUserId = parsed;
+            } else if (req.body && req.body.currentUserId) {
+                finalUserId = parseInt(req.body.currentUserId, 10);
+            } else if (req.cookies && req.cookies.token) {
+                const payload = await verifyToken(req.cookies.token);
+                if (payload && (payload.id || payload.userId)) {
+                    finalUserId = payload.id || payload.userId;
+                }
+            }
+        }
+
+        const ip = req ? (req.headers['x-forwarded-for'] || req.ip || req.socket?.remoteAddress || null) : null;
+
+        await executeQuery(
+            `INSERT INTO audit_log (user_id, action, entity_type, entity_id, details, ip_address) 
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [finalUserId || null, action, entity_type, entity_id, details, ip]
+        );
+    } catch (err) {
+        console.error('⚠️ Failed to write audit log:', err.message);
+    }
+}
+
 // --- Auth Routes ---
 
 router.post('/auth/signup', async (req, res) => {
@@ -303,6 +337,7 @@ router.post('/departments', async (req, res) => {
     try {
         const { name, code } = req.body;
         const result = await executeQuery('INSERT INTO departments (name, code) VALUES ($1, $2) RETURNING *', [name, code]);
+        await logAudit(req, { action: 'create', entity_type: 'department', entity_id: result[0]?.id, details: `إضافة قسم: ${name}` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -314,6 +349,7 @@ router.put('/departments/:id', async (req, res) => {
         const { name, code } = req.body;
         const { id } = req.params;
         const result = await executeQuery('UPDATE departments SET name = $1, code = $2 WHERE id = $3 RETURNING *', [name, code, id]);
+        await logAudit(req, { action: 'update', entity_type: 'department', entity_id: id, details: `تعديل قسم: ${name}` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -324,6 +360,7 @@ router.delete('/departments/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM departments WHERE id = $1', [id]);
+        await logAudit(req, { action: 'delete', entity_type: 'department', entity_id: id, details: `حذف قسم رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -352,6 +389,7 @@ router.post('/professors', async (req, res) => {
             'INSERT INTO professors (name, email, phone, title, academic_title) VALUES ($1, $2, $3, $4, $5) RETURNING *',
             [name, email, phone, title, academic_title]
         );
+        await logAudit(req, { action: 'create', entity_type: 'professor', entity_id: result[0]?.id, details: `إضافة أستاذ: ${name}` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -371,6 +409,7 @@ router.put('/professors/:id', async (req, res) => {
             'UPDATE professors SET name = $1, email = $2, phone = $3, title = $4, academic_title = $5 WHERE id = $6 RETURNING *',
             [name, email, phone, title, academic_title, id]
         );
+        await logAudit(req, { action: 'update', entity_type: 'professor', entity_id: id, details: `تعديل أستاذ: ${name}` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -381,6 +420,7 @@ router.delete('/professors/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM professors WHERE id = $1', [id]);
+        await logAudit(req, { action: 'delete', entity_type: 'professor', entity_id: id, details: `حذف أستاذ رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -401,6 +441,7 @@ router.post('/rooms', async (req, res) => {
     try {
         const { name, capacity } = req.body;
         const result = await executeQuery('INSERT INTO rooms (name, capacity) VALUES ($1, $2) RETURNING *', [name, capacity]);
+        await logAudit(req, { action: 'create', entity_type: 'room', entity_id: result[0]?.id, details: `إضافة قاعة: ${name} (سعة: ${capacity || 0})` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -412,6 +453,7 @@ router.put('/rooms/:id', async (req, res) => {
         const { name, capacity } = req.body;
         const { id } = req.params;
         const result = await executeQuery('UPDATE rooms SET name = $1, capacity = $2 WHERE id = $3 RETURNING *', [name, capacity, id]);
+        await logAudit(req, { action: 'update', entity_type: 'room', entity_id: id, details: `تعديل قاعة: ${name}` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -422,6 +464,7 @@ router.delete('/rooms/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM rooms WHERE id = $1', [id]);
+        await logAudit(req, { action: 'delete', entity_type: 'room', entity_id: id, details: `حذف قاعة رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -442,6 +485,7 @@ router.post('/courses', async (req, res) => {
     try {
         const { name, code, metadata } = req.body;
         const result = await executeQuery('INSERT INTO courses (name, code, metadata) VALUES ($1, $2, $3) RETURNING *', [name, code, metadata]);
+        await logAudit(req, { action: 'create', entity_type: 'course', entity_id: result[0]?.id, details: `إضافة مقياس: ${name} (${code || ''})` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -453,6 +497,7 @@ router.put('/courses/:id', async (req, res) => {
         const { name, code, metadata } = req.body;
         const { id } = req.params;
         const result = await executeQuery('UPDATE courses SET name = $1, code = $2, metadata = $3 WHERE id = $4 RETURNING *', [name, code, metadata, id]);
+        await logAudit(req, { action: 'update', entity_type: 'course', entity_id: id, details: `تعديل مقياس: ${name}` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -463,6 +508,7 @@ router.delete('/courses/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM courses WHERE id = $1', [id]);
+        await logAudit(req, { action: 'delete', entity_type: 'course', entity_id: id, details: `حذف مقياس رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -486,6 +532,7 @@ router.post('/groups', async (req, res) => {
             'INSERT INTO groups (name, department_id, group_type, specialization, parent_group_id, year) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
             [name, department_id, group_type, specialization, parent_group_id, year]
         );
+        await logAudit(req, { action: 'create', entity_type: 'group', entity_id: result[0]?.id, details: `إضافة فوج: ${name} (${specialization || ''})` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -500,6 +547,7 @@ router.put('/groups/:id', async (req, res) => {
             'UPDATE groups SET name = $1, department_id = $2, group_type = $3, specialization = $4, parent_group_id = $5, year = $6 WHERE id = $7 RETURNING *',
             [name, department_id, group_type, specialization, parent_group_id, year, id]
         );
+        await logAudit(req, { action: 'update', entity_type: 'group', entity_id: id, details: `تعديل فوج: ${name}` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -510,6 +558,7 @@ router.delete('/groups/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM groups WHERE id = $1', [id]);
+        await logAudit(req, { action: 'delete', entity_type: 'group', entity_id: id, details: `حذف فوج رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -571,6 +620,12 @@ router.post('/assignments', async (req, res) => {
             'INSERT INTO assignments (group_id, course_id, professor_id, room_id, day_of_week, start_time, end_time, academic_year, semester, specialization) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
             [group_id, course_id, professor_id, room_id, day_of_week, start_time, end_time, academic_year, semester, specialization]
         );
+        await logAudit(req, {
+            action: 'create',
+            entity_type: 'assignment',
+            entity_id: result[0]?.id,
+            details: `إضافة حصة في الجدول (يوم: ${day_of_week}, ${start_time}-${end_time})`
+        });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -585,6 +640,12 @@ router.put('/assignments/:id', async (req, res) => {
             'UPDATE assignments SET group_id = $1, course_id = $2, professor_id = $3, room_id = $4, day_of_week = $5, start_time = $6, end_time = $7, academic_year = $8, semester = $9, specialization = $10 WHERE id = $11 RETURNING *',
             [group_id, course_id, professor_id, room_id, day_of_week, start_time, end_time, academic_year, semester, specialization, id]
         );
+        await logAudit(req, {
+            action: 'update',
+            entity_type: 'assignment',
+            entity_id: id,
+            details: `تعديل/نقل حصة رقم: ${id} (يوم: ${day_of_week}, ${start_time}-${end_time})`
+        });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -595,6 +656,7 @@ router.delete('/assignments/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM assignments WHERE id = $1', [id]);
+        await logAudit(req, { action: 'delete', entity_type: 'assignment', entity_id: id, details: `حذف حصة رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -632,6 +694,7 @@ router.post('/academic-years', async (req, res) => {
             await executeQuery('UPDATE academic_years SET is_current = 0 WHERE id != $1', [result[0].id]);
         }
 
+        await logAudit(req, { action: 'create', entity_type: 'academic_year', entity_id: result[0]?.id, details: `إضافة سنة دراسية: ${yearName}` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -643,6 +706,7 @@ router.post('/academic-years/:id/activate', async (req, res) => {
         const { id } = req.params;
         await executeQuery('UPDATE academic_years SET is_current = 0');
         const result = await executeQuery('UPDATE academic_years SET is_current = 1 WHERE id = $1 RETURNING *', [id]);
+        await logAudit(req, { action: 'activate', entity_type: 'academic_year', entity_id: id, details: `تفعيل السنة الدراسية رقم: ${id}` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -653,6 +717,7 @@ router.delete('/academic-years/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM academic_years WHERE id = $1', [id]);
+        await logAudit(req, { action: 'delete', entity_type: 'academic_year', entity_id: id, details: `حذف سنة دراسية رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -710,6 +775,7 @@ router.post('/semesters', async (req, res) => {
             await executeQuery('UPDATE semesters SET is_current = 0 WHERE id != $1', [result[0].id]);
         }
 
+        await logAudit(req, { action: 'create', entity_type: 'semester', entity_id: result[0]?.id, details: `إضافة فصل دراسي: ${semesterName}` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -736,6 +802,7 @@ router.put('/semesters/:id', async (req, res) => {
         }
 
         const result = await executeQuery(query, params);
+        await logAudit(req, { action: 'update', entity_type: 'semester', entity_id: id, details: `تعديل فصل دراسي: ${semesterName}` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -747,6 +814,7 @@ router.post('/semesters/:id/activate', async (req, res) => {
         const { id } = req.params;
         await executeQuery('UPDATE semesters SET is_current = 0');
         const result = await executeQuery('UPDATE semesters SET is_current = 1 WHERE id = $1 RETURNING *', [id]);
+        await logAudit(req, { action: 'activate', entity_type: 'semester', entity_id: id, details: `تفعيل الفصل الدراسي رقم: ${id}` });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -757,6 +825,7 @@ router.delete('/semesters/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM semesters WHERE id = $1', [id]);
+        await logAudit(req, { action: 'delete', entity_type: 'semester', entity_id: id, details: `حذف فصل دراسي رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -828,7 +897,14 @@ router.post('/extra-sessions', async (req, res) => {
             `INSERT INTO extra_sessions (${columns}) VALUES (${placeholders}) RETURNING *`,
             values
         );
-        res.json(result[0]);
+        const created = result[0] || {};
+        await logAudit(req, {
+            action: 'create',
+            entity_type: 'extra_session',
+            entity_id: created.id,
+            details: `إضافة حصة إضافية/امتحان لتاريخ ${filteredSession.session_date || ''} الساعة ${filteredSession.start_time || ''}`
+        });
+        res.json(created);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -859,6 +935,12 @@ router.put('/extra-sessions/:id', async (req, res) => {
             `UPDATE extra_sessions SET ${updates} WHERE id = $${values.length} RETURNING *`,
             values
         );
+        await logAudit(req, {
+            action: 'update',
+            entity_type: 'extra_session',
+            entity_id: id,
+            details: `تعديل حصة إضافية/امتحان رقم: ${id}`
+        });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -869,6 +951,12 @@ router.delete('/extra-sessions/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM extra_sessions WHERE id = $1', [id]);
+        await logAudit(req, {
+            action: 'delete',
+            entity_type: 'extra_session',
+            entity_id: id,
+            details: `حذف حصة إضافية/امتحان رقم: ${id}`
+        });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -899,6 +987,15 @@ router.post('/auth/login', async (req, res) => {
         // Update last login
         await executeQuery('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
 
+        // Audit log login
+        await logAudit(req, {
+            action: 'login',
+            entity_type: 'user',
+            entity_id: user.id,
+            details: `تسجيل الدخول للمستخدم: ${user.username} (${user.role || ''})`,
+            user_id: user.id
+        });
+
         // Remove password hash before sending back
         delete user.password_hash;
         res.json(user);
@@ -925,7 +1022,14 @@ router.post('/users', async (req, res) => {
             'INSERT INTO users (username, password_hash, full_name, email, role, professor_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, full_name, email, role, professor_id, is_active, created_at',
             [username, password_hash, full_name, email, role, professor_id]
         );
-        res.json(result[0]);
+        const newUser = result[0];
+        await logAudit(req, {
+            action: 'create',
+            entity_type: 'user',
+            entity_id: newUser.id,
+            details: `إنشاء مستخدم جديد: ${username} (${role || 'user'})`
+        });
+        res.json(newUser);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -940,6 +1044,12 @@ router.put('/users/:id', async (req, res) => {
             'UPDATE users SET username = $1, full_name = $2, email = $3, role = $4, professor_id = $5, is_active = $6 WHERE id = $7 RETURNING id, username, full_name, email, role, professor_id, is_active, created_at',
             [username, full_name, email, role, professor_id, is_active, id]
         );
+        await logAudit(req, {
+            action: 'update',
+            entity_type: 'user',
+            entity_id: id,
+            details: `تحديث بيانات المستخدم: ${username || id}`
+        });
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -950,6 +1060,12 @@ router.delete('/users/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM users WHERE id = $1', [id]);
+        await logAudit(req, {
+            action: 'delete',
+            entity_type: 'user',
+            entity_id: id,
+            details: `حذف المستخدم رقم: ${id}`
+        });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -978,6 +1094,12 @@ router.put('/users/:id/permissions', async (req, res) => {
         const permissionsJson = JSON.stringify(permissions);
 
         await executeQuery('UPDATE users SET permissions = $1 WHERE id = $2', [permissionsJson, id]);
+        await logAudit(req, {
+            action: 'update',
+            entity_type: 'user',
+            entity_id: id,
+            details: `تعديل صلاحيات المستخدم رقم: ${id}`
+        });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -987,17 +1109,50 @@ router.put('/users/:id/permissions', async (req, res) => {
 // --- Audit Logs ---
 router.get('/audit-logs', async (req, res) => {
     try {
-        const result = await executeQuery(`
+        const { user_id, action, entity_type, limit = 1000 } = req.query;
+        let query = `
             SELECT 
                 al.*,
                 u.username as user_name,
                 u.full_name
             FROM audit_log al
             LEFT JOIN users u ON al.user_id = u.id
-            ORDER BY al.created_at DESC
-            LIMIT 1000
-        `);
-        res.json(result.rows || []);
+        `;
+        const conditions = [];
+        const params = [];
+
+        if (user_id) {
+            params.push(user_id);
+            conditions.push(`al.user_id = $${params.length}`);
+        }
+        if (action && action !== 'all') {
+            params.push(action);
+            conditions.push(`al.action = $${params.length}`);
+        }
+        if (entity_type && entity_type !== 'all') {
+            params.push(entity_type);
+            conditions.push(`al.entity_type = $${params.length}`);
+        }
+
+        if (conditions.length > 0) {
+            query += ' WHERE ' + conditions.join(' AND ');
+        }
+
+        query += ` ORDER BY al.created_at DESC LIMIT ${parseInt(limit, 10) || 1000}`;
+
+        const result = await executeQuery(query, params);
+        const rows = Array.isArray(result) ? result : (result?.rows || []);
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/audit-logs', async (req, res) => {
+    try {
+        const { action, entity_type, entity_id, details } = req.body;
+        await logAudit(req, { action, entity_type, entity_id, details });
+        res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -1087,6 +1242,13 @@ router.post('/upload-logo', upload.single('file'), async (req, res) => {
             [settingKey, dataURI, dataURI]
         );
 
+        await logAudit(req, {
+            action: 'update',
+            entity_type: 'settings',
+            entity_id: settingKey,
+            details: `تحديث شعار ${type === 'university' ? 'الجامعة' : 'الكلية'}`
+        });
+
         res.json({ url: dataURI, message: 'Logo uploaded successfully' });
     } catch (error) {
         console.error('Error uploading logo:', error);
@@ -1155,6 +1317,13 @@ router.put('/print-settings', async (req, res) => {
                 [key, value, value]
             );
         }
+
+        await logAudit(req, {
+            action: 'update',
+            entity_type: 'settings',
+            entity_id: 'print_settings',
+            details: `تحديث إعدادات الطباعة (${keys.length} إعداد)`
+        });
 
         res.json({ success: true, message: 'Print settings updated successfully' });
     } catch (error) {
@@ -1454,10 +1623,18 @@ router.post('/sandbox/save', async (req, res) => {
             return res.status(400).json({ error: 'Data is required' });
         }
 
+        const snapshotName = name || `Draft ${new Date().toLocaleString()}`;
         const result = await executeQuery(
             'INSERT INTO sandbox_snapshots (name, data) VALUES (?, ?)',
-            [name || `Draft ${new Date().toLocaleString()}`, JSON.stringify(data)]
+            [snapshotName, JSON.stringify(data)]
         );
+
+        await logAudit(req, {
+            action: 'create',
+            entity_type: 'sandbox',
+            entity_id: result?.lastInsertRowid || null,
+            details: `حفظ مسودة في صندوق التجارب: ${snapshotName}`
+        });
 
         res.json({ success: true, id: result.lastInsertRowid });
     } catch (error) {
@@ -1506,6 +1683,12 @@ router.delete('/sandbox/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM sandbox_snapshots WHERE id = ?', [id]);
+        await logAudit(req, {
+            action: 'delete',
+            entity_type: 'sandbox',
+            entity_id: id,
+            details: `حذف مسودة من صندوق التجارب رقم: ${id}`
+        });
         res.json({ success: true });
     } catch (error) {
         console.error('Error deleting sandbox snapshot:', error);
