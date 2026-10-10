@@ -1,8 +1,9 @@
 // Script to initialize Turso database schema
 const { createClient } = require('@libsql/client');
+require('dotenv').config();
 
-const TURSO_URL = 'libsql://djadwal-djalle.aws-eu-west-1.turso.io';
-const TURSO_AUTH_TOKEN = 'REDACTED_TURSO_AUTH_TOKEN';
+const TURSO_URL = process.env.TURSO_URL || process.env.VITE_TURSO_DATABASE_URL || 'libsql://djadwal-djalle.aws-eu-west-1.turso.io';
+const TURSO_AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN || process.env.VITE_TURSO_AUTH_TOKEN || '';
 
 async function initTursoSchema() {
   console.log('🚀 Connecting to Turso...');

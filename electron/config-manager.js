@@ -52,8 +52,8 @@ class ConfigManager {
       database: {
         useTurso: true,
         turso: {
-          url: 'libsql://djadwal-djalle.aws-eu-west-1.turso.io',
-          authToken: 'REDACTED_TURSO_AUTH_TOKEN'
+          url: process.env.TURSO_URL || process.env.VITE_TURSO_DATABASE_URL || 'libsql://djadwal-djalle.aws-eu-west-1.turso.io',
+          authToken: process.env.TURSO_AUTH_TOKEN || process.env.VITE_TURSO_AUTH_TOKEN || ''
         }
       },
       app: {

@@ -1,34 +1,47 @@
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+build_output*
+build_error*
 
 # Dependencies
-node_modules
+node_modules/
 
 # Build outputs
-dist
-dist-ssr
-dist-electron
-out
-build
+dist/
+dist-ssr/
+dist-electron/
+out/
+build/
+.next/
+release/
+app/dist/
 *.local
 
-# Environment variables (CRITICAL - Contains sensitive data)
+# Environment variables & Secrets (CRITICAL)
 .env
-.env.local
-.env.production
-.env.development
+.env.*
+!.env.example
+*.env
+client_secret_*.json
+client_secret*.json
+credentials*.json
+credentials.json
+*.pem
+*.key
+*.p12
 
 # Database files
 *.db
 *.sqlite
 *.sqlite3
 *.db-journal
+database.db
 
 # User data and uploads
 uploads/
@@ -38,7 +51,7 @@ tmp/
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
@@ -47,22 +60,21 @@ tmp/
 *.sw?
 
 # Deployment
-.vercel
-.netlify
+.vercel/
+.netlify/
 
 # OS files
 Thumbs.db
 Desktop.ini
 
-# Backup files
+# Backup files & local scratch
+.git-backup/
+scratch/
+scratch_*
 *.bak
 *.backup
 *~
 
 # Test coverage
-coverage
-.nyc_output
-
-# Electron specific
-release/
-app/dist
+coverage/
+.nyc_output/

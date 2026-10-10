@@ -1,16 +1,17 @@
 // Migrate professors separately
 const { Database } = require('@sqlitecloud/drivers');
 const { createClient } = require('@libsql/client');
+require('dotenv').config();
 
 const SQLITECLOUD_CONFIG = {
-  host: 'cjh4w9vank.g4.sqlite.cloud',
-  port: 8860,
-  password: 'REDACTED_SQLITECLOUD_KEY',
-  database: 'Djadwal'
+  host: process.env.SQLITECLOUD_HOST || 'cjh4w9vank.g4.sqlite.cloud',
+  port: parseInt(process.env.SQLITECLOUD_PORT || '8860', 10),
+  password: process.env.SQLITECLOUD_PASSWORD || process.env.SQLITECLOUD_APIKEY || '',
+  database: process.env.SQLITECLOUD_DATABASE || 'Djadwal'
 };
 
-const TURSO_URL = 'libsql://djadwal-djalle.aws-eu-west-1.turso.io';
-const TURSO_AUTH_TOKEN = 'REDACTED_TURSO_AUTH_TOKEN';
+const TURSO_URL = process.env.TURSO_URL || process.env.VITE_TURSO_DATABASE_URL || 'libsql://djadwal-djalle.aws-eu-west-1.turso.io';
+const TURSO_AUTH_TOKEN = process.env.TURSO_AUTH_TOKEN || process.env.VITE_TURSO_AUTH_TOKEN || '';
 
 async function migrateProfessors() {
   try {

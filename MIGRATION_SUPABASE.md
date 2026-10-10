@@ -15,8 +15,8 @@ Ce guide vous accompagne dans la migration de votre application Djadwal de SQLit
 Créez un fichier `.env` à la racine du projet avec :
 
 ```env
-VITE_SUPABASE_URL=https://kdqpnjeehzaffypahdbi.supabase.co
-VITE_SUPABASE_ANON_KEY=REDACTED_SUPABASE_KEY
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 ```
 
 ### 2. Installation des Dépendances

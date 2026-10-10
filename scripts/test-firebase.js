@@ -2,12 +2,12 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "REDACTED_FIREBASE_API_KEY",
-  authDomain: "suivie-fsegc.firebaseapp.com",
-  projectId: "suivie-fsegc",
-  storageBucket: "suivie-fsegc.firebasestorage.app",
-  messagingSenderId: "978479469224",
-  appId: "1:978479469224:web:a6bd71ceac4b8807ce289d"
+  apiKey: process.env.VITE_FIREBASE_API_KEY || "AIzaSy_YOUR_API_KEY_HERE",
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || "suivie-fsegc.firebaseapp.com",
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID || "suivie-fsegc",
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || "suivie-fsegc.firebasestorage.app",
+  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "978479469224",
+  appId: process.env.VITE_FIREBASE_APP_ID || "1:978479469224:web:a6bd71ceac4b8807ce289d"
 };
 
 const app = initializeApp(firebaseConfig);

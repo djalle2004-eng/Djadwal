@@ -20,8 +20,8 @@ if (!fs.existsSync(envPath)) {
 
 let envContent = fs.readFileSync(envPath, 'utf8');
 
-// تحديث SQLITECLOUD_URL بالشكل الصحيح
-const newUrl = 'sqlitecloud://cjh4w9vank.g4.sqlite.cloud:8860/Djadwal?apikey=REDACTED_SQLITECLOUD_KEY';
+const sqliteCloudPassword = process.env.SQLITECLOUD_PASSWORD || process.env.SQLITECLOUD_APIKEY || 'YOUR_SQLITECLOUD_APIKEY';
+const newUrl = `sqlitecloud://cjh4w9vank.g4.sqlite.cloud:8860/Djadwal?apikey=${sqliteCloudPassword}`;
 
 // استبدال أو إضافة SQLITECLOUD_URL
 if (envContent.includes('SQLITECLOUD_URL=')) {
@@ -33,7 +33,7 @@ if (envContent.includes('SQLITECLOUD_URL=')) {
 // تحديث SQLITECLOUD_PASSWORD ليكون فقط API key
 envContent = envContent.replace(
   /SQLITECLOUD_PASSWORD=.*/,
-  'SQLITECLOUD_PASSWORD=REDACTED_SQLITECLOUD_KEY'
+  `SQLITECLOUD_PASSWORD=${sqliteCloudPassword}`
 );
 
 // تحديث SQLITECLOUD_USERNAME

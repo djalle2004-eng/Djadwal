@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+# Gitleaks pre-commit hook to prevent secret leaks
+
+if command -v gitleaks >/dev/null 2>&1; then
+    echo "🔒 Running Gitleaks staged secret scan..."
+    gitleaks protect --staged --verbose
+    EXIT_CODE=$?
+    if [ $EXIT_CODE -ne 0 ]; then
+        echo "❌ [SECURITY ERROR] Gitleaks detected secrets in staged files! Commit rejected."
+        echo "   Please remove the secrets, revoke/rotate any leaked credentials, and try again."
+        exit $EXIT_CODE
+    fi
+    echo "✅ Gitleaks: No secrets detected in staged changes."
+else
+    echo "⚠️  [WARNING] 'gitleaks' executable not found in PATH."
+    echo "   Install gitleaks (https://github.com/gitleaks/gitleaks) to enforce secret scanning locally."
+fi

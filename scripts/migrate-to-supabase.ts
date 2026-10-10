@@ -8,8 +8,8 @@ import dotenv from 'dotenv'
 // Configuration des variables d'environnement
 dotenv.config()
 
-const supabaseUrl = 'https://kdqpnjeehzaffypahdbi.supabase.co'
-const supabaseKey = 'REDACTED_SUPABASE_KEY'
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co'
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
 // Création du client Supabase
 const supabase = createClient(supabaseUrl, supabaseKey)
