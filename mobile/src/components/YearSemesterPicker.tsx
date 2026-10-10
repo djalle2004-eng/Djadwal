@@ -9,9 +9,10 @@ interface YearSemesterPickerProps {
     onSemesterChange: (semester: any) => void;
     initialYear?: any;
     initialSemester?: any;
+    userRole?: 'student' | 'professor' | 'head';
 }
 
-export default function YearSemesterPicker({ onYearChange, onSemesterChange, initialYear, initialSemester }: YearSemesterPickerProps) {
+export default function YearSemesterPicker({ onYearChange, onSemesterChange, initialYear, initialSemester, userRole = 'student' }: YearSemesterPickerProps) {
     const [years, setYears] = useState<any[]>([]);
     const [semesters, setSemesters] = useState<any[]>([]);
     const [selectedYear, setSelectedYear] = useState<any>(initialYear || null);
@@ -53,8 +54,13 @@ export default function YearSemesterPicker({ onYearChange, onSemesterChange, ini
 
     const fetchSemesters = async (yearId: number) => {
         try {
+            // Filter non-public semesters for students
+            const query = userRole === 'student'
+                ? 'SELECT * FROM semesters WHERE academic_year_id = ? AND is_public = 1 ORDER BY semester_name'
+                : 'SELECT * FROM semesters WHERE academic_year_id = ? ORDER BY semester_name';
+
             const result = await turso.execute({
-                sql: 'SELECT * FROM semesters WHERE academic_year_id = ? ORDER BY semester_name',
+                sql: query,
                 args: [yearId]
             });
             setSemesters(result.rows);

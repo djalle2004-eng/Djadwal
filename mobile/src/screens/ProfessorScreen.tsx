@@ -153,6 +153,7 @@ export default function ProfessorScreen({ navigation, route }: Props) {
                         <YearSemesterPicker
                             onYearChange={setSelectedYear}
                             onSemesterChange={setSelectedSemester}
+                            userRole="professor"
                         />
                     </View>
                 </SafeAreaView>

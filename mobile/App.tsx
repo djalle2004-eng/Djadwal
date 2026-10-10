@@ -13,6 +13,8 @@ import ProfessorSearchScreen from './src/screens/ProfessorSearchScreen';
 import ProfessorDetailsScreen from './src/screens/ProfessorDetailsScreen';
 import RoomSearchScreen from './src/screens/RoomSearchScreen';
 import RoomScheduleScreen from './src/screens/RoomScheduleScreen';
+import { useAppUpdate } from './src/hooks/useAppUpdate';
+import ForceUpdateModal from './src/components/ForceUpdateModal';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -32,6 +34,8 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
+  const { needsUpdate, handleUpdate } = useAppUpdate();
+
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
@@ -48,6 +52,7 @@ export default function App() {
         <Stack.Screen name="RoomSearch" component={RoomSearchScreen} />
         <Stack.Screen name="RoomSchedule" component={RoomScheduleScreen} />
       </Stack.Navigator>
+      <ForceUpdateModal visible={needsUpdate} onUpdate={handleUpdate} />
     </NavigationContainer>
   );
 }

@@ -1513,4 +1513,19 @@ router.delete('/sandbox/:id', async (req, res) => {
     }
 });
 
+// --- App Config ---
+router.get('/app-config', async (req, res) => {
+    try {
+        const rows = await executeQuery('SELECT key, value FROM app_config');
+        const config = {};
+        rows.forEach(row => {
+            config[row.key] = row.value;
+        });
+        res.json(config);
+    } catch (error) {
+        console.error('Error fetching app config:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

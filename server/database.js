@@ -55,6 +55,9 @@ async function initDatabaseConnection() {
             // Ensure semester visibility column exists
             await ensureSemesterPublicColumn(db);
 
+            // Ensure app config table exists
+            await ensureAppConfigTable(db);
+
             return db;
         }
         return db;
@@ -102,6 +105,33 @@ async function ensureSemesterPublicColumn(database) {
             console.log('✅ Added is_public column to semesters table');
         } else {
             console.error('⚠️ Error ensuring is_public column:', error.message);
+        }
+    }
+}
+
+// Ensure app_config table exists for update management
+async function ensureAppConfigTable(database) {
+    try {
+        await database.sql('SELECT 1 FROM app_config LIMIT 1');
+        console.log('✅ app_config table already exists');
+    } catch (error) {
+        if (error.message.includes('no such table') || error.message.includes('does not exist')) {
+            console.log('ℹ️ Creating app_config table...');
+            await database.sql(`
+                CREATE TABLE IF NOT EXISTS app_config (
+                    key TEXT PRIMARY KEY,
+                    value TEXT
+                )
+            `);
+
+            // Initialiser avec des valeurs par défaut
+            await database.sql("INSERT OR IGNORE INTO app_config (key, value) VALUES ('min_version', '4.0.0')");
+            await database.sql("INSERT OR IGNORE INTO app_config (key, value) VALUES ('latest_version', '4.0.0')");
+            await database.sql("INSERT OR IGNORE INTO app_config (key, value) VALUES ('download_url', 'https://dl.surf')");
+
+            console.log('✅ Created and initialized app_config table');
+        } else {
+            console.error('⚠️ Error checking app_config table:', error);
         }
     }
 }

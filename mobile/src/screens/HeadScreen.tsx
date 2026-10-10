@@ -122,6 +122,7 @@ export default function HeadScreen({ navigation }: Props) {
                     <YearSemesterPicker
                         onYearChange={setSelectedYear}
                         onSemesterChange={setSelectedSemester}
+                        userRole="head"
                     />
                 </SafeAreaView>
             </LinearGradient>

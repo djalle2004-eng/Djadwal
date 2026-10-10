@@ -244,6 +244,7 @@ export default function StudentScreen({ route, navigation }: Props) {
                     <YearSemesterPicker
                         onYearChange={setSelectedYear}
                         onSemesterChange={setSelectedSemester}
+                        userRole="student"
                     />
 
                     <View style={styles.tabContainer}>

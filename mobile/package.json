@@ -1,6 +1,6 @@
 {
-  "name": "mobile",
-  "version": "1.0.0",
+  "name": "Djadwal",
+  "version": "4.0.0",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
