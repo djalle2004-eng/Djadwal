@@ -1,4 +1,11 @@
 require('dotenv').config();
+const { validateEnvironment } = require('../packages/core/src/config/env.js');
+
+// Enforce strict environment validation
+validateEnvironment(process.env, {
+  exitOnError: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
+});
+
 const express = require('express');
 const puppeteer = require('puppeteer');
 const cors = require('cors');

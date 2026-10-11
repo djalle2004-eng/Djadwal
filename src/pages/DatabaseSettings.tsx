@@ -180,12 +180,12 @@ export default function DatabaseSettings() {
                     ...config,
                     turso: { ...config.turso!, url: e.target.value }
                   })}
-                  placeholder="libsql://your-db.region.turso.io"
+                  placeholder="https://your-db-endpoint.domain"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                   dir="ltr"
                 />
                 <p className="text-xs text-gray-500 mt-2">
-                  مثال: libsql://djadwal-xxx.aws-eu-west-1.turso.io
+                  مثال: عنوان خادم قاعدة البيانات المشفر
                 </p>
               </div>
 

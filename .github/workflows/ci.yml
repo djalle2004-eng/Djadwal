@@ -63,8 +63,14 @@ jobs:
       - name: Run Vitest Unit & Regression Tests
         run: pnpm -r test
 
+      - name: Verify Forbidden Client Environment Prefixes
+        run: pnpm exec tsx scripts/check-forbidden-env-prefixes.ts
+
       - name: Build Workspace Artifacts
         run: pnpm -r build
+
+      - name: Scan Client Bundle for Leaked Secrets
+        run: pnpm exec tsx scripts/check-bundle-secrets.ts
 
       - name: Security Vulnerability Audit
         run: |

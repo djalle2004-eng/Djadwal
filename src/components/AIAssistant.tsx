@@ -58,55 +58,38 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     'text-bison-001'
   ];
   
-  // استخدام fetch مباشر لتجاوز مشاكل CSP
+  // استدعاء وكيل الذكاء الاصطناعي الآمن على الخادم (Secure Server AI Proxy)
   const callGeminiAPI = async (prompt: string, modelIndex = 0): Promise<string> => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    
-    if (!apiKey) {
-      throw new Error('مفتاح Gemini API غير موجود. يرجى إضافة VITE_GEMINI_API_KEY في ملف .env');
-    }
-    
-    const model = availableModels[modelIndex] || 'gemini-pro';
-    console.log(`Calling Gemini API with model: ${model}`);
-    console.log('API Key exists:', !!apiKey);
-    console.log('Prompt length:', prompt.length);
+    const model = availableModels[modelIndex] || 'gemini-1.5-pro';
     
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+      const response = await fetch('/api/ai/assist', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }]
+          prompt,
+          model
         })
       });
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gemini API Error:', response.status, errorText);
-      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
-    }
-    
-    const data = await response.json();
-    console.log('Gemini API Response:', data);
-    
-      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-        throw new Error('لم يتم الحصول على رد صحيح من Gemini API');
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error('تم تجاوز حد طلبات المساعد الذكي. يرجى الانتظار دقيقة واحدة.');
+        }
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.message || `خطأ في خادم الذكاء الاصطناعي (${response.status})`);
       }
+    
+      const data = await response.json();
+      return data.text || 'لم يتم الحصول على رد من الذكاء الاصطناعي';
       
-      return data.candidates[0].content.parts[0]?.text || 'لم يتم الحصول على رد من الذكاء الاصطناعي';
-      
-    } catch (error) {
-      // إذا فشل النموذج الحالي، جرب النموذج التالي
-      if (modelIndex < availableModels.length - 1) {
-        console.log(`Model ${availableModels[modelIndex]} failed, trying next model...`);
+    } catch (error: any) {
+      // إذا فشل النموذج الحالي، جرب النموذج التالي ما لم يكن خطأ معدل
+      if (modelIndex < availableModels.length - 1 && !error.message?.includes('تجاوز حد')) {
         return await callGeminiAPI(prompt, modelIndex + 1);
       }
-      
-      // إذا فشلت جميع النماذج
       throw error;
     }
   };
