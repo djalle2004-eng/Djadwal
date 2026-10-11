@@ -1,0 +1,13 @@
+{
+  "name": "@djadwal/core",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Djadwal Core Business Logic: Conflict Detection, Workload, Room Validation, Print Layout",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "node -e \"console.log('@djadwal/core: build ok')\"",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/ --ext .ts"
+  }
+}

@@ -1,0 +1,16 @@
+# Global System Owners
+* @djalle2004-eng
+
+# Core Business Logic & Engine
+/packages/core/ @djalle2004-eng
+/server/routes.js @djalle2004-eng
+/server/database.js @djalle2004-eng
+
+# Infrastructure & CI/CD
+/.github/ @djalle2004-eng
+/docker-compose*.yml @djalle2004-eng
+/render.yaml @djalle2004-eng
+
+# Architecture & Security
+/docs/adr/ @djalle2004-eng
+/docs/security-backlog.md @djalle2004-eng

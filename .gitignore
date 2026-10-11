@@ -78,3 +78,8 @@ scratch_*
 # Test coverage
 coverage/
 .nyc_output/
+
+# Archived diagnostic scripts and error logs
+tools/archive/*
+!tools/archive/package.json
+!tools/archive/README.md
