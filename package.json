@@ -69,6 +69,7 @@
     "pdfkit-table": "^0.1.99",
     "pdfmake": "^0.2.18",
     "pg": "^8.16.3",
+    "pino": "^10.4.0",
     "puppeteer": "^24.4.0",
     "puppeteer-core": "^24.4.0",
     "react": "^18.3.1",
@@ -78,7 +79,8 @@
     "recharts": "^3.9.2",
     "sqlite": "^5.1.1",
     "wait-on": "^8.0.3",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

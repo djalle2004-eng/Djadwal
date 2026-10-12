@@ -3,10 +3,29 @@ services:
     name: djadwal
     env: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: pnpm install --frozen-lockfile && pnpm -r build
     startCommand: npm start
+    healthCheckPath: /api/status
     envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
       - key: TURSO_DATABASE_URL
         sync: false
       - key: TURSO_AUTH_TOKEN
         sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_SECRET_PREVIOUS
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: FEATURE_AI_PROXY
+        value: "true"
+      - key: FEATURE_STRICT_ENV
+        value: "true"

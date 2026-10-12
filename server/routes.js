@@ -6,9 +6,11 @@ const { SignJWT, jwtVerify } = require('jose');
 const emailService = require('./emailService');
 
 // --- Types & Constants ---
-const JWT_SECRET = new TextEncoder().encode(
-    process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
-);
+const PRIMARY_JWT_RAW = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
+const PREVIOUS_JWT_RAW = process.env.JWT_SECRET_PREVIOUS;
+
+const JWT_SECRET = new TextEncoder().encode(PRIMARY_JWT_RAW);
+const JWT_SECRET_PREVIOUS = PREVIOUS_JWT_RAW ? new TextEncoder().encode(PREVIOUS_JWT_RAW) : null;
 
 // --- Auth Helpers ---
 async function createToken(payload) {
@@ -23,7 +25,16 @@ async function verifyToken(token) {
     try {
         const { payload } = await jwtVerify(token, JWT_SECRET);
         return payload;
-    } catch (error) {
+    } catch (primaryError) {
+        // Seamless key rotation fallback: verify with previous secret
+        if (JWT_SECRET_PREVIOUS) {
+            try {
+                const { payload } = await jwtVerify(token, JWT_SECRET_PREVIOUS);
+                return payload;
+            } catch (prevError) {
+                return null;
+            }
+        }
         return null;
     }
 }
@@ -1710,5 +1721,127 @@ router.get('/app-config', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// --- AI Proxy with Rate Limiting and Token Guard ---
+const aiRateLimitMap = new Map(); // ip -> { count, resetTime }
+
+router.post('/ai/assist', async (req, res) => {
+    try {
+        const clientIp = req.headers['x-forwarded-for'] || req.ip || req.socket?.remoteAddress || 'unknown';
+        const now = Date.now();
+        const limitWindowMs = 60 * 1000; // 1 minute
+        const maxRequestsPerWindow = 15;
+
+        // Rate limiting
+        let rateData = aiRateLimitMap.get(clientIp);
+        if (!rateData || now > rateData.resetTime) {
+            rateData = { count: 1, resetTime: now + limitWindowMs };
+            aiRateLimitMap.set(clientIp, rateData);
+        } else {
+            rateData.count++;
+            if (rateData.count > maxRequestsPerWindow) {
+                return res.status(429).json({
+                    error: 'RATE_LIMIT_EXCEEDED',
+                    message: 'تجاوزت الحد المسموح به من طلبات المساعد الذكي. يرجى الانتظار دقيقة واحدة قبل المحاولة مجددًا.'
+                });
+            }
+        }
+
+        const { prompt, model = 'gemini-1.5-pro' } = req.body;
+
+        if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+            return res.status(400).json({
+                error: 'INVALID_INPUT',
+                message: 'نص الطلب (prompt) مطلوب ويجب أن يكون نصًا صالحًا.'
+            });
+        }
+
+        // Hard cap to prevent token flooding
+        const MAX_PROMPT_LENGTH = 4000;
+        if (prompt.length > MAX_PROMPT_LENGTH) {
+            return res.status(400).json({
+                error: 'PAYLOAD_TOO_LARGE',
+                message: `حجم النص يتجاوز الحد المسموح به (${MAX_PROMPT_LENGTH} حرف).`
+            });
+        }
+
+        const geminiKey = process.env.GEMINI_API_KEY;
+        const openRouterKey = process.env.OPENROUTER_API_KEY;
+
+        if (!geminiKey && !openRouterKey) {
+            return res.status(503).json({
+                error: 'AI_UNAVAILABLE',
+                message: 'خدمة المساعد الذكي غير مهيأة على الخادم. يرجى ضبط مفتاح GEMINI_API_KEY في ملف التكوين.'
+            });
+        }
+
+        if (geminiKey) {
+            const chosenModel = model || 'gemini-1.5-pro';
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${chosenModel}:generateContent?key=${geminiKey}`;
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        maxOutputTokens: 2048,
+                        temperature: 0.2
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                return res.status(response.status).json({
+                    error: 'GEMINI_UPSTREAM_ERROR',
+                    message: 'حدث خطأ أثناء التواصل مع مزود الذكاء الاصطناعي.',
+                    details: process.env.NODE_ENV !== 'production' ? errText : undefined
+                });
+            }
+
+            const data = await response.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            return res.json({ text, model: chosenModel });
+        }
+
+        if (openRouterKey) {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${openRouterKey}`
+                },
+                body: JSON.stringify({
+                    model: 'google/gemini-pro',
+                    messages: [{ role: 'user', content: prompt }],
+                    max_tokens: 2048
+                })
+            });
+
+            if (!response.ok) {
+                return res.status(502).json({
+                    error: 'OPENROUTER_UPSTREAM_ERROR',
+                    message: 'حدث خطأ أثناء معالجة طلب الذكاء الاصطناعي عبر OpenRouter.'
+                });
+            }
+
+            const data = await response.json();
+            const text = data.choices?.[0]?.message?.content || '';
+            return res.json({ text, model: 'openrouter/gemini-pro' });
+        }
+    } catch (error) {
+        res.status(500).json({
+            error: 'AI_PROXY_INTERNAL_ERROR',
+            message: 'حدث خطأ داخلي أثناء معالجة طلب المساعد الذكي.'
+        });
+    }
+});
+
+// Testing helpers exports (non-breaking, allows test validation)
+router._authHelpers = {
+    createToken,
+    verifyToken
+};
 
 module.exports = router;

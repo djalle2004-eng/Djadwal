@@ -3,17 +3,23 @@ const path = require('path');
 // Explicitly point to the .env file in the root directory
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
+const pino = require('pino');
+const logger = pino({
+    level: process.env.LOG_LEVEL || 'info',
+    base: { service: 'djadwal-db' },
+    redact: ['url', 'authToken', 'password', 'token', 'authorization']
+});
+
 // Configuration de la base de données
 const dbConfig = {
     url: process.env.TURSO_DATABASE_URL,
     authToken: process.env.TURSO_AUTH_TOKEN
 };
 
-console.log('🔧 Server Database Config Check:');
-console.log('   - URL:', dbConfig.url ? 'Set' : 'Missing');
-console.log('   - Token:', dbConfig.authToken ? 'Set' : 'Missing');
-console.log('   - Current Dir:', __dirname);
-console.log('   - Env File Path:', path.join(__dirname, '../.env'));
+logger.info({
+    hasUrl: Boolean(dbConfig.url),
+    hasToken: Boolean(dbConfig.authToken)
+}, 'Database configuration initialized');
 
 let db = null;
 
@@ -21,7 +27,7 @@ let db = null;
 async function initDatabaseConnection() {
     try {
         if (!db) {
-            console.log('🚀 Initializing Turso connection...');
+            logger.info('Initializing database connection');
 
             if (!dbConfig.url || !dbConfig.authToken) {
                 throw new Error('Turso configuration is missing! Please check .env file.');
@@ -47,7 +53,7 @@ async function initDatabaseConnection() {
 
             // Test connection
             await db.sql('SELECT 1 as test', []);
-            console.log('✅ Database connected successfully');
+            logger.info('Database connected successfully');
 
             // Ensure sandbox table exists
             await ensureSandboxTable(db);
@@ -62,7 +68,7 @@ async function initDatabaseConnection() {
         }
         return db;
     } catch (error) {
-        console.error('❌ Database connection failed:', error.message);
+        logger.error({ err: error.message }, 'Database connection failed');
         throw error;
     }
 }
