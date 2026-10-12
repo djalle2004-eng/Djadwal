@@ -1891,7 +1891,9 @@ router.post('/ai/assist', async (req, res) => {
 // Testing helpers exports (non-breaking, allows test validation)
 router._authHelpers = {
     createToken,
-    verifyToken
+    verifyToken,
+    requireAuth
 };
+
 
 module.exports = router;

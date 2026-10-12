@@ -39,7 +39,17 @@ export const envSchema = z.object({
     .default(true),
   FEATURE_STRICT_ENV: z
     .preprocess(val => val === 'true' || val === true || val === '1', z.boolean())
-    .default(true)
+    .default(true),
+
+  // P3: PDF Renderer Isolation & Hardening Flags
+  FEATURE_SECURE_RENDERER: z
+    .preprocess(val => val === 'true' || val === true || val === '1' || val === undefined, z.boolean())
+    .default(true),
+  FEATURE_RAW_HTML_PDF: z
+    .preprocess(val => val === 'true' || val === true || val === '1' || val === undefined, z.boolean())
+    .default(true),
+  PDF_POOL_SIZE: z.coerce.number().min(1).max(10).default(2),
+  PDF_RENDER_TIMEOUT_MS: z.coerce.number().min(1000).max(60000).default(15000)
 });
 
 export type ValidatedEnv = z.infer<typeof envSchema>;
