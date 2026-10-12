@@ -1,10 +1,12 @@
 require('dotenv').config();
 const { validateEnvironment } = require('../packages/core/src/config/env.js');
 
-// Enforce strict environment validation
+// Enforce strict environment validation (respects FEATURE_STRICT_ENV feature flag for emergency rollback)
+const isStrictEnv = process.env.FEATURE_STRICT_ENV !== 'false';
 validateEnvironment(process.env, {
-  exitOnError: process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
+  exitOnError: isStrictEnv && (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')
 });
+
 
 const express = require('express');
 const puppeteer = require('puppeteer');
