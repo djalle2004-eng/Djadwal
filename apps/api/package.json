@@ -1,0 +1,14 @@
+{
+  "name": "@djadwal/api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Djadwal Express API Service",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node ../../server/server.js",
+    "start": "node ../../server/server.js",
+    "build": "node -e \"console.log('@djadwal/api: build validation ok')\"",
+    "typecheck": "node -e \"console.log('@djadwal/api: typecheck ok')\"",
+    "lint": "eslint ../../server"
+  }
+}

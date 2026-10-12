@@ -1,0 +1,9 @@
+{
+  "name": "@djadwal/archive",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Djadwal Archived Diagnostics and Error Logs",
+  "scripts": {
+    "build": "node -e \"console.log('@djadwal/archive: ok')\""
+  }
+}

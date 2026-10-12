@@ -1,0 +1,47 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": ["dependencies", "safety-net"],
+  "timezone": "Africa/Algiers",
+  "schedule": ["before 6am on monday"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "packageRules": [
+    {
+      "description": "Automatic merge for safe patch updates after passing CI",
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": false,
+      "labels": ["dependencies", "automerge-patch"]
+    },
+    {
+      "description": "Minor updates require manual code review and green CI",
+      "matchUpdateTypes": ["minor"],
+      "automerge": false,
+      "reviewers": ["djalle2004-eng"],
+      "labels": ["dependencies", "requires-review", "minor-update"]
+    },
+    {
+      "description": "Major updates require a dedicated isolated branch and compatibility agreement",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "branchPrefix": "renovate-major/",
+      "reviewers": ["djalle2004-eng"],
+      "labels": ["dependencies", "major-upgrade", "breaking-change-risk"],
+      "commitMessagePrefix": "chore(deps-major):",
+      "prBodyNotes": [
+        "⚠️ **ميثاق التوافق الإلزامي (Breaking Change Policy):**",
+        "- يتطلب هذا التحديث تحديثًا شاملاً للـ regression tests وفحص التوافق العكسي.",
+        "- يمنع الدمج المباشر دون توثيق خطة الاسترجاع في docs/adr/."
+      ]
+    },
+    {
+      "description": "Quarantine legacy dependencies pending planned migration",
+      "matchPackageNames": ["multer", "xlsx"],
+      "enabled": false
+    }
+  ]
+}

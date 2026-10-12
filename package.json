@@ -17,6 +17,8 @@
     "electron:preview": "cross-env NODE_ENV=production electron .",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "electron:postinstall": "electron-builder install-app-deps",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
     "server": "node server/server.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
     "prepare": "husky"
@@ -103,7 +105,8 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
     "vite": "^5.0.12",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^1.6.1"
   },
   "build": {
     "appId": "com.djadwal.app",

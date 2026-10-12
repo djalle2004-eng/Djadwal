@@ -1,0 +1,33 @@
+version: 2
+updates:
+  # Maintain dependencies for npm / pnpm packages
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "03:00"
+      timezone: "Africa/Algiers"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "safety-net"
+    ignore:
+      - dependency-name: "multer"
+        versions: ["*"]
+        # Controlled migration documented in docs/security-backlog.md
+      - dependency-name: "xlsx"
+        versions: ["*"]
+        # Controlled migration documented in docs/security-backlog.md
+
+  # Maintain GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "03:30"
+      timezone: "Africa/Algiers"
+    labels:
+      - "ci/cd"
+      - "dependencies"

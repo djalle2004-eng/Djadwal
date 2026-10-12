@@ -1,0 +1,35 @@
+# Multi-stage Dockerfile for Djadwal Staging Environment
+FROM node:20-slim AS builder
+
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm@10.33.2
+
+# Copy package manifests and workspace setup
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY apps/ apps/
+COPY packages/ packages/
+COPY tools/ tools/
+
+# Install dependencies and build client bundle
+RUN pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm -r build
+
+# Production runtime stage
+FROM node:20-slim AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=staging
+ENV PORT=5000
+
+COPY package.json pnpm-lock.yaml ./
+COPY server/ server/
+COPY dist/ dist/
+COPY node_modules/ node_modules/
+
+EXPOSE 5000
+
+CMD ["node", "server/server.js"]
