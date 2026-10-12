@@ -14,18 +14,47 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 
+const {
+  isHardeningEnabled,
+  corsMiddleware,
+  helmetMiddleware,
+  permissionsPolicyMiddleware,
+  generalLimiter,
+  sensitiveLimiter,
+  csrfProtectionMiddleware,
+  securityErrorHandler
+} = require('./middleware/security');
+
 // Configuration du serveur
 const app = express();
+app.set('trust proxy', 1);
 const port = process.env.PORT || 3001;
-const upload = multer();
+const upload = multer({
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
+});
 
 const apiRoutes = require('./routes');
 
-// Middleware
-app.use(cors());
+// 1. Cookie Parser (Must be loaded first to provide req.cookies to security middlewares)
 app.use(cookieParser());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// 2. HTTP Security Perimeter
+if (isHardeningEnabled) {
+  app.use(helmetMiddleware);
+  app.use(permissionsPolicyMiddleware);
+  app.use(corsMiddleware);
+  app.use(generalLimiter);
+  app.use('/api/auth', sensitiveLimiter);
+  app.use('/api/generate-pdf', sensitiveLimiter);
+  app.use(csrfProtectionMiddleware);
+} else {
+  app.use(cors());
+}
+
+// 3. Lowered Request Body Limits (256KB)
+const jsonLimit = isHardeningEnabled ? '256kb' : '50mb';
+app.use(express.json({ limit: jsonLimit }));
+app.use(express.urlencoded({ extended: true, limit: jsonLimit }));
 
 // API Routes
 app.use('/api', apiRoutes);
@@ -117,7 +146,9 @@ app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
-// Démarrage du serveur
+// Error handling
+app.use(securityErrorHandler);
+
 // Démarrage du serveur
 if (require.main === module) {
   app.listen(port, () => {

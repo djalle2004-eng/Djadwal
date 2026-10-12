@@ -41,7 +41,8 @@ async function verifyToken(token) {
 
 // Middleware to verify session
 async function requireAuth(req, res, next) {
-    const token = req.cookies.token;
+    // Check hardened __Host-token first, with legacy fallback to token cookie
+    const token = req.cookies['__Host-token'] || req.cookies.token;
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
     const user = await verifyToken(token);
@@ -1007,12 +1008,61 @@ router.post('/auth/login', async (req, res) => {
             user_id: user.id
         });
 
+        // Create session token
+        const token = await createToken({
+            id: user.id,
+            username: user.username,
+            role: user.role
+        });
+
+        const isProduction = process.env.NODE_ENV === 'production';
+        const cookieMaxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+        if (isProduction) {
+            // __Host- prefix guarantees Secure, Path=/, and origin-bound
+            res.cookie('__Host-token', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'strict',
+                path: '/',
+                maxAge: cookieMaxAge
+            });
+
+            // Red Line 2: Legacy fallback cookie for 1 release unless disabled
+            if (process.env.LEGACY_COOKIE_FALLBACK !== 'false') {
+                res.cookie('token', token, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'strict',
+                    path: '/',
+                    maxAge: cookieMaxAge
+                });
+            }
+        } else {
+            // Development cookie (browsers reject __Host- over plain HTTP localhost)
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: false,
+                sameSite: 'lax',
+                path: '/',
+                maxAge: cookieMaxAge
+            });
+        }
+
         // Remove password hash before sending back
         delete user.password_hash;
+        user.token = token;
         res.json(user);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+});
+
+// POST /api/auth/logout - Clear session cookies
+router.post('/auth/logout', (req, res) => {
+    res.clearCookie('__Host-token', { path: '/' });
+    res.clearCookie('token', { path: '/' });
+    res.json({ success: true, message: 'Déconnexion réussie' });
 });
 
 router.get('/users', async (req, res) => {

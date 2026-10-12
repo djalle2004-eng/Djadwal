@@ -4,6 +4,12 @@
 // Utiliser l'URL relative en production, localhost en développement
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api';
 
+function getCsrfToken(): string | null {
+    if (typeof document === 'undefined') return null;
+    const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
 // Helper pour les appels API
 async function fetchApi(endpoint: string, options: RequestInit = {}) {
     const authHeaders: Record<string, string> = {};
@@ -18,6 +24,14 @@ async function fetchApi(endpoint: string, options: RequestInit = {}) {
         }
     } catch (e) {
         // ignore
+    }
+
+    const method = (options.method || 'GET').toUpperCase();
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+        const csrf = getCsrfToken();
+        if (csrf) {
+            authHeaders['x-csrf-token'] = csrf;
+        }
     }
 
     const response = await fetch(`${API_URL}${endpoint}`, {
