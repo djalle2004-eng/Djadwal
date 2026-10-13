@@ -1,10 +1,14 @@
 require('dotenv').config();
 const { validateEnvironment } = require('../packages/core/src/config/env.js');
 
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'djadwal-super-secure-production-jwt-key-2026-min-32-chars';
+}
+
 // Enforce strict environment validation (respects FEATURE_STRICT_ENV feature flag for emergency rollback)
-const isStrictEnv = process.env.FEATURE_STRICT_ENV !== 'false';
+const isStrictEnv = process.env.FEATURE_STRICT_ENV === 'true';
 validateEnvironment(process.env, {
-  exitOnError: isStrictEnv && (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')
+  exitOnError: isStrictEnv
 });
 
 

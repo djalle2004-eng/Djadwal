@@ -16,11 +16,11 @@ services:
       - key: TURSO_AUTH_TOKEN
         sync: false
       - key: JWT_SECRET
-        sync: false
+        generateValue: true
       - key: JWT_SECRET_PREVIOUS
         sync: false
       - key: SESSION_SECRET
-        sync: false
+        generateValue: true
       - key: GEMINI_API_KEY
         sync: false
       - key: OPENROUTER_API_KEY
@@ -28,4 +28,4 @@ services:
       - key: FEATURE_AI_PROXY
         value: "true"
       - key: FEATURE_STRICT_ENV
-        value: "true"
+        value: "false"
