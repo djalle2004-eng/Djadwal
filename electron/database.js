@@ -1233,7 +1233,17 @@ async function login(username, password) {
   const user = users[0];
   console.log('🔑 User found:', { id: user.id, username: user.username, hashPreview: user.password_hash?.substring(0, 20) });
 
-  const isValid = await bcrypt.compare(password, user.password_hash);
+  let isValid = false;
+  if (user.password_hash && user.password_hash.startsWith('$argon2')) {
+    try {
+      const argon2 = require('argon2');
+      isValid = await argon2.verify(user.password_hash, password);
+    } catch (argonErr) {
+      console.error('⚠️ Argon2 verification failed:', argonErr.message);
+    }
+  } else if (user.password_hash) {
+    isValid = await bcrypt.compare(password, user.password_hash);
+  }
   console.log('✅ Password valid:', isValid);
 
   if (!isValid) {

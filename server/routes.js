@@ -225,13 +225,20 @@ async function handleSignin(req, res) {
             rawRefreshToken: session.rawRefreshToken
         });
 
+        const safeUser = {
+            id: user.id,
+            username: user.username || (user.email ? user.email.split('@')[0] : ''),
+            email: user.email || '',
+            role: user.role,
+            full_name: user.full_name || user.username || '',
+            professor_id: user.professor_id || null,
+            is_active: Boolean(user.is_active),
+            created_at: user.created_at || new Date().toISOString()
+        };
+
         res.json({
-            user: {
-                id: user.id,
-                email: user.email,
-                role: user.role,
-                full_name: user.full_name
-            },
+            ...safeUser,
+            user: safeUser,
             sessionId: session.sessionId,
             token: session.accessToken
         });
@@ -321,8 +328,21 @@ router.get('/auth/me', async (req, res) => {
     }
 
     const userId = payload.userId || payload.id;
-    const users = await executeQuery('SELECT id, email, role, full_name, email_verified_at FROM users WHERE id = ?', [userId]);
+    const users = await executeQuery('SELECT id, username, email, role, full_name, email_verified_at FROM users WHERE id = ?', [userId]);
     res.json({ user: users[0] || null });
+});
+
+// User permissions endpoint
+router.get('/users/:id/permissions', async (req, res) => {
+    try {
+        const users = await executeQuery('SELECT permissions FROM users WHERE id = ?', [req.params.id]);
+        if (users.length > 0 && users[0].permissions) {
+            return res.json(users[0].permissions);
+        }
+        res.json(null);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // 5. Devices & Sessions Management (Active Sessions List & Instant Revocation)
