@@ -64,6 +64,10 @@ async function initDatabaseConnection() {
             // Ensure app config table exists
             await ensureAppConfigTable(db);
 
+            // Ensure P4 auth tables exist (sessions, auth_events, invitations, mfa_factors, reset tokens)
+            const { ensureAuthTables } = require('./services/authMigrations');
+            await ensureAuthTables(db);
+
             return db;
         }
         return db;

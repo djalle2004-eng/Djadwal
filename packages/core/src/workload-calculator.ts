@@ -4,7 +4,7 @@
  */
 
 export interface ProfessorAssignment {
-  professor_id: number | string;
+  professor_id?: number | string;
   start_time: string; // "HH:MM"
   end_time: string;   // "HH:MM"
   session_type?: 'cours' | 'td' | 'tp' | string;

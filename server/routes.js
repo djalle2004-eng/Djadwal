@@ -41,12 +41,24 @@ async function verifyToken(token) {
 
 // Middleware to verify session
 async function requireAuth(req, res, next) {
-    // Check hardened __Host-token first, with legacy fallback to token cookie
-    const token = req.cookies['__Host-token'] || req.cookies.token;
+    // Check hardened __Host-token first, with legacy fallback to token cookie and Authorization header
+    const token = req.cookies['__Host-token'] || req.cookies.token || (req.headers.authorization && req.headers.authorization.replace(/^Bearer\s+/, ''));
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
     const user = await verifyToken(token);
     if (!user) return res.status(401).json({ error: 'Invalid token' });
+
+    // P4 check: if token has sessionId, verify session is not revoked in DB
+    if (user.sessionId) {
+        try {
+            const sessions = await executeQuery('SELECT revoked_at, expires_at FROM sessions WHERE id = ?', [user.sessionId]);
+            if (sessions.length === 0 || sessions[0].revoked_at !== null || new Date(sessions[0].expires_at) < new Date()) {
+                return res.status(401).json({ error: 'SESSION_REVOKED', message: 'انتهت صلاحية الجلسة أو تم إلغاؤها' });
+            }
+        } catch (sessionErr) {
+            console.error('Error verifying session revocation:', sessionErr.message);
+        }
+    }
 
     req.user = user;
     next();
@@ -86,12 +98,328 @@ async function logAudit(req, { action, entity_type, entity_id = null, details = 
     }
 }
 
-// --- Auth Routes ---
+// --- P4 Modernized Authentication Engine ---
+const authService = require('./services/auth');
 
+function setAuthCookies(res, { accessToken, rawRefreshToken }) {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const accessCookieName = isProduction ? '__Host-token' : 'token';
+    const refreshCookieName = isProduction ? '__Host-refresh-token' : 'refreshToken';
+
+    // 15 mins Access Token Cookie
+    res.cookie(accessCookieName, accessToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 15 * 60 * 1000 // 15 mins
+    });
+
+    if (isProduction && process.env.LEGACY_COOKIE_FALLBACK !== 'false') {
+        res.cookie('token', accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 15 * 60 * 1000
+        });
+    }
+
+    // 30 days Refresh Token Cookie
+    if (rawRefreshToken) {
+        res.cookie(refreshCookieName, rawRefreshToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: 'strict',
+            path: '/',
+            maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+        });
+    }
+}
+
+function clearAuthCookies(res) {
+    res.clearCookie('token', { path: '/' });
+    res.clearCookie('__Host-token', { path: '/' });
+    res.clearCookie('refreshToken', { path: '/' });
+    res.clearCookie('__Host-refresh-token', { path: '/' });
+}
+
+// 1. Unified Signin / Login Handler
+async function handleSignin(req, res) {
+    try {
+        const loginId = req.body.email || req.body.username;
+        const password = req.body.password;
+        const mfaCode = req.body.mfaCode || req.body.code;
+
+        if (!loginId || !password) {
+            return res.status(400).json({ error: 'البريد الإلكتروني / اسم المستخدم وكلمة المرور مطلوبان' });
+        }
+
+        const ip = req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '';
+        const lockoutKey = `${ip}:${loginId.toLowerCase()}`;
+
+        // Progressive Brute-force Lockout Check
+        const lockout = authService.checkBruteForceLockout(lockoutKey);
+        if (lockout.isLocked) {
+            return res.status(429).json({
+                error: 'ACCOUNT_LOCKED_TEMPORARILY',
+                message: `تم قفل محاولات تسجيل الدخول مؤقتًا بسبب تكرار المحاولات الخاطئة. يرجى المحاولة بعد ${lockout.remainingSeconds} ثانية.`,
+                retryAfter: lockout.remainingSeconds
+            });
+        }
+
+        const users = await executeQuery(
+            'SELECT * FROM users WHERE LOWER(email) = LOWER(?) OR LOWER(username) = LOWER(?)',
+            [loginId, loginId]
+        );
+        const user = users[0];
+
+        // Dual Verification (Argon2id primary, bcrypt fallback)
+        const verification = await authService.verifyPassword(user ? user.password_hash : null, password);
+
+        if (!user || !verification.isValid) {
+            authService.recordFailedAttempt(lockoutKey);
+            await authService.logAuthEvent(user ? user.id : null, 'LOGIN_FAILED', ip, req.headers['user-agent']);
+            return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
+        }
+
+        authService.clearFailedAttempts(lockoutKey);
+
+        if (!user.is_active) {
+            return res.status(403).json({ error: 'Account is disabled' });
+        }
+
+        // Transparent Migration: Upgrade bcrypt to Argon2id automatically
+        if (verification.needsUpgrade) {
+            await authService.upgradePasswordHashIfNeeded(user.id, password, true);
+        }
+
+        // Two-Factor Authentication (MFA / TOTP)
+        const mfaActive = await authService.isMfaEnabled(user.id);
+        if (mfaActive) {
+            if (!mfaCode) {
+                return res.status(200).json({
+                    mfaRequired: true,
+                    userId: user.id,
+                    message: 'يرجى إدخال رمز التحقق الثنائي (TOTP) أو كود الاسترجاع'
+                });
+            }
+
+            const mfaVerify = await authService.verifyMfaChallenge(user.id, mfaCode);
+            if (!mfaVerify.verified) {
+                return res.status(401).json({ error: mfaVerify.error || 'رمز التحقق الثنائي غير صحيح' });
+            }
+        }
+
+        // Issue Session with 15m Access Token + 30d Rotated Refresh Token
+        const session = await authService.createSession({
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+            userAgent: req.headers['user-agent'] || '',
+            ip
+        });
+
+        setAuthCookies(res, {
+            accessToken: session.accessToken,
+            rawRefreshToken: session.rawRefreshToken
+        });
+
+        res.json({
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                full_name: user.full_name
+            },
+            sessionId: session.sessionId,
+            token: session.accessToken
+        });
+    } catch (error) {
+        console.error('Signin error:', error);
+        res.status(500).json({ error: error.message });
+    }
+}
+
+// 2. Unified Signout / Logout Handler
+async function handleSignout(req, res) {
+    try {
+        const rawRefreshToken = req.cookies['__Host-refresh-token'] || req.cookies.refreshToken;
+        if (rawRefreshToken) {
+            const tokenHash = authService.hashTokenSha256(rawRefreshToken);
+            await executeQuery('UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE token_hash = ?', [tokenHash]);
+        }
+
+        if (req.user && req.user.sessionId) {
+            await authService.revokeSession(req.user.sessionId, req.user.userId || req.user.id);
+        }
+
+        clearAuthCookies(res);
+        res.json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
+    } catch (e) {
+        clearAuthCookies(res);
+        res.json({ success: true });
+    }
+}
+
+router.post('/auth/signin', handleSignin);
+router.post('/auth/login', handleSignin);
+router.post('/auth/signout', handleSignout);
+router.post('/auth/logout', handleSignout);
+
+// 3. Refresh Token Endpoint with Reuse Detection (SEC-01)
+router.post('/auth/refresh', async (req, res) => {
+    try {
+        const rawRefreshToken = req.cookies['__Host-refresh-token'] || req.cookies.refreshToken || req.body.refreshToken;
+        const result = await authService.rotateRefreshToken(rawRefreshToken, {
+            userAgent: req.headers['user-agent'] || '',
+            ip: req.ip || ''
+        });
+
+        if (result.error) {
+            clearAuthCookies(res);
+            return res.status(result.status || 401).json({
+                error: result.error,
+                message: result.message || 'فشل تجديد الجلسة'
+            });
+        }
+
+        setAuthCookies(res, {
+            accessToken: result.accessToken,
+            rawRefreshToken: result.rawRefreshToken
+        });
+
+        res.json({
+            success: true,
+            user: result.user,
+            sessionId: result.sessionId,
+            token: result.accessToken
+        });
+    } catch (error) {
+        console.error('Refresh token error:', error);
+        clearAuthCookies(res);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 4. Current User Session Check
+router.get('/auth/me', async (req, res) => {
+    const token = req.cookies['__Host-token'] || req.cookies.token || (req.headers.authorization && req.headers.authorization.replace(/^Bearer\s+/, ''));
+    if (!token) return res.json({ user: null });
+
+    const payload = await verifyToken(token);
+    if (!payload) return res.json({ user: null });
+
+    // Verify session not revoked if sessionId present
+    if (payload.sessionId) {
+        try {
+            const sessions = await executeQuery('SELECT revoked_at FROM sessions WHERE id = ?', [payload.sessionId]);
+            if (sessions.length === 0 || sessions[0].revoked_at !== null) {
+                return res.json({ user: null });
+            }
+        } catch (e) {}
+    }
+
+    const userId = payload.userId || payload.id;
+    const users = await executeQuery('SELECT id, email, role, full_name, email_verified_at FROM users WHERE id = ?', [userId]);
+    res.json({ user: users[0] || null });
+});
+
+// 5. Devices & Sessions Management (Active Sessions List & Instant Revocation)
+router.get('/auth/sessions', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.userId || req.user.id;
+        const sessions = await authService.getUserSessions(userId, req.user.sessionId);
+        res.json({ sessions });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.delete('/auth/sessions/:id', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.userId || req.user.id;
+        await authService.revokeSession(req.params.id, userId);
+        res.json({ success: true, message: 'تم إبطال الجلسة بنجاح' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.delete('/auth/sessions', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.userId || req.user.id;
+        await authService.revokeAllUserSessions(userId, req.user.sessionId);
+        res.json({ success: true, message: 'تم إبطال جميع الجلسات الأخرى بنجاح' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 6. Safe Password Recovery (SEC-04: Uniform response, zero debugToken disclosure)
+router.post('/auth/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const result = await authService.requestPasswordRecovery(email, {
+            ip: req.ip || '',
+            ua: req.headers['user-agent'] || ''
+        });
+
+        // Dispatch Email if mailer configured & internal token exists
+        if (result.internalToken && process.env.EMAIL_USER) {
+            const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5173'}/takleef/reset-password?token=${result.internalToken}`;
+            emailService.sendEmail(
+                email,
+                'استعادة كلمة المرور - منصة التكليف',
+                `<p>لاستعادة كلمة المرور، يرجى النقر على الرابط التالي (صالح لمدة 15 دقيقة فقط):</p><a href="${resetLink}">${resetLink}</a>`
+            ).catch(err => console.error('Error sending reset email:', err.message));
+        }
+
+        // ALWAYS return uniform safe response (Zero debugToken)
+        res.json({
+            success: true,
+            message: 'إذا كان البريد الإلكتروني مسجلاً، فستصلك تعليمات استعادة كلمة المرور.'
+        });
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.json({
+            success: true,
+            message: 'إذا كان البريد الإلكتروني مسجلاً، فستصلك تعليمات استعادة كلمة المرور.'
+        });
+    }
+});
+
+router.post('/auth/reset-password', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        const result = await authService.completePasswordReset(token, newPassword);
+
+        if (!result.success) {
+            return res.status(400).json({ error: result.error });
+        }
+
+        res.json({
+            success: true,
+            message: 'تم تحديث كلمة المرور بنجاح، يمكنك الآن تسجيل الدخول'
+        });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 7. Invitations & Onboarding (SEC-08: Closed Signup behind Feature Flag)
 router.post('/auth/signup', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const isOpenSignup = process.env.FEATURE_OPEN_SIGNUP === 'true';
+        if (!isOpenSignup) {
+            return res.status(403).json({
+                error: 'INVITATION_ONLY',
+                message: 'التسجيل المباشر معطّل. التسجيل متاح حصراً عبر دعوات رسمية من الإدارة.'
+            });
+        }
 
+        const { email, password } = req.body;
         if (!email || !email.endsWith('@univ-eloued.dz')) {
             return res.status(400).json({ error: 'Email must be @univ-eloued.dz' });
         }
@@ -101,126 +429,127 @@ router.post('/auth/signup', async (req, res) => {
             return res.status(400).json({ error: 'Email already exists' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create user
+        const hashedPassword = await authService.hashPassword(password);
         const safeEmail = String(email).trim();
         const result = await executeQuery(
-            "INSERT INTO users (username, email, password_hash, role, is_active) VALUES (?, ?, ?, 'PROFESSOR', 1) RETURNING id, email, role",
+            "INSERT INTO users (username, email, password_hash, role, is_active, email_verified_at) VALUES (?, ?, ?, 'PROFESSOR', 1, CURRENT_TIMESTAMP) RETURNING id, email, role",
             [safeEmail, safeEmail, hashedPassword]
         );
         const user = result[0];
 
-        // Create Professor Profile Placeholder
-        // 'name' is required by legacy Djadwal schema
         await executeQuery(
             "INSERT INTO professors (user_id, name, professional_email, full_name_arabic, full_name_latin, academic_rank, department, primary_phone, phd_specialization) VALUES (?, ?, ?, '', '', '', '', '', '')",
             [user.id, email.split('@')[0], email]
         );
 
-        // Generate Token
-        const token = await createToken({ userId: user.id, email: user.email, role: user.role });
-
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        const session = await authService.createSession({
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+            userAgent: req.headers['user-agent'] || '',
+            ip: req.ip || ''
         });
 
-        res.json({ user });
+        setAuthCookies(res, {
+            accessToken: session.accessToken,
+            rawRefreshToken: session.rawRefreshToken
+        });
+
+        res.json({ user, sessionId: session.sessionId });
     } catch (error) {
         console.error('Signup error:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-router.post('/auth/signin', async (req, res) => {
+// Admin creates invitation
+router.post('/auth/invitations', requireAuth, async (req, res) => {
     try {
-        const { email, password } = req.body;
-
-        const users = await executeQuery('SELECT * FROM users WHERE email = $1', [email]);
-        const user = users[0];
-
-        if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+        const currentUserRole = String(req.user.role || '').toLowerCase();
+        if (currentUserRole !== 'admin') {
+            return res.status(403).json({ error: 'إنشاء الدعوات مقصور على مسؤولي النظام فقط' });
         }
 
-        if (!user.is_active) {
-            return res.status(403).json({ error: 'Account is disabled' });
-        }
-
-        const token = await createToken({ userId: user.id, email: user.email, role: user.role });
-
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        const { email, role = 'PROFESSOR' } = req.body;
+        const invitation = await authService.createInvitation({
+            email,
+            role,
+            invitedBy: req.user.userId || req.user.id
         });
 
-        res.json({ user: { id: user.id, email: user.email, role: user.role } });
+        res.status(201).json({
+            success: true,
+            invitation: {
+                id: invitation.invitationId,
+                email: invitation.email,
+                role: invitation.role,
+                rawToken: invitation.rawToken,
+                expiresAt: invitation.expiresAt
+            }
+        });
     } catch (error) {
-        console.error('Signin error:', error);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// User accepts invitation
+router.post('/auth/accept-invitation', async (req, res) => {
+    try {
+        const { token, password, fullName } = req.body;
+        const user = await authService.acceptInvitation({
+            rawToken: token,
+            password,
+            fullName
+        });
+
+        res.json({
+            success: true,
+            user,
+            message: 'تم تفعيل الحساب بنجاح، يمكنك الآن تسجيل الدخول'
+        });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// 8. Multi-Factor Authentication (MFA / TOTP) Endpoints
+router.post('/auth/mfa/setup', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.userId || req.user.id;
+        const setup = await authService.setupMfa(userId, req.user.email);
+        res.json({
+            success: true,
+            secret: setup.secret,
+            otpAuthUri: setup.otpAuthUri,
+            backupCodes: setup.backupCodes
+        });
+    } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-router.post('/auth/signout', (req, res) => {
-    res.clearCookie('token');
-    res.json({ success: true });
-});
-
-router.get('/auth/me', async (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.json({ user: null });
-
-    const payload = await verifyToken(token);
-    if (!payload) return res.json({ user: null });
-
-    const users = await executeQuery('SELECT id, email, role FROM users WHERE id = $1', [payload.userId]);
-    res.json({ user: users[0] || null });
-});
-
-router.post('/auth/forgot-password', async (req, res) => {
+router.post('/auth/mfa/enable', requireAuth, async (req, res) => {
     try {
-        const { email } = req.body;
-        const users = await executeQuery('SELECT * FROM users WHERE email = $1', [email]);
-        const user = users[0];
-
-        if (!user) return res.json({ success: true }); // Silent fail for security
-
-        // Generate Token
-        const token = require('crypto').randomBytes(32).toString('hex');
-        const expiresAt = new Date(Date.now() + 3600000); // 1 hour
-
-        await executeQuery(
-            'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
-            [user.id, token, expiresAt.toISOString()] // ISO string for SQLite/Turso
-        );
-
-        // Send Email (if configured)
-        const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:5173'}/takleef/reset-password?token=${token}`;
-
-        if (process.env.EMAIL_USER) {
-            await emailService.sendEmail(
-                email,
-                'استعادة كلمة المرور - منصة التكليف',
-                `<p>لاستعادة كلمة المرور، يرجى النقر على الرابط التالي:</p><a href="${resetLink}">${resetLink}</a>`
-            );
-        } else {
-            // For dev without email service, maybe log it or return it?
-            // Returning it in dev mode only
-            if (process.env.NODE_ENV !== 'production') {
-                return res.json({ success: true, debugToken: token, debugLink: resetLink });
-            }
+        const userId = req.user.userId || req.user.id;
+        const { code, secret, backupCodes } = req.body;
+        const result = await authService.enableMfa(userId, code, secret, backupCodes);
+        if (!result.success) {
+            return res.status(400).json({ error: result.error });
         }
-
-        res.json({ success: true });
-
+        res.json({ success: true, message: 'تم تفعيل المصادقة الثنائية (TOTP) بنجاح' });
     } catch (error) {
-        console.error('Forgot password error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/auth/mfa/disable', requireAuth, async (req, res) => {
+    try {
+        const userId = req.user.userId || req.user.id;
+        await executeQuery('DELETE FROM mfa_factors WHERE user_id = ?', [userId]);
+        await authService.logAuthEvent(userId, 'MFA_DISABLED', req.ip, req.headers['user-agent']);
+        res.json({ success: true, message: 'تم تعطيل المصادقة الثنائية' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -1892,8 +2221,10 @@ router.post('/ai/assist', async (req, res) => {
 router._authHelpers = {
     createToken,
     verifyToken,
-    requireAuth
+    requireAuth,
+    authService
 };
+
 
 
 module.exports = router;
