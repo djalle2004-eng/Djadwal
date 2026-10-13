@@ -31,7 +31,7 @@
     "@emotion/styled": "^11.14.1",
     "@google-cloud/local-auth": "^3.0.1",
     "@google/generative-ai": "^0.22.0",
-    "@libsql/client": "^0.14.0",
+    "@libsql/client": "^0.18.0",
     "@mui/icons-material": "^6.5.0",
     "@mui/material": "^6.5.0",
     "@mui/x-data-grid": "^7.22.2",
