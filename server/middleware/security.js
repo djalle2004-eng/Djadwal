@@ -153,11 +153,16 @@ function csrfProtectionMiddleware(req, res, next) {
     return next();
   }
 
-  // 3. Exempted paths (OAuth callbacks, initial login without prior cookie, public status)
+  // 3. Exempted paths (OAuth callbacks, initial unauthenticated entry points, public status)
   const exemptedPaths = [
     '/api/email/oauth2callback',
     '/api/status',
-    '/api/auth/login' // Login establishes session; protected by rate limiter
+    '/api/auth/login',
+    '/api/auth/signin',
+    '/api/auth/signup',
+    '/api/auth/forgot-password',
+    '/api/auth/reset-password',
+    '/api/auth/accept-invitation'
   ];
 
   if (exemptedPaths.some(p => req.path.startsWith(p))) {

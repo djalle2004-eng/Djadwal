@@ -41,6 +41,7 @@
     "@types/pdfkit": "^0.13.9",
     "ag-grid-community": "^34.3.0",
     "ag-grid-react": "^34.3.0",
+    "argon2": "^0.45.1",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^11.9.1",

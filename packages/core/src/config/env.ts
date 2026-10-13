@@ -49,7 +49,21 @@ export const envSchema = z.object({
     .preprocess(val => val === 'true' || val === true || val === '1' || val === undefined, z.boolean())
     .default(true),
   PDF_POOL_SIZE: z.coerce.number().min(1).max(10).default(2),
-  PDF_RENDER_TIMEOUT_MS: z.coerce.number().min(1000).max(60000).default(15000)
+  PDF_RENDER_TIMEOUT_MS: z.coerce.number().min(1000).max(60000).default(15000),
+
+  // P4: Modernized Authentication & Revocable Sessions Flags
+  FEATURE_NEW_AUTH: z
+    .preprocess(val => val === 'true' || val === true || val === '1' || val === undefined, z.boolean())
+    .default(true),
+  FEATURE_OPEN_SIGNUP: z
+    .preprocess(val => val === 'true' || val === true || val === '1', z.boolean())
+    .default(false),
+  FEATURE_MFA: z
+    .preprocess(val => val === 'true' || val === true || val === '1' || val === undefined, z.boolean())
+    .default(true),
+  ARGON2_MEMORY_COST: z.coerce.number().default(19456),
+  ARGON2_TIME_COST: z.coerce.number().default(2),
+  ARGON2_PARALLELISM: z.coerce.number().default(1)
 });
 
 export type ValidatedEnv = z.infer<typeof envSchema>;
