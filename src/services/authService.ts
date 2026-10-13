@@ -9,7 +9,8 @@ export const login = async (credentials: LoginCredentials): Promise<{ user: User
       throw new Error('Authentication service not available');
     }
 
-    const user = await window.db.login(credentials.username, credentials.password);
+    const rawUser = await window.db.login(credentials.username, credentials.password);
+    const user = rawUser?.user && rawUser.user.id ? { ...rawUser, ...rawUser.user } : rawUser;
     
     if (user && user.id) {
       // تحميل الصلاحيات المخصصة من قاعدة البيانات

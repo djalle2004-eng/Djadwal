@@ -186,10 +186,13 @@ export const webClient = {
     getTimeSlots: () => fetchApi('/time-slots'),
 
     // --- Auth & Users ---
-    login: (username, password) => fetchApi('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ username, password })
-    }),
+    login: async (username, password) => {
+        const res = await fetchApi('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ username, password })
+        });
+        return res?.user ? { ...res, ...res.user } : res;
+    },
     logout: (userId) => Promise.resolve(true), // Client-side logout mostly
     getUsers: () => fetchApi('/users'),
     addUser: (userData) => fetchApi('/users', {
