@@ -4,6 +4,12 @@
 // Utiliser l'URL relative en production, localhost en développement
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api';
 
+function getCsrfToken(): string | null {
+    if (typeof document === 'undefined') return null;
+    const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
 // Helper pour les appels API
 async function fetchApi(endpoint: string, options: RequestInit = {}) {
     const authHeaders: Record<string, string> = {};
@@ -18,6 +24,14 @@ async function fetchApi(endpoint: string, options: RequestInit = {}) {
         }
     } catch (e) {
         // ignore
+    }
+
+    const method = (options.method || 'GET').toUpperCase();
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+        const csrf = getCsrfToken();
+        if (csrf) {
+            authHeaders['x-csrf-token'] = csrf;
+        }
     }
 
     const response = await fetch(`${API_URL}${endpoint}`, {
@@ -294,13 +308,21 @@ export const webDataUtils = {
             input.click();
         });
     },
-    generatePDF: async (htmlContent, options) => {
+    generatePDF: async (htmlContent: string, options: any) => {
+        const csrf = getCsrfToken();
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (csrf) headers['x-csrf-token'] = csrf;
+
         const response = await fetch(`${API_URL}/generate-pdf`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            headers,
             body: JSON.stringify({ html: htmlContent, options })
         });
-        if (!response.ok) throw new Error('PDF Generation failed');
+        if (!response.ok) {
+            const errJson = await response.json().catch(() => ({}));
+            throw new Error(errJson.error || 'PDF Generation failed');
+        }
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -310,6 +332,7 @@ export const webDataUtils = {
         a.click();
         document.body.removeChild(a);
     },
+
     getPrintSettings: async () => {
         try {
             return await fetchApi('/print-settings', { method: 'GET' });
