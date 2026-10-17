@@ -68,6 +68,9 @@ async function initDatabaseConnection() {
             const { ensureAuthTables } = require('./services/authMigrations');
             await ensureAuthTables(db);
 
+            // Ensure P5 audit log cryptographic chain columns exist
+            await ensureAuditLogHardening(db);
+
             return db;
         }
         return db;
@@ -143,6 +146,55 @@ async function ensureAppConfigTable(database) {
         } else {
             console.error('⚠️ Error checking app_config table:', error);
         }
+    }
+}
+
+// Ensure audit_log table and P5 cryptographic chain columns exist
+async function ensureAuditLogHardening(database) {
+    try {
+        await database.sql(`
+            CREATE TABLE IF NOT EXISTS audit_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                action TEXT NOT NULL,
+                entity_type TEXT,
+                entity_id INTEGER,
+                details TEXT,
+                ip_address TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                prev_hash TEXT DEFAULT '0000000000000000000000000000000000000000000000000000000000000000',
+                row_hash TEXT,
+                claimed_by TEXT
+            )
+        `);
+
+        // Check if prev_hash column exists, if not add it (Expand pattern)
+        try {
+            await database.sql('SELECT prev_hash FROM audit_log LIMIT 1');
+        } catch (colErr) {
+            console.log('ℹ️ Adding prev_hash column to audit_log...');
+            await database.sql("ALTER TABLE audit_log ADD COLUMN prev_hash TEXT DEFAULT '0000000000000000000000000000000000000000000000000000000000000000'");
+        }
+
+        try {
+            await database.sql('SELECT row_hash FROM audit_log LIMIT 1');
+        } catch (colErr) {
+            console.log('ℹ️ Adding row_hash column to audit_log...');
+            await database.sql("ALTER TABLE audit_log ADD COLUMN row_hash TEXT");
+        }
+
+        try {
+            await database.sql('SELECT claimed_by FROM audit_log LIMIT 1');
+        } catch (colErr) {
+            console.log('ℹ️ Adding claimed_by column to audit_log...');
+            await database.sql("ALTER TABLE audit_log ADD COLUMN claimed_by TEXT");
+        }
+
+        await database.sql('CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at DESC)');
+        await database.sql('CREATE INDEX IF NOT EXISTS idx_audit_user_id ON audit_log(user_id)');
+        console.log('🔒 [AuditHardening] audit_log tamper-evident hash chain columns verified');
+    } catch (err) {
+        console.error('⚠️ Error ensuring audit_log hardening:', err.message);
     }
 }
 

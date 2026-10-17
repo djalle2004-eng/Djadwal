@@ -63,7 +63,17 @@ export const envSchema = z.object({
     .default(true),
   ARGON2_MEMORY_COST: z.coerce.number().default(19456),
   ARGON2_TIME_COST: z.coerce.number().default(2),
-  ARGON2_PARALLELISM: z.coerce.number().default(1)
+  ARGON2_PARALLELISM: z.coerce.number().default(1),
+
+  // P5: Server Authorization (RBAC) & Tamper-Evident Audit Chain Flags
+  FEATURE_RBAC: z
+    .preprocess(val => val === 'true' || val === true || val === '1' || val === undefined, z.boolean())
+    .default(true),
+  RBAC_EXEMPTIONS: z.string().optional().default(''),
+  METRICS_SINK: z.string().optional(),
+  FEATURE_AUDIT_HASH_CHAIN: z
+    .preprocess(val => val === 'true' || val === true || val === '1' || val === undefined, z.boolean())
+    .default(true)
 });
 
 export type ValidatedEnv = z.infer<typeof envSchema>;
