@@ -23,6 +23,9 @@ const PUBLIC_VIEW_RESOURCES = new Set([
     'print_settings'
 ]);
 
+// Fast in-memory cache for user database lookups (reduces remote cloud latency)
+const userCache = new Map();
+
 async function verifyTokenFallback(token) {
     try {
         const { payload } = await jwtVerify(token, JWT_SECRET);
@@ -84,7 +87,12 @@ function authorize(resource, action, options = {}) {
             return next();
         }
 
-        // 3. Ensure user identity is authenticated
+        // 3. Early Bypass for public read-only pedagogical timetable views (Zero database overhead)
+        if (action === 'view' && PUBLIC_VIEW_RESOURCES.has(resource)) {
+            return next();
+        }
+
+        // 4. Ensure user identity is authenticated for restricted or mutating operations
         if (!req.user) {
             const token = req.cookies?.['__Host-token'] || 
                           req.cookies?.token || 
@@ -97,32 +105,39 @@ function authorize(resource, action, options = {}) {
             }
         }
 
-        // 3.1 Fallback for client transition: if req.user is missing but x-user-id header is provided
+        // 4.1 Fallback for client transition with fast in-memory TTL cache
         if (!req.user && req.headers?.['x-user-id']) {
-            try {
-                const uRows = await executeQuery(
-                    'SELECT id, username, role, is_active FROM users WHERE id = ? AND is_active = 1',
-                    [req.headers['x-user-id']]
-                );
-                if (uRows && uRows.length > 0) {
-                    req.user = {
-                        id: uRows[0].id,
-                        userId: uRows[0].id,
-                        username: uRows[0].username,
-                        role: uRows[0].role
-                    };
+            const requestedUserId = req.headers['x-user-id'];
+            const cached = userCache.get(requestedUserId);
+            if (cached && cached.expiresAt > Date.now()) {
+                req.user = cached.user;
+            } else {
+                try {
+                    const uRows = await executeQuery(
+                        'SELECT id, username, role, is_active FROM users WHERE id = ? AND is_active = 1',
+                        [requestedUserId]
+                    );
+                    if (uRows && uRows.length > 0) {
+                        const resolvedUser = {
+                            id: uRows[0].id,
+                            userId: uRows[0].id,
+                            username: uRows[0].username,
+                            role: uRows[0].role
+                        };
+                        userCache.set(requestedUserId, {
+                            user: resolvedUser,
+                            expiresAt: Date.now() + 60000 // 60s cache
+                        });
+                        req.user = resolvedUser;
+                    }
+                } catch (dbErr) {
+                    // ignore
                 }
-            } catch (dbErr) {
-                // ignore
             }
         }
 
-        // 3.2 If user is unauthenticated:
+        // 4.2 If user is unauthenticated for protected/mutating operation:
         if (!req.user) {
-            // Allow public read-only pedagogical timetable views without blocking frontend dashboard/schedules
-            if (action === 'view' && PUBLIC_VIEW_RESOURCES.has(resource)) {
-                return next();
-            }
             return res.status(401).json({
                 error: 'UNAUTHORIZED',
                 message: 'المصادقة مطلوبة للوصول إلى هذا المورد'

@@ -195,7 +195,9 @@ export default function Dashboard() {
           window.db.getProfessors(),
           window.db.getCourses(),
           window.db.getRooms(),
-          window.db.getAssignments(),
+          currentYear?.year_name && currentSemester?.semester_name
+            ? window.db.getAssignments(currentYear.year_name, currentSemester.semester_name)
+            : window.db.getAssignments(),
           window.db.getGroups(),
           window.db.getDepartments(),
           window.db.getExtraSessions(),

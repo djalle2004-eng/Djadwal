@@ -22,62 +22,87 @@ logger.info({
 }, 'Database configuration initialized');
 
 let db = null;
+let initPromise = null;
+let schemaVerified = false;
 
-// Initialiser la connexion à la base de données
+// Initialiser la connexion à la base de données (avec verrou d'initialisation pour éviter les vérifications concurrentes)
 async function initDatabaseConnection() {
-    try {
-        if (!db) {
-            logger.info('Initializing database connection');
+    if (db && schemaVerified) {
+        return db;
+    }
+    if (initPromise) {
+        return initPromise;
+    }
 
-            if (!dbConfig.url || !dbConfig.authToken) {
-                throw new Error('Turso configuration is missing! Please check .env file.');
+    initPromise = (async () => {
+        try {
+            if (!db) {
+                logger.info('Initializing database connection');
+
+                if (!dbConfig.url || !dbConfig.authToken) {
+                    throw new Error('Turso configuration is missing! Please check .env file.');
+                }
+
+                const tursoClient = createClient({
+                    url: dbConfig.url,
+                    authToken: dbConfig.authToken
+                });
+
+                // Wrap Turso client to match expected API
+                db = {
+                    sql: async (query, params = []) => {
+                        const result = await tursoClient.execute({
+                            sql: query,
+                            args: params
+                        });
+                        return result.rows;
+                    },
+                    close: () => tursoClient.close(),
+                    raw: tursoClient
+                };
+
+                // Test connection
+                await db.sql('SELECT 1 as test', []);
+                logger.info('Database connected successfully');
             }
 
-            const tursoClient = createClient({
-                url: dbConfig.url,
-                authToken: dbConfig.authToken
-            });
+            if (!schemaVerified) {
+                // Ensure sandbox table exists
+                await ensureSandboxTable(db);
 
-            // Wrap Turso client to match expected API
-            db = {
-                sql: async (query, params = []) => {
-                    const result = await tursoClient.execute({
-                        sql: query,
-                        args: params
-                    });
-                    return result.rows;
-                },
-                close: () => tursoClient.close(),
-                raw: tursoClient
-            };
+                // Ensure semester visibility column exists
+                await ensureSemesterPublicColumn(db);
 
-            // Test connection
-            await db.sql('SELECT 1 as test', []);
-            logger.info('Database connected successfully');
+                // Ensure app config table exists
+                await ensureAppConfigTable(db);
 
-            // Ensure sandbox table exists
-            await ensureSandboxTable(db);
+                // Ensure P4 auth tables exist (sessions, auth_events, invitations, mfa_factors, reset tokens)
+                const { ensureAuthTables } = require('./services/authMigrations');
+                await ensureAuthTables(db);
 
-            // Ensure semester visibility column exists
-            await ensureSemesterPublicColumn(db);
+                // Ensure P5 audit log cryptographic chain columns exist
+                await ensureAuditLogHardening(db);
 
-            // Ensure app config table exists
-            await ensureAppConfigTable(db);
+                // Ensure high-performance composite indexes for fast timetable reading
+                try {
+                    await db.sql('CREATE INDEX IF NOT EXISTS idx_assignments_year_sem ON assignments(academic_year, semester)');
+                    await db.sql('CREATE INDEX IF NOT EXISTS idx_extra_sessions_date ON extra_sessions(session_date)');
+                } catch (idxErr) {
+                    // ignore
+                }
 
-            // Ensure P4 auth tables exist (sessions, auth_events, invitations, mfa_factors, reset tokens)
-            const { ensureAuthTables } = require('./services/authMigrations');
-            await ensureAuthTables(db);
-
-            // Ensure P5 audit log cryptographic chain columns exist
-            await ensureAuditLogHardening(db);
+                schemaVerified = true;
+            }
 
             return db;
+        } catch (error) {
+            logger.error({ err: error.message }, 'Database connection failed');
+            initPromise = null;
+            throw error;
         }
-        return db;
-    } catch (error) {
-        logger.error({ err: error.message }, 'Database connection failed');
-        throw error;
-    }
+    })();
+
+    return initPromise;
 }
 
 // Ensure sandbox_snapshots table exists

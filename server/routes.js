@@ -663,9 +663,34 @@ router.post('/preferences', requireAuth, async (req, res) => {
     }
 });
 
+// --- High-Performance In-Memory Read Cache for Pedagogical Data ---
+const routeCache = new Map();
+
+function getCached(key) {
+    const entry = routeCache.get(key);
+    if (entry && entry.expiresAt > Date.now()) {
+        return entry.data;
+    }
+    return null;
+}
+
+function setCached(key, data, ttlMs = 60000) {
+    routeCache.set(key, { data, expiresAt: Date.now() + ttlMs });
+}
+
+function clearCache(prefix) {
+    for (const k of routeCache.keys()) {
+        if (k.startsWith(prefix)) routeCache.delete(k);
+    }
+}
+
 router.get('/departments', authorize('departments', 'view'), async (req, res) => {
     try {
+        const cached = getCached('departments');
+        if (cached) return res.json(cached);
+
         const result = await executeQuery('SELECT * FROM departments ORDER BY name');
+        setCached('departments', result, 60000);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -676,6 +701,7 @@ router.post('/departments', authorize('departments', 'create'), async (req, res)
     try {
         const { name, code } = req.body;
         const result = await executeQuery('INSERT INTO departments (name, code) VALUES ($1, $2) RETURNING *', [name, code]);
+        clearCache('departments');
         await logAudit(req, { action: 'create', entity_type: 'department', entity_id: result[0]?.id, details: `إضافة قسم: ${name}` });
         res.json(result[0]);
     } catch (error) {
@@ -688,6 +714,7 @@ router.put('/departments/:id', authorize('departments', 'update'), async (req, r
         const { name, code } = req.body;
         const { id } = req.params;
         const result = await executeQuery('UPDATE departments SET name = $1, code = $2 WHERE id = $3 RETURNING *', [name, code, id]);
+        clearCache('departments');
         await logAudit(req, { action: 'update', entity_type: 'department', entity_id: id, details: `تعديل قسم: ${name}` });
         res.json(result[0]);
     } catch (error) {
@@ -699,6 +726,7 @@ router.delete('/departments/:id', authorize('departments', 'delete'), async (req
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM departments WHERE id = $1', [id]);
+        clearCache('departments');
         await logAudit(req, { action: 'delete', entity_type: 'department', entity_id: id, details: `حذف قسم رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
@@ -709,7 +737,11 @@ router.delete('/departments/:id', authorize('departments', 'delete'), async (req
 // --- Professors ---
 router.get('/professors', authorize('professors', 'view'), async (req, res) => {
     try {
+        const cached = getCached('professors');
+        if (cached) return res.json(cached);
+
         const result = await executeQuery('SELECT * FROM professors ORDER BY name');
+        setCached('professors', result, 60000);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -728,6 +760,7 @@ router.post('/professors', authorize('professors', 'create'), async (req, res) =
             'INSERT INTO professors (name, email, phone, title, academic_title) VALUES ($1, $2, $3, $4, $5) RETURNING *',
             [name, email, phone, title, academic_title]
         );
+        clearCache('professors');
         await logAudit(req, { action: 'create', entity_type: 'professor', entity_id: result[0]?.id, details: `إضافة أستاذ: ${name}` });
         res.json(result[0]);
     } catch (error) {
@@ -748,6 +781,7 @@ router.put('/professors/:id', authorize('professors', 'update'), async (req, res
             'UPDATE professors SET name = $1, email = $2, phone = $3, title = $4, academic_title = $5 WHERE id = $6 RETURNING *',
             [name, email, phone, title, academic_title, id]
         );
+        clearCache('professors');
         await logAudit(req, { action: 'update', entity_type: 'professor', entity_id: id, details: `تعديل أستاذ: ${name}` });
         res.json(result[0]);
     } catch (error) {
@@ -759,6 +793,7 @@ router.delete('/professors/:id', authorize('professors', 'delete'), async (req, 
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM professors WHERE id = $1', [id]);
+        clearCache('professors');
         await logAudit(req, { action: 'delete', entity_type: 'professor', entity_id: id, details: `حذف أستاذ رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
@@ -769,7 +804,11 @@ router.delete('/professors/:id', authorize('professors', 'delete'), async (req, 
 // --- Rooms ---
 router.get('/rooms', authorize('rooms', 'view'), async (req, res) => {
     try {
+        const cached = getCached('rooms');
+        if (cached) return res.json(cached);
+
         const result = await executeQuery('SELECT * FROM rooms ORDER BY name');
+        setCached('rooms', result, 60000);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -780,6 +819,7 @@ router.post('/rooms', authorize('rooms', 'create'), async (req, res) => {
     try {
         const { name, capacity } = req.body;
         const result = await executeQuery('INSERT INTO rooms (name, capacity) VALUES ($1, $2) RETURNING *', [name, capacity]);
+        clearCache('rooms');
         await logAudit(req, { action: 'create', entity_type: 'room', entity_id: result[0]?.id, details: `إضافة قاعة: ${name} (سعة: ${capacity || 0})` });
         res.json(result[0]);
     } catch (error) {
@@ -792,6 +832,7 @@ router.put('/rooms/:id', authorize('rooms', 'update'), async (req, res) => {
         const { name, capacity } = req.body;
         const { id } = req.params;
         const result = await executeQuery('UPDATE rooms SET name = $1, capacity = $2 WHERE id = $3 RETURNING *', [name, capacity, id]);
+        clearCache('rooms');
         await logAudit(req, { action: 'update', entity_type: 'room', entity_id: id, details: `تعديل قاعة: ${name}` });
         res.json(result[0]);
     } catch (error) {
@@ -803,6 +844,7 @@ router.delete('/rooms/:id', authorize('rooms', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM rooms WHERE id = $1', [id]);
+        clearCache('rooms');
         await logAudit(req, { action: 'delete', entity_type: 'room', entity_id: id, details: `حذف قاعة رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
@@ -813,7 +855,11 @@ router.delete('/rooms/:id', authorize('rooms', 'delete'), async (req, res) => {
 // --- Courses ---
 router.get('/courses', authorize('courses', 'view'), async (req, res) => {
     try {
+        const cached = getCached('courses');
+        if (cached) return res.json(cached);
+
         const result = await executeQuery('SELECT * FROM courses ORDER BY name');
+        setCached('courses', result, 60000);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -824,6 +870,7 @@ router.post('/courses', authorize('courses', 'create'), async (req, res) => {
     try {
         const { name, code, metadata } = req.body;
         const result = await executeQuery('INSERT INTO courses (name, code, metadata) VALUES ($1, $2, $3) RETURNING *', [name, code, metadata]);
+        clearCache('courses');
         await logAudit(req, { action: 'create', entity_type: 'course', entity_id: result[0]?.id, details: `إضافة مقياس: ${name} (${code || ''})` });
         res.json(result[0]);
     } catch (error) {
@@ -836,6 +883,7 @@ router.put('/courses/:id', authorize('courses', 'update'), async (req, res) => {
         const { name, code, metadata } = req.body;
         const { id } = req.params;
         const result = await executeQuery('UPDATE courses SET name = $1, code = $2, metadata = $3 WHERE id = $4 RETURNING *', [name, code, metadata, id]);
+        clearCache('courses');
         await logAudit(req, { action: 'update', entity_type: 'course', entity_id: id, details: `تعديل مقياس: ${name}` });
         res.json(result[0]);
     } catch (error) {
@@ -847,6 +895,7 @@ router.delete('/courses/:id', authorize('courses', 'delete'), async (req, res) =
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM courses WHERE id = $1', [id]);
+        clearCache('courses');
         await logAudit(req, { action: 'delete', entity_type: 'course', entity_id: id, details: `حذف مقياس رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
@@ -857,7 +906,11 @@ router.delete('/courses/:id', authorize('courses', 'delete'), async (req, res) =
 // --- Groups ---
 router.get('/groups', authorize('groups', 'view'), async (req, res) => {
     try {
+        const cached = getCached('groups');
+        if (cached) return res.json(cached);
+
         const result = await executeQuery('SELECT * FROM groups ORDER BY name');
+        setCached('groups', result, 60000);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -871,6 +924,7 @@ router.post('/groups', authorize('groups', 'create'), async (req, res) => {
             'INSERT INTO groups (name, department_id, group_type, specialization, parent_group_id, year) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
             [name, department_id, group_type, specialization, parent_group_id, year]
         );
+        clearCache('groups');
         await logAudit(req, { action: 'create', entity_type: 'group', entity_id: result[0]?.id, details: `إضافة فوج: ${name} (${specialization || ''})` });
         res.json(result[0]);
     } catch (error) {
@@ -886,6 +940,7 @@ router.put('/groups/:id', authorize('groups', 'update'), async (req, res) => {
             'UPDATE groups SET name = $1, department_id = $2, group_type = $3, specialization = $4, parent_group_id = $5, year = $6 WHERE id = $7 RETURNING *',
             [name, department_id, group_type, specialization, parent_group_id, year, id]
         );
+        clearCache('groups');
         await logAudit(req, { action: 'update', entity_type: 'group', entity_id: id, details: `تعديل فوج: ${name}` });
         res.json(result[0]);
     } catch (error) {
@@ -897,6 +952,7 @@ router.delete('/groups/:id', authorize('groups', 'delete'), async (req, res) => 
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM groups WHERE id = $1', [id]);
+        clearCache('groups');
         await logAudit(req, { action: 'delete', entity_type: 'group', entity_id: id, details: `حذف فوج رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
