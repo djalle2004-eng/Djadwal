@@ -39,22 +39,52 @@ async function fetchApi(endpoint: string, options: RequestInit = {}) {
         }
     }
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-            ...authHeaders,
-            ...options.headers,
-        },
-        ...options,
-    });
+    const maxAttempts = (method === 'GET' || method === 'HEAD') ? 3 : 2;
+    let lastError: any = null;
 
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(error.error || `API Error: ${response.statusText}`);
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            const response = await fetch(`${API_URL}${endpoint}`, {
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...authHeaders,
+                    ...options.headers,
+                },
+                ...options,
+            });
+
+            if (!response.ok) {
+                // If it's a 502/503/504 edge/proxy hiccup, retry if attempts remain
+                if ([502, 503, 504].includes(response.status) && attempt < maxAttempts) {
+                    await new Promise(r => setTimeout(r, attempt * 300));
+                    continue;
+                }
+                const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+                throw new Error(error.error || `API Error: ${response.statusText}`);
+            }
+
+            return await response.json();
+        } catch (err: any) {
+            lastError = err;
+            const msg = String(err?.message || '').toLowerCase();
+            const isNetworkError =
+                !err?.message ||
+                err?.name === 'TypeError' ||
+                msg.includes('fetch') ||
+                msg.includes('failed to fetch') ||
+                msg.includes('network') ||
+                msg.includes('connection');
+
+            if (isNetworkError && attempt < maxAttempts) {
+                await new Promise(r => setTimeout(r, attempt * 300));
+                continue;
+            }
+            throw err;
+        }
     }
 
-    return response.json();
+    throw lastError || new Error('Network request failed');
 }
 
 export const webClient = {

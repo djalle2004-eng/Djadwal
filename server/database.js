@@ -24,6 +24,62 @@ logger.info({
 let db = null;
 let initPromise = null;
 let schemaVerified = false;
+let keepAliveTimer = null;
+
+// Vérifier si une erreur est due à une perte de connexion réseau/Turso
+function isConnectionError(err) {
+    if (!err) return false;
+    const msg = String(err.message || err).toLowerCase();
+    const code = String(err.code || '').toLowerCase();
+    return (
+        msg.includes('fetch failed') ||
+        msg.includes('network') ||
+        msg.includes('econnreset') ||
+        msg.includes('etimedout') ||
+        msg.includes('connection closed') ||
+        msg.includes('connection reset') ||
+        msg.includes('socket hang up') ||
+        msg.includes('stream closed') ||
+        msg.includes('websocket is closed') ||
+        msg.includes('websocket closed') ||
+        msg.includes('tls') ||
+        msg.includes('client closed') ||
+        msg.includes('bad gateway') ||
+        msg.includes('502') ||
+        msg.includes('503') ||
+        msg.includes('504') ||
+        msg.includes('econnrefused') ||
+        msg.includes('ehostunreach') ||
+        msg.includes('server closed the connection') ||
+        code === 'econnreset' ||
+        code === 'etimedout' ||
+        code === 'econnrefused'
+    );
+}
+
+// Maintenir la connexion active pour empêcher la fermeture par inactivité côté proxy/cloud
+function startKeepAlive() {
+    if (keepAliveTimer) return;
+    keepAliveTimer = setInterval(async () => {
+        try {
+            if (db) {
+                await db.sql('SELECT 1 as keepalive');
+            }
+        } catch (err) {
+            if (isConnectionError(err)) {
+                logger.warn({ err: err.message }, 'Keepalive ping detected dropped database connection. Resetting connection handle.');
+                try {
+                    if (db && typeof db.close === 'function') db.close();
+                } catch (_) {}
+                db = null;
+                initPromise = null;
+            }
+        }
+    }, 45000);
+    if (keepAliveTimer.unref) {
+        keepAliveTimer.unref();
+    }
+}
 
 // Initialiser la connexion à la base de données (avec verrou d'initialisation pour éviter les vérifications concurrentes)
 async function initDatabaseConnection() {
@@ -64,6 +120,7 @@ async function initDatabaseConnection() {
                 // Test connection
                 await db.sql('SELECT 1 as test', []);
                 logger.info('Database connected successfully');
+                startKeepAlive();
             }
 
             if (!schemaVerified) {
@@ -97,8 +154,11 @@ async function initDatabaseConnection() {
             return db;
         } catch (error) {
             logger.error({ err: error.message }, 'Database connection failed');
+            db = null;
             initPromise = null;
             throw error;
+        } finally {
+            initPromise = null;
         }
     })();
 
@@ -223,33 +283,59 @@ async function ensureAuditLogHardening(database) {
     }
 }
 
-// Exécuter une requête
-async function executeQuery(query, params = []) {
-    try {
-        if (!db) {
-            await initDatabaseConnection();
+// Exécuter une requête avec reconnexion automatique et résilience aux déconnexions
+async function executeQuery(query, params = [], maxRetries = 3) {
+    // Convert PostgreSQL placeholders ($1, $2, ...) to SQLite placeholders (?)
+    let sqliteQuery = query;
+    const cleanParams = params.map(p => p === undefined ? null : p);
+
+    // Replace $1, $2, etc. with ?
+    if (query.includes('$')) {
+        let index = 1;
+        while (sqliteQuery.includes(`$${index}`)) {
+            sqliteQuery = sqliteQuery.replace(`$${index}`, '?');
+            index++;
         }
-
-        // Convert PostgreSQL placeholders ($1, $2, ...) to SQLite placeholders (?)
-        let sqliteQuery = query;
-        const cleanParams = params.map(p => p === undefined ? null : p);
-
-        // Replace $1, $2, etc. with ?
-        if (query.includes('$')) {
-            let index = 1;
-            while (sqliteQuery.includes(`$${index}`)) {
-                sqliteQuery = sqliteQuery.replace(`$${index}`, '?');
-                index++;
-            }
-        }
-
-        const result = await db.sql(sqliteQuery, cleanParams);
-        return result;
-    } catch (error) {
-        console.error('❌ Query execution failed:', error.message);
-        console.error('📝 Query:', query);
-        throw error;
     }
+
+    let lastError = null;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            if (!db) {
+                await initDatabaseConnection();
+            }
+
+            const result = await db.sql(sqliteQuery, cleanParams);
+            return result;
+        } catch (error) {
+            lastError = error;
+            const isConn = isConnectionError(error);
+
+            if (isConn && attempt < maxRetries) {
+                logger.warn({
+                    attempt,
+                    maxRetries,
+                    err: error.message
+                }, 'Database connection drop detected. Reconnecting and retrying query...');
+
+                try {
+                    if (db && typeof db.close === 'function') db.close();
+                } catch (_) {}
+                db = null;
+                initPromise = null;
+
+                // Exponential backoff: 200ms, 450ms
+                await new Promise(res => setTimeout(res, attempt * 200));
+                continue;
+            }
+
+            console.error(`❌ Query execution failed (attempt ${attempt}/${maxRetries}):`, error.message);
+            console.error('📝 Query:', query);
+            throw error;
+        }
+    }
+
+    throw lastError;
 }
 
 module.exports = {

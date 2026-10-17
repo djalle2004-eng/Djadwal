@@ -115,6 +115,7 @@ export default function Dashboard() {
   const [latestSessions, setLatestSessions] = useState<LatestSession[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [retryTrigger, setRetryTrigger] = useState(0);
   const [roomOccupancy, setRoomOccupancy] = useState<RoomOccupancy[]>([]);
   const [professorWorkload, setProfessorWorkload] = useState<ProfessorWorkload[]>([]);
   const [departmentStats, setDepartmentStats] = useState<DepartmentStats[]>([]);
@@ -182,16 +183,16 @@ export default function Dashboard() {
         };
         setDbInfo(databaseInfo);
 
-        // استخدام SQLite بدلاً من Firebase
+        // استخدام SQLite مع مرونة Promise.allSettled لمنع انهيار الواجهة عند أي انقطاع مؤقت
         const [
-          professorsData,
-          coursesData,
-          roomsData,
-          assignmentsData,
-          groupsData,
-          departmentsData,
-          extraSessionsData,
-        ] = await Promise.all([
+          professorsRes,
+          coursesRes,
+          roomsRes,
+          assignmentsRes,
+          groupsRes,
+          departmentsRes,
+          extraSessionsRes,
+        ] = await Promise.allSettled([
           window.db.getProfessors(),
           window.db.getCourses(),
           window.db.getRooms(),
@@ -202,6 +203,25 @@ export default function Dashboard() {
           window.db.getDepartments(),
           window.db.getExtraSessions(),
         ]);
+
+        const getSettledArray = (res: PromiseSettledResult<any>) =>
+          res.status === 'fulfilled' && Array.isArray(res.value) ? res.value : [];
+
+        const professorsData = getSettledArray(professorsRes);
+        const coursesData = getSettledArray(coursesRes);
+        const roomsData = getSettledArray(roomsRes);
+        const assignmentsData = getSettledArray(assignmentsRes);
+        const groupsData = getSettledArray(groupsRes);
+        const departmentsData = getSettledArray(departmentsRes);
+        const extraSessionsData = getSettledArray(extraSessionsRes);
+
+        const anyFulfilled = [
+          professorsRes, coursesRes, roomsRes, assignmentsRes, groupsRes, departmentsRes, extraSessionsRes
+        ].some(r => r.status === 'fulfilled');
+
+        if (!anyFulfilled) {
+          throw new Error('تعذر الاتصال بقاعدة البيانات السحابية. يرجى التحقق من الشبكة وإعادة المحاولة.');
+        }
 
         // Filter assignments by current academic year and semester
         const filteredAssignments = assignmentsData?.filter((assignment: any) => {
@@ -452,18 +472,48 @@ export default function Dashboard() {
         // --- End Advanced Statistics ---
 
         setLoading(false);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching dashboard data:', error);
-        setError('Failed to fetch dashboard data');
+        setError(error?.message || 'فشل في جلب بيانات لوحة التحكم');
         setLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, [currentYear, currentSemester]);
+  }, [currentYear, currentSemester, retryTrigger]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center p-8 text-center" dir="rtl">
+        <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+        <p className="text-base font-semibold text-gray-700">جاري تحميل بيانات لوحة التحكم...</p>
+        <p className="text-xs text-gray-500 mt-1">يتم جلب الإحصائيات وجداول الحصص من الخادم السحابي</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center p-8 text-center" dir="rtl">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md w-full shadow-sm">
+          <div className="w-14 h-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">تعذر الاتصال بقاعدة البيانات</h3>
+          <p className="text-sm text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => setRetryTrigger(c => c + 1)}
+            className="w-full inline-flex justify-center items-center gap-2 px-5 py-2.5 border border-transparent text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow transition"
+          >
+            <span>🔄</span>
+            <span>إعادة المحاولة الآن</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full">
