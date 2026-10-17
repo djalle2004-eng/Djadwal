@@ -20,6 +20,11 @@ async function fetchApi(endpoint: string, options: RequestInit = {}) {
                 const u = JSON.parse(userStr);
                 if (u?.id) authHeaders['x-user-id'] = String(u.id);
                 if (u?.username) authHeaders['x-user-name'] = encodeURIComponent(u.username);
+                if (u?.token) authHeaders['Authorization'] = `Bearer ${u.token}`;
+            }
+            const token = localStorage.getItem('token');
+            if (token && !authHeaders['Authorization']) {
+                authHeaders['Authorization'] = `Bearer ${token}`;
             }
         }
     } catch (e) {
@@ -191,6 +196,9 @@ export const webClient = {
             method: 'POST',
             body: JSON.stringify({ username, password })
         });
+        if (res?.token && typeof window !== 'undefined' && window.localStorage) {
+            localStorage.setItem('token', res.token);
+        }
         return res?.user ? { ...res, ...res.user } : res;
     },
     logout: (userId) => Promise.resolve(true), // Client-side logout mostly
