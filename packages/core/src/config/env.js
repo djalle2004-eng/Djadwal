@@ -13,7 +13,7 @@ const envSchema = z.object({
   // Primary signing key - MUST be at least 32 characters
   JWT_SECRET: z.string().min(32, {
     message: 'مفتاح JWT_SECRET يجب أن يكون بطول 32 حرفًا على الأقل لضمان التشفير الآمن'
-  }).default('djadwal-super-secure-production-jwt-key-2026-min-32-chars'),
+  }),
 
   // Optional previous key to allow graceful zero-downtime key rotation
   JWT_SECRET_PREVIOUS: z.string().min(32).optional(),
@@ -63,7 +63,17 @@ const envSchema = z.object({
     .default(true),
   ARGON2_MEMORY_COST: z.coerce.number().default(19456),
   ARGON2_TIME_COST: z.coerce.number().default(2),
-  ARGON2_PARALLELISM: z.coerce.number().default(1)
+  ARGON2_PARALLELISM: z.coerce.number().default(1),
+
+  // P5: Server Authorization (RBAC) & Tamper-Evident Audit Chain Flags
+  FEATURE_RBAC: z
+    .preprocess(val => val === 'true' || val === true || val === '1' || val === undefined, z.boolean())
+    .default(true),
+  RBAC_EXEMPTIONS: z.string().optional().default(''),
+  METRICS_SINK: z.string().optional(),
+  FEATURE_AUDIT_HASH_CHAIN: z
+    .preprocess(val => val === 'true' || val === true || val === '1' || val === undefined, z.boolean())
+    .default(true)
 });
 
 let hasLoggedStatus = false;

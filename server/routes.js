@@ -64,38 +64,14 @@ async function requireAuth(req, res, next) {
     next();
 }
 
-// Helper to record audit logs
-async function logAudit(req, { action, entity_type, entity_id = null, details = null, user_id = null }) {
-    try {
-        let finalUserId = user_id;
-        if (!finalUserId && req) {
-            if (req.user && req.user.id) {
-                finalUserId = req.user.id;
-            } else if (req.user && req.user.userId) {
-                finalUserId = req.user.userId;
-            } else if (req.headers && req.headers['x-user-id']) {
-                const parsed = parseInt(req.headers['x-user-id'], 10);
-                if (!isNaN(parsed)) finalUserId = parsed;
-            } else if (req.body && req.body.currentUserId) {
-                finalUserId = parseInt(req.body.currentUserId, 10);
-            } else if (req.cookies && req.cookies.token) {
-                const payload = await verifyToken(req.cookies.token);
-                if (payload && (payload.id || payload.userId)) {
-                    finalUserId = payload.id || payload.userId;
-                }
-            }
-        }
+// --- P5 Authorization & Tamper-Evident Audit Engine ---
+const auditService = require('./services/audit');
+const { authorize } = require('./authz/authorize');
+const crypto = require('crypto');
 
-        const ip = req ? (req.headers['x-forwarded-for'] || req.ip || req.socket?.remoteAddress || null) : null;
-
-        await executeQuery(
-            `INSERT INTO audit_log (user_id, action, entity_type, entity_id, details, ip_address) 
-             VALUES ($1, $2, $3, $4, $5, $6)`,
-            [finalUserId || null, action, entity_type, entity_id, details, ip]
-        );
-    } catch (err) {
-        console.error('⚠️ Failed to write audit log:', err.message);
-    }
+// Helper to record audit logs (Strictly derived from req.user, preserves claimed_by for forensics)
+async function logAudit(req, payload) {
+    return auditService.logAudit(req, payload);
 }
 
 // --- P4 Modernized Authentication Engine ---
@@ -333,7 +309,9 @@ router.get('/auth/me', async (req, res) => {
 });
 
 // User permissions endpoint
-router.get('/users/:id/permissions', async (req, res) => {
+router.get('/users/:id/permissions', authorize('permissions', 'view', {
+    checkScope: (req, user) => String(user.id || user.userId) === String(req.params.id) || String(user.role).toLowerCase() === 'admin'
+}), async (req, res) => {
     try {
         const users = await executeQuery('SELECT permissions FROM users WHERE id = ?', [req.params.id]);
         if (users.length > 0 && users[0].permissions) {
@@ -685,7 +663,7 @@ router.post('/preferences', requireAuth, async (req, res) => {
     }
 });
 
-router.get('/departments', async (req, res) => {
+router.get('/departments', authorize('departments', 'view'), async (req, res) => {
     try {
         const result = await executeQuery('SELECT * FROM departments ORDER BY name');
         res.json(result);
@@ -694,7 +672,7 @@ router.get('/departments', async (req, res) => {
     }
 });
 
-router.post('/departments', async (req, res) => {
+router.post('/departments', authorize('departments', 'create'), async (req, res) => {
     try {
         const { name, code } = req.body;
         const result = await executeQuery('INSERT INTO departments (name, code) VALUES ($1, $2) RETURNING *', [name, code]);
@@ -705,7 +683,7 @@ router.post('/departments', async (req, res) => {
     }
 });
 
-router.put('/departments/:id', async (req, res) => {
+router.put('/departments/:id', authorize('departments', 'update'), async (req, res) => {
     try {
         const { name, code } = req.body;
         const { id } = req.params;
@@ -717,7 +695,7 @@ router.put('/departments/:id', async (req, res) => {
     }
 });
 
-router.delete('/departments/:id', async (req, res) => {
+router.delete('/departments/:id', authorize('departments', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM departments WHERE id = $1', [id]);
@@ -729,7 +707,7 @@ router.delete('/departments/:id', async (req, res) => {
 });
 
 // --- Professors ---
-router.get('/professors', async (req, res) => {
+router.get('/professors', authorize('professors', 'view'), async (req, res) => {
     try {
         const result = await executeQuery('SELECT * FROM professors ORDER BY name');
         res.json(result);
@@ -738,7 +716,7 @@ router.get('/professors', async (req, res) => {
     }
 });
 
-router.post('/professors', async (req, res) => {
+router.post('/professors', authorize('professors', 'create'), async (req, res) => {
     try {
         const { name, email, metadata } = req.body;
         const meta = typeof metadata === 'string' ? JSON.parse(metadata) : (metadata || {});
@@ -757,7 +735,7 @@ router.post('/professors', async (req, res) => {
     }
 });
 
-router.put('/professors/:id', async (req, res) => {
+router.put('/professors/:id', authorize('professors', 'update'), async (req, res) => {
     try {
         const { name, email, metadata } = req.body;
         const { id } = req.params;
@@ -777,7 +755,7 @@ router.put('/professors/:id', async (req, res) => {
     }
 });
 
-router.delete('/professors/:id', async (req, res) => {
+router.delete('/professors/:id', authorize('professors', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM professors WHERE id = $1', [id]);
@@ -789,7 +767,7 @@ router.delete('/professors/:id', async (req, res) => {
 });
 
 // --- Rooms ---
-router.get('/rooms', async (req, res) => {
+router.get('/rooms', authorize('rooms', 'view'), async (req, res) => {
     try {
         const result = await executeQuery('SELECT * FROM rooms ORDER BY name');
         res.json(result);
@@ -798,7 +776,7 @@ router.get('/rooms', async (req, res) => {
     }
 });
 
-router.post('/rooms', async (req, res) => {
+router.post('/rooms', authorize('rooms', 'create'), async (req, res) => {
     try {
         const { name, capacity } = req.body;
         const result = await executeQuery('INSERT INTO rooms (name, capacity) VALUES ($1, $2) RETURNING *', [name, capacity]);
@@ -809,7 +787,7 @@ router.post('/rooms', async (req, res) => {
     }
 });
 
-router.put('/rooms/:id', async (req, res) => {
+router.put('/rooms/:id', authorize('rooms', 'update'), async (req, res) => {
     try {
         const { name, capacity } = req.body;
         const { id } = req.params;
@@ -821,7 +799,7 @@ router.put('/rooms/:id', async (req, res) => {
     }
 });
 
-router.delete('/rooms/:id', async (req, res) => {
+router.delete('/rooms/:id', authorize('rooms', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM rooms WHERE id = $1', [id]);
@@ -833,7 +811,7 @@ router.delete('/rooms/:id', async (req, res) => {
 });
 
 // --- Courses ---
-router.get('/courses', async (req, res) => {
+router.get('/courses', authorize('courses', 'view'), async (req, res) => {
     try {
         const result = await executeQuery('SELECT * FROM courses ORDER BY name');
         res.json(result);
@@ -842,7 +820,7 @@ router.get('/courses', async (req, res) => {
     }
 });
 
-router.post('/courses', async (req, res) => {
+router.post('/courses', authorize('courses', 'create'), async (req, res) => {
     try {
         const { name, code, metadata } = req.body;
         const result = await executeQuery('INSERT INTO courses (name, code, metadata) VALUES ($1, $2, $3) RETURNING *', [name, code, metadata]);
@@ -853,7 +831,7 @@ router.post('/courses', async (req, res) => {
     }
 });
 
-router.put('/courses/:id', async (req, res) => {
+router.put('/courses/:id', authorize('courses', 'update'), async (req, res) => {
     try {
         const { name, code, metadata } = req.body;
         const { id } = req.params;
@@ -865,7 +843,7 @@ router.put('/courses/:id', async (req, res) => {
     }
 });
 
-router.delete('/courses/:id', async (req, res) => {
+router.delete('/courses/:id', authorize('courses', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM courses WHERE id = $1', [id]);
@@ -877,7 +855,7 @@ router.delete('/courses/:id', async (req, res) => {
 });
 
 // --- Groups ---
-router.get('/groups', async (req, res) => {
+router.get('/groups', authorize('groups', 'view'), async (req, res) => {
     try {
         const result = await executeQuery('SELECT * FROM groups ORDER BY name');
         res.json(result);
@@ -886,7 +864,7 @@ router.get('/groups', async (req, res) => {
     }
 });
 
-router.post('/groups', async (req, res) => {
+router.post('/groups', authorize('groups', 'create'), async (req, res) => {
     try {
         const { name, department_id, group_type, specialization, parent_group_id, year } = req.body;
         const result = await executeQuery(
@@ -900,7 +878,7 @@ router.post('/groups', async (req, res) => {
     }
 });
 
-router.put('/groups/:id', async (req, res) => {
+router.put('/groups/:id', authorize('groups', 'update'), async (req, res) => {
     try {
         const { name, department_id, group_type, specialization, parent_group_id, year } = req.body;
         const { id } = req.params;
@@ -915,7 +893,7 @@ router.put('/groups/:id', async (req, res) => {
     }
 });
 
-router.delete('/groups/:id', async (req, res) => {
+router.delete('/groups/:id', authorize('groups', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM groups WHERE id = $1', [id]);
@@ -927,7 +905,7 @@ router.delete('/groups/:id', async (req, res) => {
 });
 
 // --- Assignments ---
-router.get('/assignments', async (req, res) => {
+router.get('/assignments', authorize('assignments', 'view'), async (req, res) => {
     try {
         const { academicYear, semester, specialization } = req.query;
         let query = `
@@ -974,7 +952,7 @@ router.get('/assignments', async (req, res) => {
     }
 });
 
-router.post('/assignments', async (req, res) => {
+router.post('/assignments', authorize('assignments', 'create'), async (req, res) => {
     try {
         const { group_id, course_id, professor_id, room_id, day_of_week, start_time, end_time, academic_year, semester, specialization } = req.body;
         const result = await executeQuery(
@@ -993,7 +971,7 @@ router.post('/assignments', async (req, res) => {
     }
 });
 
-router.put('/assignments/:id', async (req, res) => {
+router.put('/assignments/:id', authorize('assignments', 'update'), async (req, res) => {
     try {
         const { group_id, course_id, professor_id, room_id, day_of_week, start_time, end_time, academic_year, semester, specialization } = req.body;
         const { id } = req.params;
@@ -1013,7 +991,7 @@ router.put('/assignments/:id', async (req, res) => {
     }
 });
 
-router.delete('/assignments/:id', async (req, res) => {
+router.delete('/assignments/:id', authorize('assignments', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM assignments WHERE id = $1', [id]);
@@ -1025,7 +1003,7 @@ router.delete('/assignments/:id', async (req, res) => {
 });
 
 // --- Academic Years ---
-router.get('/academic-years', async (req, res) => {
+router.get('/academic-years', authorize('academic_years', 'view'), async (req, res) => {
     try {
         const result = await executeQuery('SELECT * FROM academic_years ORDER BY year_name');
         res.json(result);
@@ -1034,7 +1012,7 @@ router.get('/academic-years', async (req, res) => {
     }
 });
 
-router.get('/academic-years/active', async (req, res) => {
+router.get('/academic-years/active', authorize('academic_years', 'view'), async (req, res) => {
     try {
         const result = await executeQuery('SELECT * FROM academic_years WHERE is_current = 1 LIMIT 1');
         res.json(result[0] || null);
@@ -1043,7 +1021,7 @@ router.get('/academic-years/active', async (req, res) => {
     }
 });
 
-router.post('/academic-years', async (req, res) => {
+router.post('/academic-years', authorize('academic_years', 'create'), async (req, res) => {
     try {
         const { yearName, setAsCurrent } = req.body;
         const result = await executeQuery(
@@ -1062,7 +1040,7 @@ router.post('/academic-years', async (req, res) => {
     }
 });
 
-router.post('/academic-years/:id/activate', async (req, res) => {
+router.post('/academic-years/:id/activate', authorize('academic_years', 'activate'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('UPDATE academic_years SET is_current = 0');
@@ -1074,7 +1052,7 @@ router.post('/academic-years/:id/activate', async (req, res) => {
     }
 });
 
-router.delete('/academic-years/:id', async (req, res) => {
+router.delete('/academic-years/:id', authorize('academic_years', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM academic_years WHERE id = $1', [id]);
@@ -1086,7 +1064,7 @@ router.delete('/academic-years/:id', async (req, res) => {
 });
 
 // --- Semesters ---
-router.get('/semesters', async (req, res) => {
+router.get('/semesters', authorize('semesters', 'view'), async (req, res) => {
     try {
         const { academicYearId } = req.query;
         let query = 'SELECT * FROM semesters';
@@ -1105,7 +1083,7 @@ router.get('/semesters', async (req, res) => {
     }
 });
 
-router.get('/semesters/active', async (req, res) => {
+router.get('/semesters/active', authorize('semesters', 'view'), async (req, res) => {
     try {
         const { academicYearId } = req.query;
         let query = 'SELECT * FROM semesters WHERE is_current = 1';
@@ -1124,7 +1102,7 @@ router.get('/semesters/active', async (req, res) => {
     }
 });
 
-router.post('/semesters', async (req, res) => {
+router.post('/semesters', authorize('semesters', 'create'), async (req, res) => {
     try {
         const { academicYearId, semesterName, startDate, endDate, setAsCurrent, isPublic } = req.body;
         const result = await executeQuery(
@@ -1143,7 +1121,7 @@ router.post('/semesters', async (req, res) => {
     }
 });
 
-router.put('/semesters/:id', async (req, res) => {
+router.put('/semesters/:id', authorize('semesters', 'update'), async (req, res) => {
     try {
         const { semesterName, startDate, endDate, isPublic } = req.body;
         const { id } = req.params;
@@ -1170,7 +1148,7 @@ router.put('/semesters/:id', async (req, res) => {
     }
 });
 
-router.post('/semesters/:id/activate', async (req, res) => {
+router.post('/semesters/:id/activate', authorize('semesters', 'activate'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('UPDATE semesters SET is_current = 0');
@@ -1182,7 +1160,7 @@ router.post('/semesters/:id/activate', async (req, res) => {
     }
 });
 
-router.delete('/semesters/:id', async (req, res) => {
+router.delete('/semesters/:id', authorize('semesters', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM semesters WHERE id = $1', [id]);
@@ -1194,7 +1172,7 @@ router.delete('/semesters/:id', async (req, res) => {
 });
 
 // --- Extra Sessions ---
-router.get('/extra-sessions', async (req, res) => {
+router.get('/extra-sessions', authorize('extra_sessions', 'view'), async (req, res) => {
     try {
         const result = await executeQuery(`
             SELECT 
@@ -1217,7 +1195,7 @@ router.get('/extra-sessions', async (req, res) => {
 });
 
 // Archive past sessions
-router.post('/extra-sessions/archive', async (req, res) => {
+router.post('/extra-sessions/archive', authorize('extra_sessions', 'update'), async (req, res) => {
     try {
         const today = new Date().toISOString().split('T')[0];
         const result = await executeQuery(
@@ -1230,7 +1208,7 @@ router.post('/extra-sessions/archive', async (req, res) => {
     }
 });
 
-router.post('/extra-sessions', async (req, res) => {
+router.post('/extra-sessions', authorize('extra_sessions', 'create'), async (req, res) => {
     try {
         const session = req.body;
         // Whitelist valid columns to prevent SQL errors with extra UI fields
@@ -1271,7 +1249,7 @@ router.post('/extra-sessions', async (req, res) => {
     }
 });
 
-router.put('/extra-sessions/:id', async (req, res) => {
+router.put('/extra-sessions/:id', authorize('extra_sessions', 'update'), async (req, res) => {
     try {
         const session = req.body;
         const { id } = req.params;
@@ -1308,7 +1286,7 @@ router.put('/extra-sessions/:id', async (req, res) => {
     }
 });
 
-router.delete('/extra-sessions/:id', async (req, res) => {
+router.delete('/extra-sessions/:id', authorize('extra_sessions', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM extra_sessions WHERE id = $1', [id]);
@@ -1325,7 +1303,7 @@ router.delete('/extra-sessions/:id', async (req, res) => {
 });
 
 
-router.get('/users', async (req, res) => {
+router.get('/users', authorize('users', 'view'), async (req, res) => {
     try {
         const result = await executeQuery('SELECT id, username, full_name, email, role, professor_id, is_active, last_login, created_at FROM users ORDER BY username');
         res.json(result);
@@ -1334,7 +1312,7 @@ router.get('/users', async (req, res) => {
     }
 });
 
-router.post('/users', async (req, res) => {
+router.post('/users', authorize('users', 'create'), async (req, res) => {
     try {
         const { username, password, full_name, email, role, professor_id } = req.body;
         const password_hash = await bcrypt.hash(password, 10);
@@ -1356,7 +1334,7 @@ router.post('/users', async (req, res) => {
     }
 });
 
-router.put('/users/:id', async (req, res) => {
+router.put('/users/:id', authorize('users', 'update'), async (req, res) => {
     try {
         const { username, full_name, email, role, professor_id, is_active } = req.body;
         const { id } = req.params;
@@ -1377,7 +1355,7 @@ router.put('/users/:id', async (req, res) => {
     }
 });
 
-router.delete('/users/:id', async (req, res) => {
+router.delete('/users/:id', authorize('users', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM users WHERE id = $1', [id]);
@@ -1393,7 +1371,7 @@ router.delete('/users/:id', async (req, res) => {
     }
 });
 
-router.get('/users/:id/permissions', async (req, res) => {
+router.get('/users/:id/permissions', authorize('permissions', 'view'), async (req, res) => {
     try {
         const { id } = req.params;
         const result = await executeQuery('SELECT permissions FROM users WHERE id = $1', [id]);
@@ -1408,7 +1386,7 @@ router.get('/users/:id/permissions', async (req, res) => {
     }
 });
 
-router.put('/users/:id/permissions', async (req, res) => {
+router.put('/users/:id/permissions', authorize('permissions', 'update'), async (req, res) => {
     try {
         const { id } = req.params;
         const { permissions } = req.body; // Expecting JSON object
@@ -1428,7 +1406,7 @@ router.put('/users/:id/permissions', async (req, res) => {
 });
 
 // --- Audit Logs ---
-router.get('/audit-logs', async (req, res) => {
+router.get('/audit-logs', authorize('audit_logs', 'view'), async (req, res) => {
     try {
         const { user_id, action, entity_type, limit = 1000 } = req.query;
         let query = `
@@ -1469,7 +1447,7 @@ router.get('/audit-logs', async (req, res) => {
     }
 });
 
-router.post('/audit-logs', async (req, res) => {
+router.post('/audit-logs', authorize('audit_logs', 'create'), async (req, res) => {
     try {
         const { action, entity_type, entity_id, details } = req.body;
         await logAudit(req, { action, entity_type, entity_id, details });
@@ -1479,8 +1457,128 @@ router.post('/audit-logs', async (req, res) => {
     }
 });
 
+// --- Audit Logs Export (ADMIN only / Signed Short-Lived URL) ---
+router.get('/audit-logs/export', async (req, res) => {
+    try {
+        const { format = 'jsonl', expires, sig, limit = 5000 } = req.query;
+        let isAuthorized = false;
+
+        // 1. Validate Signed Short-Lived URL if signature params are provided
+        if (sig && expires) {
+            const exp = parseInt(expires, 10);
+            if (Date.now() <= exp) {
+                const expectedSig = crypto
+                    .createHmac('sha256', PRIMARY_JWT_RAW)
+                    .update(`${expires}:${format}`)
+                    .digest('hex');
+                if (sig === expectedSig) {
+                    isAuthorized = true;
+                }
+            }
+        }
+
+        // 2. Validate Session / Token if not signed URL
+        if (!isAuthorized) {
+            const token = req.cookies?.['__Host-token'] || 
+                          req.cookies?.token || 
+                          (req.headers.authorization && req.headers.authorization.replace(/^Bearer\s+/, ''));
+            if (token) {
+                const user = await verifyToken(token);
+                if (user && String(user.role).toLowerCase() === 'admin') {
+                    isAuthorized = true;
+                    req.user = user;
+                }
+            }
+        }
+
+        if (!isAuthorized) {
+            return res.status(403).json({
+                error: 'FORBIDDEN',
+                message: 'تصدير سجل التدقيق مقتصر على المشرفين (ADMIN) أو عبر رابط موقّع سارٍ'
+            });
+        }
+
+        const maxRows = Math.min(Math.max(parseInt(limit, 10) || 5000, 1), 50000);
+        const rows = await executeQuery(
+            `SELECT al.*, u.username as user_name, u.full_name 
+             FROM audit_log al 
+             LEFT JOIN users u ON al.user_id = u.id 
+             ORDER BY al.id ASC LIMIT $1`,
+            [maxRows]
+        );
+
+        const verifyResult = await auditService.verifyAuditChain();
+        const chainStatus = verifyResult.valid ? 'verified' : 'tampered';
+        const headHash = verifyResult.headHash || 'genesis';
+
+        res.setHeader('X-Audit-Chain-Status', chainStatus);
+        res.setHeader('X-Audit-Head-Hash', headHash);
+
+        if (format === 'csv') {
+            res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+            res.setHeader('Content-Disposition', `attachment; filename="audit-export-${Date.now()}.csv"`);
+            
+            const headers = ['id', 'created_at', 'user_id', 'user_name', 'action', 'entity_type', 'entity_id', 'details', 'ip_address', 'prev_hash', 'row_hash', 'claimed_by'];
+            const escapeCsv = (v) => {
+                if (v === null || v === undefined) return '';
+                const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+                return `"${s.replace(/"/g, '""')}"`;
+            };
+            
+            let csv = headers.join(',') + '\n';
+            for (const r of rows) {
+                csv += headers.map(h => escapeCsv(r[h])).join(',') + '\n';
+            }
+            return res.send(csv);
+        } else {
+            // Default JSONL (newline delimited JSON)
+            res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+            res.setHeader('Content-Disposition', `attachment; filename="audit-export-${Date.now()}.jsonl"`);
+
+            let output = '';
+            for (const r of rows) {
+                output += JSON.stringify(r) + '\n';
+            }
+            return res.send(output);
+        }
+    } catch (exportErr) {
+        console.error('Audit export error:', exportErr);
+        res.status(500).json({ error: exportErr.message });
+    }
+});
+
+router.post('/audit-logs/export-url', authorize('audit_logs', 'export'), async (req, res) => {
+    try {
+        const { format = 'jsonl' } = req.body || {};
+        const expiresInSeconds = 300; // 5 minutes
+        const expires = Date.now() + expiresInSeconds * 1000;
+        const sig = crypto
+            .createHmac('sha256', PRIMARY_JWT_RAW)
+            .update(`${expires}:${format}`)
+            .digest('hex');
+
+        const downloadUrl = `/api/audit-logs/export?format=${encodeURIComponent(format)}&expires=${expires}&sig=${sig}`;
+        res.json({
+            downloadUrl,
+            expiresInSeconds,
+            expiresAt: new Date(expires).toISOString()
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.get('/audit-logs/verify', authorize('audit_logs', 'admin'), async (req, res) => {
+    try {
+        const result = await auditService.verifyAuditChain();
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // --- Time Slots ---
-router.get('/time-slots', async (req, res) => {
+router.get('/time-slots', authorize('sessions', 'view'), async (req, res) => {
     try {
         // Hardcoded time slots as they are usually static, or fetch from DB if you have a table
         const timeSlots = [
@@ -1540,7 +1638,7 @@ const upload = multer({
 });
 
 // Upload logo endpoint
-router.post('/upload-logo', upload.single('file'), async (req, res) => {
+router.post('/upload-logo', authorize('print_settings', 'update'), upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
@@ -1578,7 +1676,7 @@ router.post('/upload-logo', upload.single('file'), async (req, res) => {
 });
 
 // Get print settings
-router.get('/print-settings', async (req, res) => {
+router.get('/print-settings', authorize('print_settings', 'view'), async (req, res) => {
     try {
         const settings = await executeQuery('SELECT setting_key, setting_value FROM print_settings');
 
@@ -1617,7 +1715,7 @@ router.get('/print-settings', async (req, res) => {
 });
 
 // Update print settings
-router.put('/print-settings', async (req, res) => {
+router.put('/print-settings', authorize('print_settings', 'update'), async (req, res) => {
     try {
         const settings = req.body;
         const keys = Object.keys(settings);
@@ -1654,7 +1752,7 @@ router.put('/print-settings', async (req, res) => {
 });
 
 // --- Backup & Export ---
-router.get('/export/data', async (req, res) => {
+router.get('/export/data', authorize('backup', 'export'), async (req, res) => {
     try {
         // Export all tables
         const backup = {
@@ -1704,8 +1802,7 @@ const { google } = require('googleapis');
 
 
 // GET /gmail-auth-url
-// GET /gmail-auth-url
-router.get('/gmail-auth-url', (req, res) => {
+router.get('/gmail-auth-url', authorize('email', 'admin'), (req, res) => {
     try {
         console.log('Generating Auth URL with:', {
             clientId: process.env.GMAIL_CLIENT_ID ? 'Set' : 'Missing',
@@ -1802,7 +1899,7 @@ router.get('/email/oauth2callback', async (req, res) => {
 });
 
 // POST /gmail-auth-code
-router.post('/gmail-auth-code', async (req, res) => {
+router.post('/gmail-auth-code', authorize('email', 'admin'), async (req, res) => {
     try {
         const { code } = req.body;
 
@@ -1834,7 +1931,7 @@ router.post('/gmail-auth-code', async (req, res) => {
 });
 
 // GET /gmail-auth-status
-router.get('/gmail-auth-status', async (req, res) => {
+router.get('/gmail-auth-status', authorize('email', 'view'), async (req, res) => {
     try {
         const result = await executeQuery(
             'SELECT is_authenticated FROM email_settings WHERE id = 1'
@@ -1846,7 +1943,7 @@ router.get('/gmail-auth-status', async (req, res) => {
 });
 
 // POST /send-professor-schedule
-router.post('/send-professor-schedule', async (req, res) => {
+router.post('/send-professor-schedule', authorize('email', 'create'), async (req, res) => {
     try {
         console.log('🔵 ROUTE HIT: /send-professor-schedule');
         const { professorId, pdfBase64, semester } = req.body;
@@ -1921,7 +2018,7 @@ router.post('/send-professor-schedule', async (req, res) => {
 });
 
 // Debug route
-router.get('/debug/email-settings', async (req, res) => {
+router.get('/debug/email-settings', authorize('email', 'admin'), async (req, res) => {
     try {
         const settings = await executeQuery('SELECT * FROM email_settings');
         res.json(settings);
@@ -1936,7 +2033,7 @@ router.get('/debug/email-settings', async (req, res) => {
 // ==========================================
 
 // POST /api/sandbox/save - Save current sandbox state
-router.post('/sandbox/save', async (req, res) => {
+router.post('/sandbox/save', authorize('sandbox_snapshots', 'create'), async (req, res) => {
     try {
         const { name, data } = req.body;
 
@@ -1965,7 +2062,7 @@ router.post('/sandbox/save', async (req, res) => {
 });
 
 // GET /api/sandbox/list - List saved snapshots
-router.get('/sandbox/list', async (req, res) => {
+router.get('/sandbox/list', authorize('sandbox_snapshots', 'view'), async (req, res) => {
     try {
         const snapshots = await executeQuery(
             'SELECT id, name, created_at FROM sandbox_snapshots ORDER BY created_at DESC'
@@ -1978,7 +2075,7 @@ router.get('/sandbox/list', async (req, res) => {
 });
 
 // GET /api/sandbox/load/:id - Load a specific snapshot
-router.get('/sandbox/load/:id', async (req, res) => {
+router.get('/sandbox/load/:id', authorize('sandbox_snapshots', 'view'), async (req, res) => {
     try {
         const { id } = req.params;
         const snapshot = await executeQuery(
@@ -2000,7 +2097,7 @@ router.get('/sandbox/load/:id', async (req, res) => {
 });
 
 // DELETE /api/sandbox/:id - Delete a snapshot
-router.delete('/sandbox/:id', async (req, res) => {
+router.delete('/sandbox/:id', authorize('sandbox_snapshots', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM sandbox_snapshots WHERE id = ?', [id]);
@@ -2018,7 +2115,7 @@ router.delete('/sandbox/:id', async (req, res) => {
 });
 
 // --- App Config ---
-router.get('/app-config', async (req, res) => {
+router.get('/app-config', authorize('app_config', 'view'), async (req, res) => {
     try {
         const rows = await executeQuery('SELECT key, value FROM app_config');
         const config = {};
@@ -2035,7 +2132,7 @@ router.get('/app-config', async (req, res) => {
 // --- AI Proxy with Rate Limiting and Token Guard ---
 const aiRateLimitMap = new Map(); // ip -> { count, resetTime }
 
-router.post('/ai/assist', async (req, res) => {
+router.post('/ai/assist', authorize('ai', 'create'), async (req, res) => {
     try {
         const clientIp = req.headers['x-forwarded-for'] || req.ip || req.socket?.remoteAddress || 'unknown';
         const now = Date.now();
@@ -2153,9 +2250,9 @@ router._authHelpers = {
     createToken,
     verifyToken,
     requireAuth,
-    authService
+    authService,
+    auditService,
+    authorize
 };
-
-
 
 module.exports = router;
