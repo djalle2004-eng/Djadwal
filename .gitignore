@@ -83,3 +83,7 @@ coverage/
 tools/archive/*
 !tools/archive/package.json
 !tools/archive/README.md
+
+# Local agent & graphify tooling
+.agents/
+graphify-out/

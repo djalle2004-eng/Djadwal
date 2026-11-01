@@ -61,6 +61,14 @@ async function fetchApi(endpoint: string, options: RequestInit = {}) {
                     continue;
                 }
                 const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+                if (response.status === 409) {
+                    const conflictErr: any = new Error(error.error || 'تعارض في التحديث: تم تعديل هذا السجل من قِبل مستخدم آخر. يرجى تحديث الصفحة.');
+                    conflictErr.status = 409;
+                    conflictErr.isConflict = true;
+                    conflictErr.expectedVersion = error.expectedVersion;
+                    conflictErr.actualVersion = error.actualVersion;
+                    throw conflictErr;
+                }
                 throw new Error(error.error || `API Error: ${response.statusText}`);
             }
 
@@ -88,6 +96,35 @@ async function fetchApi(endpoint: string, options: RequestInit = {}) {
 }
 
 export const webClient = {
+    // --- P7 Atomic Business Layer & Soft-Delete Helpers ---
+    swapAssignments: (idA: number, idB: number) => fetchApi('/assignments/swap', {
+        method: 'POST',
+        body: JSON.stringify({ idA, idB })
+    }),
+    moveAssignment: (id: number, data: { day_of_week: number; start_time: string; end_time: string; room_id?: number; version?: number }) =>
+        fetchApi(`/assignments/${id}/move`, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        }),
+    getDeleteImpact: (entity: string, id: number | string) =>
+        fetchApi(`/${entity}/${id}/delete-impact`),
+    archiveCascadeDepartment: (id: number) =>
+        fetchApi(`/departments/${id}/archive-cascade`, { method: 'POST' }),
+    bulkImportProfessors: (professors: any[]) =>
+        fetchApi('/professors/bulk-import', {
+            method: 'POST',
+            body: JSON.stringify({ professors })
+        }),
+    createUserWithProfessor: (payload: any) =>
+        fetchApi('/users/with-professor', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        }),
+    getRecentChanges: (limit = 50) =>
+        fetchApi(`/changes?limit=${limit}`),
+    undoChange: (id: number) =>
+        fetchApi(`/changes/${id}/undo`, { method: 'POST' }),
+
     // --- Departments ---
     getDepartments: () => fetchApi('/departments'),
     addDepartment: (name: string, code: string) => fetchApi('/departments', {

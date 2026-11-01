@@ -81,6 +81,12 @@ const envSchema = z.object({
   FEATURE_READ_SOURCE: z.enum(['postgres', 'turso']).default('postgres'),
   FEATURE_DUAL_WRITE: z
     .preprocess(val => val === 'true' || val === true || val === '1' || val === undefined, z.boolean())
+    .default(true),
+
+  // P7: Atomic Business Layer Flags
+  FEATURE_OPTIMISTIC_LOCK_MODE: z.enum(['off', 'monitor', 'enforce']).default('monitor'),
+  FEATURE_SOFT_DELETE: z
+    .preprocess(val => val === 'true' || val === true || val === '1' || val === undefined, z.boolean())
     .default(true)
 });
 

@@ -299,7 +299,8 @@ export async function verify(): Promise<boolean> {
       'email_logs', 'print_settings', 'sandbox_snapshots', 'sessions',
       'auth_events', 'invitations', 'mfa_factors', 'password_reset_tokens',
       'modules', 'preferences', 'specializations', 'schema_migrations',
-      'reconciliation_diffs'
+      'reconciliation_diffs',
+      'change_log'
     ];
 
     const tablesRes = await client.query(`
@@ -337,7 +338,18 @@ export async function verify(): Promise<boolean> {
       'audit_log.row_hash',
       'audit_log.claimed_by',
       'users.permissions',
-      'users.email_verified_at'
+      'users.email_verified_at',
+      'assignments.version',
+      'professors.version',
+      'courses.version',
+      'rooms.version',
+      'groups.version',
+      'semesters.version',
+      'professors.deleted_at',
+      'courses.deleted_at',
+      'rooms.deleted_at',
+      'groups.deleted_at',
+      'departments.deleted_at'
     ];
 
     const missingCols = requiredColumns.filter(c => !colsSet.has(c));

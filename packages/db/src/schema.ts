@@ -23,7 +23,8 @@ export const departments = pgTable('departments', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   code: text('code'),
-  created_at: timestamp('created_at').defaultNow()
+  created_at: timestamp('created_at').defaultNow(),
+  deleted_at: timestamp('deleted_at')
 });
 
 // 3. Rooms
@@ -31,6 +32,8 @@ export const rooms = pgTable('rooms', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   capacity: integer('capacity').default(0),
+  version: integer('version').default(1).notNull(),
+  deleted_at: timestamp('deleted_at'),
   created_at: timestamp('created_at').defaultNow()
 });
 
@@ -41,6 +44,8 @@ export const courses = pgTable('courses', {
   code: text('code'),
   metadata: text('metadata').default('{}'),
   department_id: integer('department_id').references(() => departments.id),
+  version: integer('version').default(1).notNull(),
+  deleted_at: timestamp('deleted_at'),
   created_at: timestamp('created_at').defaultNow()
 });
 
@@ -81,6 +86,8 @@ export const professors = pgTable('professors', {
   department: varchar('department', { length: 255 }),
   profile_completed: boolean('profile_completed').default(false),
   user_id: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  version: integer('version').default(1).notNull(),
+  deleted_at: timestamp('deleted_at'),
   created_at: timestamp('created_at').defaultNow()
 });
 
@@ -93,6 +100,8 @@ export const groups = pgTable('groups', {
   department_id: integer('department_id').references(() => departments.id),
   group_type: text('group_type').default('group'),
   year: text('year'),
+  version: integer('version').default(1).notNull(),
+  deleted_at: timestamp('deleted_at'),
   created_at: timestamp('created_at').defaultNow()
 });
 
@@ -105,6 +114,7 @@ export const semesters = pgTable('semesters', {
   end_date: text('end_date'),
   is_current: integer('is_current').default(0),
   is_public: integer('is_public').default(1),
+  version: integer('version').default(1).notNull(),
   created_at: timestamp('created_at').defaultNow()
 });
 
@@ -123,6 +133,7 @@ export const assignments = pgTable('assignments', {
   semester: text('semester').default('1'),
   specialization: text('specialization').default(''),
   created_at: text('created_at'),
+  version: integer('version').default(1).notNull(),
   updated_at: timestamp('updated_at').defaultNow()
 }, (table) => ({
   yearSemIdx: index('idx_assignments_year_sem').on(table.academic_year, table.semester),
@@ -361,3 +372,20 @@ export const reconciliationDiffs = pgTable('reconciliation_diffs', {
   tableOpIdx: index('idx_recon_table_op').on(table.table_name, table.operation)
 }));
 
+
+// 28. Change Log (P7 Atomic Business Layer Audit & Undo Log)
+export const changeLog = pgTable('change_log', {
+  id: serial('id').primaryKey(),
+  entity_type: text('entity_type').notNull(),
+  entity_id: text('entity_id').notNull(),
+  action: text('action').notNull(),
+  before_state: text('before_state'),
+  after_state: text('after_state'),
+  changed_by: integer('changed_by').references(() => users.id),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  reverted_at: timestamp('reverted_at'),
+  reverted_by: integer('reverted_by').references(() => users.id)
+}, (table) => ({
+  entityIdx: index('idx_change_log_entity').on(table.entity_type, table.entity_id),
+  createdIdx: index('idx_change_log_created').on(table.created_at)
+}));

@@ -366,6 +366,9 @@ async function executeQuery(query, params = [], maxRetries = 3) {
 module.exports = {
     initDatabaseConnection,
     executeQuery,
+    executeTursoQuery,
+    toPostgresQuery,
+    toSqliteQuery,
     getPgPool,
     recordReconciliationDiff
 };
