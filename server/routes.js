@@ -1395,15 +1395,28 @@ router.put('/users/:id', authorize('users', 'update'), async (req, res) => {
         const { username, full_name, email, role, professor_id, is_active } = req.body;
         const { id } = req.params;
 
+        const existingUsers = await executeQuery('SELECT * FROM users WHERE id = $1', [id]);
+        if (!existingUsers || existingUsers.length === 0) {
+            return res.status(404).json({ error: 'المستخدم غير موجود' });
+        }
+        const current = existingUsers[0];
+
+        const targetUsername = username !== undefined ? username : current.username;
+        const targetFullName = full_name !== undefined ? full_name : current.full_name;
+        const targetEmail = email !== undefined ? email : current.email;
+        const targetRole = role !== undefined ? role : (current.role || 'staff');
+        const targetProfId = professor_id !== undefined ? professor_id : current.professor_id;
+        const targetIsActive = is_active !== undefined ? is_active : (current.is_active !== undefined ? current.is_active : 1);
+
         const result = await executeQuery(
             'UPDATE users SET username = $1, full_name = $2, email = $3, role = $4, professor_id = $5, is_active = $6 WHERE id = $7 RETURNING id, username, full_name, email, role, professor_id, is_active, created_at',
-            [username, full_name, email, role, professor_id, is_active, id]
+            [targetUsername, targetFullName, targetEmail, targetRole, targetProfId, targetIsActive, id]
         );
         await logAudit(req, {
             action: 'update',
             entity_type: 'user',
             entity_id: id,
-            details: `تحديث بيانات المستخدم: ${username || id}`
+            details: `تحديث بيانات المستخدم: ${targetUsername || id}`
         });
         res.json(result[0]);
     } catch (error) {
