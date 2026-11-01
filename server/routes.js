@@ -12,6 +12,15 @@ const PREVIOUS_JWT_RAW = process.env.JWT_SECRET_PREVIOUS;
 const JWT_SECRET = new TextEncoder().encode(PRIMARY_JWT_RAW);
 const JWT_SECRET_PREVIOUS = PREVIOUS_JWT_RAW ? new TextEncoder().encode(PREVIOUS_JWT_RAW) : null;
 
+// --- Isolated Heartbeat Ping ---
+router.get('/ping', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.status(200).json({
+        status: 'ok',
+        timestamp: new Date().toISOString()
+    });
+});
+
 // --- Auth Helpers ---
 async function createToken(payload) {
     return new SignJWT(payload)

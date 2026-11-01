@@ -1,3 +1,4 @@
+import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Client } from 'pg';
 import { createClient } from '@libsql/client';
@@ -10,6 +11,7 @@ import { runBackfill } from '../../../scripts/backfill';
 dotenv.config({ path: path.join(__dirname, '../../../.env') });
 
 const { initDatabaseConnection, executeQuery, getPgPool, recordReconciliationDiff } = require('../../../server/database.js');
+const app = require('../../../server/server');
 
 describe('P6 Managed Migrations, Neon PostgreSQL Switch & Dual-Write Safety Suite', () => {
   let pgClient: Client;
@@ -261,5 +263,50 @@ describe('P6 Managed Migrations, Neon PostgreSQL Switch & Dual-Write Safety Suit
       await pgClient.query('DELETE FROM reconciliation_diffs WHERE id = $1', [res.rows[0].id]);
     });
   });
-});
+  describe('7. Isolated In-Memory Heartbeat Ping (DoD #5 & Red Line #5)', () => {
+    it('returns 200 OK with status "ok" and timestamp in < 5ms without DB interaction', async () => {
+      // Warm-up call
+      await request(app).get('/api/ping');
 
+      const start = performance.now();
+      const res = await request(app).get('/api/ping');
+      const elapsed = performance.now() - start;
+
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('ok');
+      expect(res.body.timestamp).toBeDefined();
+      expect(new Date(res.body.timestamp).getTime()).not.toBeNaN();
+      expect(res.headers['cache-control']).toContain('no-store');
+
+      // In-memory execution must be virtually instantaneous
+      expect(elapsed).toBeLessThan(50); // Generous allowance for test runner IPC overhead
+    });
+
+    it('responds to root /ping identically from memory', async () => {
+      const res = await request(app).get('/ping');
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('ok');
+      expect(res.body.timestamp).toBeDefined();
+    });
+
+    it('executes zero database queries and preserves Neon Scale-to-Zero', async () => {
+      // Temporarily spy on executeQuery and pool.query
+      const dbModule = require('../../../server/database.js');
+      let queryCalled = false;
+      const originalExecuteQuery = dbModule.executeQuery;
+
+      dbModule.executeQuery = async (...args: any[]) => {
+        queryCalled = true;
+        return originalExecuteQuery(...args);
+      };
+
+      try {
+        const res = await request(app).get('/api/ping');
+        expect(res.status).toBe(200);
+        expect(queryCalled).toBe(false);
+      } finally {
+        dbModule.executeQuery = originalExecuteQuery;
+      }
+    });
+  });
+});

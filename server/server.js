@@ -62,6 +62,15 @@ const jsonLimit = isHardeningEnabled ? '256kb' : '50mb';
 app.use(express.json({ limit: jsonLimit }));
 app.use(express.urlencoded({ extended: true, limit: jsonLimit }));
 
+// Isolated Heartbeat Ping: Returns 200 OK from memory in < 5ms with ZERO DB touch (preserves Neon Scale-to-Zero)
+app.get(['/api/ping', '/ping'], (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // API Routes
 app.use('/api', apiRoutes);
 
