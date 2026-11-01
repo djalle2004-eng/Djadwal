@@ -411,6 +411,24 @@ export const webDataUtils = {
         return await response.json();
     },
 
+
+    getDatabaseStatus: async () => {
+        try {
+            return await fetchApi('/database/status', { method: 'GET' });
+        } catch (error: any) {
+            console.error('Error fetching database status:', error);
+            return {
+                status: 'غير متصل',
+                readSource: 'postgres',
+                engine: 'Neon PostgreSQL',
+                displayName: 'Neon PostgreSQL (السحابية)',
+                dualWrite: true,
+                dualWriteTarget: 'Turso (Dual-Write)',
+                isCloud: true,
+                error: error.message
+            };
+        }
+    },
     // --- Backup/Restore ---
     restoreBackup: async (file: File) => {
         console.warn('Restore backup not implemented yet');

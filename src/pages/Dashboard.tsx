@@ -97,6 +97,12 @@ interface DatabaseInfo {
   type: string;
   status: string;
   name: string;
+  displayName?: string;
+  engine?: string;
+  readSource?: string;
+  dualWrite?: boolean;
+  dualWriteTarget?: string;
+  responseTimeMs?: number;
   isCloud: boolean;
   hasConnectionString: boolean;
 }
@@ -173,14 +179,36 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // جلب معلومات قاعدة البيانات
-        const databaseInfo = {
-          type: 'Turso',
+        // جلب معلومات وحالة قاعدة البيانات النشطة للقراءة
+        let databaseInfo: DatabaseInfo = {
+          type: 'Neon PostgreSQL',
+          engine: 'Neon PostgreSQL',
+          displayName: 'Neon PostgreSQL (السحابية)',
           status: 'متصل',
           name: 'Djadwal (Cloud)',
+          readSource: 'postgres',
+          dualWrite: true,
+          dualWriteTarget: 'Turso (Dual-Write)',
           isCloud: true,
           hasConnectionString: true
         };
+
+        try {
+          if (window.db && typeof window.db.getDatabaseStatus === 'function') {
+            const liveStatus = await window.db.getDatabaseStatus();
+            if (liveStatus && liveStatus.status) {
+              databaseInfo = { ...databaseInfo, ...liveStatus };
+            }
+          } else if (window.electron && typeof window.electron.invoke === 'function') {
+            const electronStatus = await window.electron.invoke('get-database-info');
+            if (electronStatus && electronStatus.status) {
+              databaseInfo = { ...databaseInfo, ...electronStatus };
+            }
+          }
+        } catch (dbErr) {
+          console.warn('Could not fetch dynamic database status:', dbErr);
+        }
+
         setDbInfo(databaseInfo);
 
         // استخدام SQLite مع مرونة Promise.allSettled لمنع انهيار الواجهة عند أي انقطاع مؤقت
@@ -532,23 +560,69 @@ export default function Dashboard() {
                 )}
               </div>
               {dbInfo && (
-                <div className="flex items-center gap-2 text-xs">
-                  <span className={`px-2 py-1 rounded-full ${dbInfo.status === 'متصل' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
+                <div className="flex flex-wrap items-center justify-end gap-2 text-xs">
+                  {/* مؤشر حالة الاتصال الحي */}
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-medium shadow-sm border ${
+                      dbInfo.status === 'متصل'
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                        : 'bg-rose-50 text-rose-800 border-rose-200'
+                    }`}
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        dbInfo.status === 'متصل' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
+                      }`}
+                    />
                     {dbInfo.status}
                   </span>
-                  <span className="text-gray-600">
-                    {dbInfo.name} ({dbInfo.type})
+
+                  {/* قاعدة البيانات النشطة للقراءة (Active Read Source) */}
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold shadow-sm border ${
+                      dbInfo.readSource === 'postgres' || (dbInfo.engine && dbInfo.engine.includes('Neon'))
+                        ? 'bg-indigo-50 text-indigo-800 border-indigo-200'
+                        : 'bg-amber-50 text-amber-800 border-amber-200'
+                    }`}
+                    title={`مصدر قراءة البيانات المباشر: ${dbInfo.engine || dbInfo.displayName || dbInfo.type}${
+                      dbInfo.responseTimeMs ? ` (استجابة: ${dbInfo.responseTimeMs}ms)` : ''
+                    }`}
+                  >
+                    <span className="text-gray-500 font-normal">قراءة من:</span>
+                    <span>
+                      {dbInfo.readSource === 'postgres' || (dbInfo.engine && dbInfo.engine.includes('Neon'))
+                        ? '🐘 Neon PostgreSQL'
+                        : '⚡ Turso Database'}
+                    </span>
+                    {typeof dbInfo.responseTimeMs === 'number' && (
+                      <span className="text-[10px] text-gray-500">(${dbInfo.responseTimeMs}ms)</span>
+                    )}
                   </span>
-                  {dbInfo.isCloud && (
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">☁️ Cloud</span>
+
+                  {/* مؤشر النسخ المزدوج (Dual-Write Target) */}
+                  {dbInfo.dualWrite && (
+                    <span
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-cyan-50 text-cyan-800 border border-cyan-200 shadow-sm"
+                      title="يتم حفظ نسخة احتياطية متزامنة تلقائياً في Turso"
+                    >
+                      <span className="text-cyan-600">🔄 نسخ متزامن:</span>
+                      <span className="font-medium">{dbInfo.dualWriteTarget || 'Turso'}</span>
+                    </span>
                   )}
+
+                  {/* وسم السحابي */}
+                  {dbInfo.isCloud && (
+                    <span className="bg-sky-50 text-sky-700 border border-sky-200 px-2 py-1 rounded-full shadow-sm">
+                      ☁️ سحابي
+                    </span>
+                  )}
+
                   <button
                     onClick={handleDebugDatabase}
-                    className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full hover:bg-yellow-200 transition-colors"
-                    title="عرض محتوى قاعدة البيانات"
+                    className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 px-2.5 py-1 rounded-full transition-colors shadow-sm"
+                    title="عرض محتوى وتشخيص قاعدة البيانات"
                   >
-                    🔍 Debug
+                    🔍 فحص
                   </button>
                 </div>
               )}

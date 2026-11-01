@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { executeQuery } = require('./database');
+const { executeQuery, getPgPool } = require('./database');
 const bcrypt = require('bcrypt');
 const { SignJWT, jwtVerify } = require('jose');
 const emailService = require('./emailService');
@@ -2180,6 +2180,48 @@ router.delete('/sandbox/:id', authorize('sandbox_snapshots', 'delete'), async (r
     } catch (error) {
         console.error('Error deleting sandbox snapshot:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+
+// --- Database Connection & Active Read Engine Status ---
+router.get('/database/status', async (req, res) => {
+    try {
+        const pool = getPgPool();
+        const readSource = process.env.FEATURE_READ_SOURCE || 'postgres';
+        const dualWrite = process.env.FEATURE_DUAL_WRITE !== 'false';
+        const isPostgres = readSource === 'postgres';
+        const engine = isPostgres ? 'Neon PostgreSQL' : 'Turso (libSQL)';
+        
+        const startTime = Date.now();
+        if (isPostgres && pool) {
+            await pool.query('SELECT 1 as ping');
+        } else {
+            await executeQuery('SELECT 1 as ping');
+        }
+        const responseTimeMs = Date.now() - startTime;
+
+        res.json({
+            status: 'متصل',
+            readSource,
+            engine,
+            displayName: isPostgres ? 'Neon PostgreSQL (السحابية)' : 'Turso Database (السحابية)',
+            dualWrite,
+            dualWriteTarget: dualWrite ? 'Turso (Dual-Write)' : 'معطل',
+            responseTimeMs,
+            isCloud: true,
+            checkedAt: new Date().toISOString()
+        });
+    } catch (err) {
+        res.status(500).json({
+            status: 'غير متصل',
+            error: err.message,
+            readSource: process.env.FEATURE_READ_SOURCE || 'postgres',
+            engine: (process.env.FEATURE_READ_SOURCE || 'postgres') === 'postgres' ? 'Neon PostgreSQL' : 'Turso (libSQL)',
+            displayName: (process.env.FEATURE_READ_SOURCE || 'postgres') === 'postgres' ? 'Neon PostgreSQL (السحابية)' : 'Turso Database (السحابية)',
+            dualWrite: process.env.FEATURE_DUAL_WRITE !== 'false',
+            isCloud: true
+        });
     }
 });
 

@@ -79,6 +79,7 @@ contextBridge.exposeInMainWorld('db', {
   resetPassword: (userId, newPassword) => ipcRenderer.invoke('reset-password', userId, newPassword),
   toggleUserStatus: (userId, isActive) => ipcRenderer.invoke('toggle-user-status', userId, isActive),
   getAuditLogs: (filters = {}) => ipcRenderer.invoke('get-audit-logs', filters),
+  getDatabaseStatus: () => ipcRenderer.invoke('get-database-info'),
   getUserPermissions: (userId) => ipcRenderer.invoke('get-user-permissions', userId),
   saveUserPermissions: (userId, permissionsJson) => ipcRenderer.invoke('save-user-permissions', userId, permissionsJson),
 

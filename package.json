@@ -1,7 +1,7 @@
 {
   "name": "djadwal",
   "private": true,
-  "version": "28.11.25.Turso",
+  "version": "01.11.26.Neon",
   "author": "Ali Hussain",
   "description": "Application de gestion des emplois du temps",
   "type": "commonjs",

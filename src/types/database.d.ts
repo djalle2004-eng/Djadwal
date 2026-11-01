@@ -139,6 +139,7 @@ interface Database {
   resetPassword: (userId: number, newPassword: string) => Promise<{ success: boolean; message: string }>;
   toggleUserStatus: (userId: number, isActive: boolean) => Promise<{ success: boolean }>;
   getAuditLogs: (filters?: any) => Promise<any[]>;
+  getDatabaseStatus?: () => Promise<any>;
 
   // دوال Sandbox (حفظ المسودات)
   saveSandboxDraft: (name: string, data: any) => Promise<any>;
