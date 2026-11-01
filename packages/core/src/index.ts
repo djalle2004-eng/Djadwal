@@ -3,3 +3,5 @@ export * from './workload-calculator.js';
 export * from './room-validator.js';
 export * from './print-header-generator.js';
 export * from './config/env.js';
+export * from './unitOfWork.js';
+export * from './repositories/index.js';

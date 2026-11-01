@@ -34,6 +34,7 @@ module.exports = {
     'audit_log',
     'auth_events',
     'backup_history',
+    'change_log',
     'courses',
     'departments',
     'email_logs',

@@ -5,6 +5,19 @@ const bcrypt = require('bcrypt');
 const { SignJWT, jwtVerify } = require('jose');
 const emailService = require('./emailService');
 
+// P7: Atomic Business Layer Imports
+const { unitOfWork, OptimisticLockError } = require('../packages/core/src/unitOfWork.js');
+const {
+    assignmentsRepository,
+    professorsRepository,
+    coursesRepository,
+    roomsRepository,
+    groupsRepository,
+    departmentsRepository,
+    changeLogRepository,
+    calculateDeleteImpact
+} = require('../packages/core/src/repositories/index.js');
+
 // --- Types & Constants ---
 const PRIMARY_JWT_RAW = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
 const PREVIOUS_JWT_RAW = process.env.JWT_SECRET_PREVIOUS;
@@ -698,7 +711,8 @@ router.get('/departments', authorize('departments', 'view'), async (req, res) =>
         const cached = getCached('departments');
         if (cached) return res.json(cached);
 
-        const result = await executeQuery('SELECT * FROM departments ORDER BY name');
+        const softCond = process.env.FEATURE_SOFT_DELETE !== 'false' && !req.query.withArchived ? 'WHERE deleted_at IS NULL' : '';
+        const result = await executeQuery(`SELECT * FROM departments ${softCond} ORDER BY name`);
         setCached('departments', result, 60000);
         res.json(result);
     } catch (error) {
@@ -734,12 +748,49 @@ router.put('/departments/:id', authorize('departments', 'update'), async (req, r
 router.delete('/departments/:id', authorize('departments', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
-        await executeQuery('DELETE FROM departments WHERE id = $1', [id]);
+        if (process.env.FEATURE_SOFT_DELETE !== 'false') {
+            await executeQuery('UPDATE departments SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+        } else {
+            await executeQuery('DELETE FROM departments WHERE id = $1', [id]);
+        }
         clearCache('departments');
         await logAudit(req, { action: 'delete', entity_type: 'department', entity_id: id, details: `حذف قسم رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
+
+router.post('/departments/:id/archive-cascade', authorize('departments', 'delete'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await unitOfWork(async (uow) => {
+            const [dept] = await uow.query('SELECT * FROM departments WHERE id = $1', [id]);
+            if (!dept) throw new Error(`القسم رقم #${id} غير موجود`);
+
+            await uow.query('UPDATE departments SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+            await uow.query('UPDATE courses SET deleted_at = CURRENT_TIMESTAMP WHERE department_id = $1 AND deleted_at IS NULL', [id]);
+            await uow.query('UPDATE groups SET deleted_at = CURRENT_TIMESTAMP WHERE department_id = $1 AND deleted_at IS NULL', [id]);
+
+            await uow.recordChange({
+                entity_type: 'departments',
+                entity_id: id,
+                action: 'archive',
+                before_state: dept,
+                after_state: { ...dept, deleted_at: new Date().toISOString() },
+                changed_by: req.user?.id
+            });
+
+            return { success: true, departmentId: id, message: 'تم أرشفة القسم والمقاييس والأفواج التابعة بنجاح' };
+        });
+
+        clearCache('departments');
+        clearCache('courses');
+        clearCache('groups');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
     }
 });
 
@@ -749,7 +800,8 @@ router.get('/professors', authorize('professors', 'view'), async (req, res) => {
         const cached = getCached('professors');
         if (cached) return res.json(cached);
 
-        const result = await executeQuery('SELECT * FROM professors ORDER BY name');
+        const softCond = process.env.FEATURE_SOFT_DELETE !== 'false' && !req.query.withArchived ? 'WHERE deleted_at IS NULL' : '';
+        const result = await executeQuery(`SELECT * FROM professors ${softCond} ORDER BY name`);
         setCached('professors', result, 60000);
         res.json(result);
     } catch (error) {
@@ -801,12 +853,53 @@ router.put('/professors/:id', authorize('professors', 'update'), async (req, res
 router.delete('/professors/:id', authorize('professors', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
-        await executeQuery('DELETE FROM professors WHERE id = $1', [id]);
+        if (process.env.FEATURE_SOFT_DELETE !== 'false') {
+            await executeQuery('UPDATE professors SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+        } else {
+            await executeQuery('DELETE FROM professors WHERE id = $1', [id]);
+        }
         clearCache('professors');
         await logAudit(req, { action: 'delete', entity_type: 'professor', entity_id: id, details: `حذف أستاذ رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
+
+router.post('/professors/bulk-import', authorize('professors', 'create'), async (req, res) => {
+    try {
+        const { professors: profList } = req.body;
+        if (!Array.isArray(profList) || profList.length === 0) {
+            return res.status(400).json({ error: 'قائمة الأساتذة غير صالحة أو فارغة' });
+        }
+
+        const inserted = await unitOfWork(async (uow) => {
+            const results = [];
+            for (const p of profList) {
+                if (!p.name || !p.name.trim()) {
+                    throw new Error('اسم الأستاذ حقل إجباري لجميع السجلات');
+                }
+                const [created] = await uow.query(
+                    'INSERT INTO professors (name, email, phone, title, academic_title, version) VALUES ($1, $2, $3, $4, $5, 1) RETURNING *',
+                    [p.name.trim(), p.email || null, p.phone || null, p.title || null, p.academic_title || null]
+                );
+                results.push(created);
+                await uow.recordChange({
+                    entity_type: 'professors',
+                    entity_id: created.id,
+                    action: 'create',
+                    after_state: created,
+                    changed_by: req.user?.id
+                });
+            }
+            return results;
+        });
+
+        clearCache('professors');
+        res.json({ success: true, count: inserted.length, professors: inserted });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
     }
 });
 
@@ -816,7 +909,8 @@ router.get('/rooms', authorize('rooms', 'view'), async (req, res) => {
         const cached = getCached('rooms');
         if (cached) return res.json(cached);
 
-        const result = await executeQuery('SELECT * FROM rooms ORDER BY name');
+        const softCond = process.env.FEATURE_SOFT_DELETE !== 'false' && !req.query.withArchived ? 'WHERE deleted_at IS NULL' : '';
+        const result = await executeQuery(`SELECT * FROM rooms ${softCond} ORDER BY name`);
         setCached('rooms', result, 60000);
         res.json(result);
     } catch (error) {
@@ -852,7 +946,11 @@ router.put('/rooms/:id', authorize('rooms', 'update'), async (req, res) => {
 router.delete('/rooms/:id', authorize('rooms', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
-        await executeQuery('DELETE FROM rooms WHERE id = $1', [id]);
+        if (process.env.FEATURE_SOFT_DELETE !== 'false') {
+            await executeQuery('UPDATE rooms SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+        } else {
+            await executeQuery('DELETE FROM rooms WHERE id = $1', [id]);
+        }
         clearCache('rooms');
         await logAudit(req, { action: 'delete', entity_type: 'room', entity_id: id, details: `حذف قاعة رقم: ${id}` });
         res.json({ success: true });
@@ -867,7 +965,8 @@ router.get('/courses', authorize('courses', 'view'), async (req, res) => {
         const cached = getCached('courses');
         if (cached) return res.json(cached);
 
-        const result = await executeQuery('SELECT * FROM courses ORDER BY name');
+        const softCond = process.env.FEATURE_SOFT_DELETE !== 'false' && !req.query.withArchived ? 'WHERE deleted_at IS NULL' : '';
+        const result = await executeQuery(`SELECT * FROM courses ${softCond} ORDER BY name`);
         setCached('courses', result, 60000);
         res.json(result);
     } catch (error) {
@@ -903,7 +1002,11 @@ router.put('/courses/:id', authorize('courses', 'update'), async (req, res) => {
 router.delete('/courses/:id', authorize('courses', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
-        await executeQuery('DELETE FROM courses WHERE id = $1', [id]);
+        if (process.env.FEATURE_SOFT_DELETE !== 'false') {
+            await executeQuery('UPDATE courses SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+        } else {
+            await executeQuery('DELETE FROM courses WHERE id = $1', [id]);
+        }
         clearCache('courses');
         await logAudit(req, { action: 'delete', entity_type: 'course', entity_id: id, details: `حذف مقياس رقم: ${id}` });
         res.json({ success: true });
@@ -918,7 +1021,8 @@ router.get('/groups', authorize('groups', 'view'), async (req, res) => {
         const cached = getCached('groups');
         if (cached) return res.json(cached);
 
-        const result = await executeQuery('SELECT * FROM groups ORDER BY name');
+        const softCond = process.env.FEATURE_SOFT_DELETE !== 'false' && !req.query.withArchived ? 'WHERE deleted_at IS NULL' : '';
+        const result = await executeQuery(`SELECT * FROM groups ${softCond} ORDER BY name`);
         setCached('groups', result, 60000);
         res.json(result);
     } catch (error) {
@@ -960,7 +1064,11 @@ router.put('/groups/:id', authorize('groups', 'update'), async (req, res) => {
 router.delete('/groups/:id', authorize('groups', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
-        await executeQuery('DELETE FROM groups WHERE id = $1', [id]);
+        if (process.env.FEATURE_SOFT_DELETE !== 'false') {
+            await executeQuery('UPDATE groups SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1', [id]);
+        } else {
+            await executeQuery('DELETE FROM groups WHERE id = $1', [id]);
+        }
         clearCache('groups');
         await logAudit(req, { action: 'delete', entity_type: 'group', entity_id: id, details: `حذف فوج رقم: ${id}` });
         res.json({ success: true });
@@ -1033,6 +1141,57 @@ router.post('/assignments', authorize('assignments', 'create'), async (req, res)
         res.json(result[0]);
     } catch (error) {
         res.status(500).json({ error: error.message });
+
+router.post('/assignments/swap', authorize('assignments', 'update'), async (req, res) => {
+    try {
+        const { idA, idB } = req.body;
+        if (!idA || !idB) {
+            return res.status(400).json({ error: 'يجب تحديد معرف الحصتين المراد تبديلهما (idA, idB)' });
+        }
+
+        const result = await unitOfWork(async (uow) => {
+            return await assignmentsRepository.swap(Number(idA), Number(idB), {
+                uow,
+                userId: req.user?.id
+            });
+        });
+
+        res.json({ success: true, ...result });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/assignments/:id/move', authorize('assignments', 'update'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { day_of_week, start_time, end_time, room_id, version } = req.body;
+
+        const result = await unitOfWork(async (uow) => {
+            return await assignmentsRepository.move(
+                Number(id),
+                { day_of_week, start_time, end_time, room_id },
+                {
+                    uow,
+                    userId: req.user?.id,
+                    expectedVersion: version !== undefined ? Number(version) : undefined
+                }
+            );
+        });
+
+        res.json(result);
+    } catch (error) {
+        if (error.name === 'OptimisticLockError') {
+            return res.status(409).json({
+                error: error.message,
+                expectedVersion: error.expectedVersion,
+                actualVersion: error.actualVersion
+            });
+        }
+        res.status(500).json({ error: error.message });
+    }
+});
+
     }
 });
 
@@ -1396,6 +1555,48 @@ router.post('/users', authorize('users', 'create'), async (req, res) => {
         res.json(newUser);
     } catch (error) {
         res.status(500).json({ error: error.message });
+
+router.post('/users/with-professor', authorize('users', 'create'), async (req, res) => {
+    try {
+        const { username, password, full_name, email, role, professorData } = req.body;
+        if (!username || !password) {
+            return res.status(400).json({ error: 'اسم المستخدم وكلمة المرور مطلوبان' });
+        }
+
+        const password_hash = await bcrypt.hash(password, 10);
+
+        const result = await unitOfWork(async (uow) => {
+            const profName = professorData?.name || full_name || username;
+            const profEmail = professorData?.email || email || null;
+
+            const [newProf] = await uow.query(
+                'INSERT INTO professors (name, email, phone, title, academic_title, version) VALUES ($1, $2, $3, $4, $5, 1) RETURNING *',
+                [profName, profEmail, professorData?.phone || null, professorData?.title || null, professorData?.academic_title || null]
+            );
+
+            const [newUser] = await uow.query(
+                'INSERT INTO users (username, password_hash, full_name, email, role, professor_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, full_name, email, role, professor_id, is_active, created_at',
+                [username, password_hash, full_name || profName, email || profEmail, role || 'staff', newProf.id]
+            );
+
+            await uow.recordChange({
+                entity_type: 'users',
+                entity_id: newUser.id,
+                action: 'create',
+                after_state: { user: newUser, professor: newProf },
+                changed_by: req.user?.id
+            });
+
+            return { user: newUser, professor: newProf };
+        });
+
+        clearCache('professors');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
     }
 });
 
@@ -2374,5 +2575,43 @@ router._authHelpers = {
     auditService,
     authorize
 };
+
+
+// --- P7: Deletion Impact & 24h Undo Endpoints ---
+router.get('/:entity/:id/delete-impact', authorize('departments', 'view'), async (req, res) => {
+    try {
+        const { entity, id } = req.params;
+        const result = await calculateDeleteImpact(entity, id);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/changes', authorize('audit', 'view'), async (req, res) => {
+    try {
+        const limit = Number(req.query.limit || 50);
+        const { entityType, entityId } = req.query;
+        const changes = await changeLogRepository.getRecent(limit, entityType, entityId);
+        res.json(changes);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.post('/changes/:id/undo', authorize('assignments', 'update'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await unitOfWork(async (uow) => {
+            return await changeLogRepository.undo(Number(id), {
+                uow,
+                userId: req.user?.id
+            });
+        });
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
 
 module.exports = router;
