@@ -73,6 +73,14 @@ export const envSchema = z.object({
   METRICS_SINK: z.string().optional(),
   FEATURE_AUDIT_HASH_CHAIN: z
     .preprocess(val => val === 'true' || val === true || val === '1' || val === undefined, z.boolean())
+    .default(true),
+
+  // P6: Managed Migrations & Neon PostgreSQL Engine Switch Flags
+  DATABASE_URL: z.string().optional(),
+  DIRECT_URL: z.string().optional(),
+  FEATURE_READ_SOURCE: z.enum(['postgres', 'turso']).default('postgres'),
+  FEATURE_DUAL_WRITE: z
+    .preprocess(val => val === 'true' || val === true || val === '1' || val === undefined, z.boolean())
     .default(true)
 });
 

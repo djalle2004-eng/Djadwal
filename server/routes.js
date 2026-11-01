@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { executeQuery } = require('./database');
+const { executeQuery, getPgPool } = require('./database');
 const bcrypt = require('bcrypt');
 const { SignJWT, jwtVerify } = require('jose');
 const emailService = require('./emailService');
@@ -11,6 +11,15 @@ const PREVIOUS_JWT_RAW = process.env.JWT_SECRET_PREVIOUS;
 
 const JWT_SECRET = new TextEncoder().encode(PRIMARY_JWT_RAW);
 const JWT_SECRET_PREVIOUS = PREVIOUS_JWT_RAW ? new TextEncoder().encode(PREVIOUS_JWT_RAW) : null;
+
+// --- Isolated Heartbeat Ping ---
+router.get('/ping', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.status(200).json({
+        status: 'ok',
+        timestamp: new Date().toISOString()
+    });
+});
 
 // --- Auth Helpers ---
 async function createToken(payload) {
@@ -663,9 +672,34 @@ router.post('/preferences', requireAuth, async (req, res) => {
     }
 });
 
+// --- High-Performance In-Memory Read Cache for Pedagogical Data ---
+const routeCache = new Map();
+
+function getCached(key) {
+    const entry = routeCache.get(key);
+    if (entry && entry.expiresAt > Date.now()) {
+        return entry.data;
+    }
+    return null;
+}
+
+function setCached(key, data, ttlMs = 60000) {
+    routeCache.set(key, { data, expiresAt: Date.now() + ttlMs });
+}
+
+function clearCache(prefix) {
+    for (const k of routeCache.keys()) {
+        if (k.startsWith(prefix)) routeCache.delete(k);
+    }
+}
+
 router.get('/departments', authorize('departments', 'view'), async (req, res) => {
     try {
+        const cached = getCached('departments');
+        if (cached) return res.json(cached);
+
         const result = await executeQuery('SELECT * FROM departments ORDER BY name');
+        setCached('departments', result, 60000);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -676,6 +710,7 @@ router.post('/departments', authorize('departments', 'create'), async (req, res)
     try {
         const { name, code } = req.body;
         const result = await executeQuery('INSERT INTO departments (name, code) VALUES ($1, $2) RETURNING *', [name, code]);
+        clearCache('departments');
         await logAudit(req, { action: 'create', entity_type: 'department', entity_id: result[0]?.id, details: `إضافة قسم: ${name}` });
         res.json(result[0]);
     } catch (error) {
@@ -688,6 +723,7 @@ router.put('/departments/:id', authorize('departments', 'update'), async (req, r
         const { name, code } = req.body;
         const { id } = req.params;
         const result = await executeQuery('UPDATE departments SET name = $1, code = $2 WHERE id = $3 RETURNING *', [name, code, id]);
+        clearCache('departments');
         await logAudit(req, { action: 'update', entity_type: 'department', entity_id: id, details: `تعديل قسم: ${name}` });
         res.json(result[0]);
     } catch (error) {
@@ -699,6 +735,7 @@ router.delete('/departments/:id', authorize('departments', 'delete'), async (req
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM departments WHERE id = $1', [id]);
+        clearCache('departments');
         await logAudit(req, { action: 'delete', entity_type: 'department', entity_id: id, details: `حذف قسم رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
@@ -709,7 +746,11 @@ router.delete('/departments/:id', authorize('departments', 'delete'), async (req
 // --- Professors ---
 router.get('/professors', authorize('professors', 'view'), async (req, res) => {
     try {
+        const cached = getCached('professors');
+        if (cached) return res.json(cached);
+
         const result = await executeQuery('SELECT * FROM professors ORDER BY name');
+        setCached('professors', result, 60000);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -728,6 +769,7 @@ router.post('/professors', authorize('professors', 'create'), async (req, res) =
             'INSERT INTO professors (name, email, phone, title, academic_title) VALUES ($1, $2, $3, $4, $5) RETURNING *',
             [name, email, phone, title, academic_title]
         );
+        clearCache('professors');
         await logAudit(req, { action: 'create', entity_type: 'professor', entity_id: result[0]?.id, details: `إضافة أستاذ: ${name}` });
         res.json(result[0]);
     } catch (error) {
@@ -748,6 +790,7 @@ router.put('/professors/:id', authorize('professors', 'update'), async (req, res
             'UPDATE professors SET name = $1, email = $2, phone = $3, title = $4, academic_title = $5 WHERE id = $6 RETURNING *',
             [name, email, phone, title, academic_title, id]
         );
+        clearCache('professors');
         await logAudit(req, { action: 'update', entity_type: 'professor', entity_id: id, details: `تعديل أستاذ: ${name}` });
         res.json(result[0]);
     } catch (error) {
@@ -759,6 +802,7 @@ router.delete('/professors/:id', authorize('professors', 'delete'), async (req, 
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM professors WHERE id = $1', [id]);
+        clearCache('professors');
         await logAudit(req, { action: 'delete', entity_type: 'professor', entity_id: id, details: `حذف أستاذ رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
@@ -769,7 +813,11 @@ router.delete('/professors/:id', authorize('professors', 'delete'), async (req, 
 // --- Rooms ---
 router.get('/rooms', authorize('rooms', 'view'), async (req, res) => {
     try {
+        const cached = getCached('rooms');
+        if (cached) return res.json(cached);
+
         const result = await executeQuery('SELECT * FROM rooms ORDER BY name');
+        setCached('rooms', result, 60000);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -780,6 +828,7 @@ router.post('/rooms', authorize('rooms', 'create'), async (req, res) => {
     try {
         const { name, capacity } = req.body;
         const result = await executeQuery('INSERT INTO rooms (name, capacity) VALUES ($1, $2) RETURNING *', [name, capacity]);
+        clearCache('rooms');
         await logAudit(req, { action: 'create', entity_type: 'room', entity_id: result[0]?.id, details: `إضافة قاعة: ${name} (سعة: ${capacity || 0})` });
         res.json(result[0]);
     } catch (error) {
@@ -792,6 +841,7 @@ router.put('/rooms/:id', authorize('rooms', 'update'), async (req, res) => {
         const { name, capacity } = req.body;
         const { id } = req.params;
         const result = await executeQuery('UPDATE rooms SET name = $1, capacity = $2 WHERE id = $3 RETURNING *', [name, capacity, id]);
+        clearCache('rooms');
         await logAudit(req, { action: 'update', entity_type: 'room', entity_id: id, details: `تعديل قاعة: ${name}` });
         res.json(result[0]);
     } catch (error) {
@@ -803,6 +853,7 @@ router.delete('/rooms/:id', authorize('rooms', 'delete'), async (req, res) => {
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM rooms WHERE id = $1', [id]);
+        clearCache('rooms');
         await logAudit(req, { action: 'delete', entity_type: 'room', entity_id: id, details: `حذف قاعة رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
@@ -813,7 +864,11 @@ router.delete('/rooms/:id', authorize('rooms', 'delete'), async (req, res) => {
 // --- Courses ---
 router.get('/courses', authorize('courses', 'view'), async (req, res) => {
     try {
+        const cached = getCached('courses');
+        if (cached) return res.json(cached);
+
         const result = await executeQuery('SELECT * FROM courses ORDER BY name');
+        setCached('courses', result, 60000);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -824,6 +879,7 @@ router.post('/courses', authorize('courses', 'create'), async (req, res) => {
     try {
         const { name, code, metadata } = req.body;
         const result = await executeQuery('INSERT INTO courses (name, code, metadata) VALUES ($1, $2, $3) RETURNING *', [name, code, metadata]);
+        clearCache('courses');
         await logAudit(req, { action: 'create', entity_type: 'course', entity_id: result[0]?.id, details: `إضافة مقياس: ${name} (${code || ''})` });
         res.json(result[0]);
     } catch (error) {
@@ -836,6 +892,7 @@ router.put('/courses/:id', authorize('courses', 'update'), async (req, res) => {
         const { name, code, metadata } = req.body;
         const { id } = req.params;
         const result = await executeQuery('UPDATE courses SET name = $1, code = $2, metadata = $3 WHERE id = $4 RETURNING *', [name, code, metadata, id]);
+        clearCache('courses');
         await logAudit(req, { action: 'update', entity_type: 'course', entity_id: id, details: `تعديل مقياس: ${name}` });
         res.json(result[0]);
     } catch (error) {
@@ -847,6 +904,7 @@ router.delete('/courses/:id', authorize('courses', 'delete'), async (req, res) =
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM courses WHERE id = $1', [id]);
+        clearCache('courses');
         await logAudit(req, { action: 'delete', entity_type: 'course', entity_id: id, details: `حذف مقياس رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
@@ -857,7 +915,11 @@ router.delete('/courses/:id', authorize('courses', 'delete'), async (req, res) =
 // --- Groups ---
 router.get('/groups', authorize('groups', 'view'), async (req, res) => {
     try {
+        const cached = getCached('groups');
+        if (cached) return res.json(cached);
+
         const result = await executeQuery('SELECT * FROM groups ORDER BY name');
+        setCached('groups', result, 60000);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -871,6 +933,7 @@ router.post('/groups', authorize('groups', 'create'), async (req, res) => {
             'INSERT INTO groups (name, department_id, group_type, specialization, parent_group_id, year) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
             [name, department_id, group_type, specialization, parent_group_id, year]
         );
+        clearCache('groups');
         await logAudit(req, { action: 'create', entity_type: 'group', entity_id: result[0]?.id, details: `إضافة فوج: ${name} (${specialization || ''})` });
         res.json(result[0]);
     } catch (error) {
@@ -886,6 +949,7 @@ router.put('/groups/:id', authorize('groups', 'update'), async (req, res) => {
             'UPDATE groups SET name = $1, department_id = $2, group_type = $3, specialization = $4, parent_group_id = $5, year = $6 WHERE id = $7 RETURNING *',
             [name, department_id, group_type, specialization, parent_group_id, year, id]
         );
+        clearCache('groups');
         await logAudit(req, { action: 'update', entity_type: 'group', entity_id: id, details: `تعديل فوج: ${name}` });
         res.json(result[0]);
     } catch (error) {
@@ -897,6 +961,7 @@ router.delete('/groups/:id', authorize('groups', 'delete'), async (req, res) => 
     try {
         const { id } = req.params;
         await executeQuery('DELETE FROM groups WHERE id = $1', [id]);
+        clearCache('groups');
         await logAudit(req, { action: 'delete', entity_type: 'group', entity_id: id, details: `حذف فوج رقم: ${id}` });
         res.json({ success: true });
     } catch (error) {
@@ -1339,15 +1404,28 @@ router.put('/users/:id', authorize('users', 'update'), async (req, res) => {
         const { username, full_name, email, role, professor_id, is_active } = req.body;
         const { id } = req.params;
 
+        const existingUsers = await executeQuery('SELECT * FROM users WHERE id = $1', [id]);
+        if (!existingUsers || existingUsers.length === 0) {
+            return res.status(404).json({ error: 'المستخدم غير موجود' });
+        }
+        const current = existingUsers[0];
+
+        const targetUsername = username !== undefined ? username : current.username;
+        const targetFullName = full_name !== undefined ? full_name : current.full_name;
+        const targetEmail = email !== undefined ? email : current.email;
+        const targetRole = role !== undefined ? role : (current.role || 'staff');
+        const targetProfId = professor_id !== undefined ? professor_id : current.professor_id;
+        const targetIsActive = is_active !== undefined ? is_active : (current.is_active !== undefined ? current.is_active : 1);
+
         const result = await executeQuery(
             'UPDATE users SET username = $1, full_name = $2, email = $3, role = $4, professor_id = $5, is_active = $6 WHERE id = $7 RETURNING id, username, full_name, email, role, professor_id, is_active, created_at',
-            [username, full_name, email, role, professor_id, is_active, id]
+            [targetUsername, targetFullName, targetEmail, targetRole, targetProfId, targetIsActive, id]
         );
         await logAudit(req, {
             action: 'update',
             entity_type: 'user',
             entity_id: id,
-            details: `تحديث بيانات المستخدم: ${username || id}`
+            details: `تحديث بيانات المستخدم: ${targetUsername || id}`
         });
         res.json(result[0]);
     } catch (error) {
@@ -2111,6 +2189,48 @@ router.delete('/sandbox/:id', authorize('sandbox_snapshots', 'delete'), async (r
     } catch (error) {
         console.error('Error deleting sandbox snapshot:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+
+// --- Database Connection & Active Read Engine Status ---
+router.get('/database/status', async (req, res) => {
+    try {
+        const pool = getPgPool();
+        const readSource = process.env.FEATURE_READ_SOURCE || 'postgres';
+        const dualWrite = process.env.FEATURE_DUAL_WRITE !== 'false';
+        const isPostgres = readSource === 'postgres';
+        const engine = isPostgres ? 'Neon PostgreSQL' : 'Turso (libSQL)';
+        
+        const startTime = Date.now();
+        if (isPostgres && pool) {
+            await pool.query('SELECT 1 as ping');
+        } else {
+            await executeQuery('SELECT 1 as ping');
+        }
+        const responseTimeMs = Date.now() - startTime;
+
+        res.json({
+            status: 'متصل',
+            readSource,
+            engine,
+            displayName: isPostgres ? 'Neon PostgreSQL (السحابية)' : 'Turso Database (السحابية)',
+            dualWrite,
+            dualWriteTarget: dualWrite ? 'Turso (Dual-Write)' : 'معطل',
+            responseTimeMs,
+            isCloud: true,
+            checkedAt: new Date().toISOString()
+        });
+    } catch (err) {
+        res.status(500).json({
+            status: 'غير متصل',
+            error: err.message,
+            readSource: process.env.FEATURE_READ_SOURCE || 'postgres',
+            engine: (process.env.FEATURE_READ_SOURCE || 'postgres') === 'postgres' ? 'Neon PostgreSQL' : 'Turso (libSQL)',
+            displayName: (process.env.FEATURE_READ_SOURCE || 'postgres') === 'postgres' ? 'Neon PostgreSQL (السحابية)' : 'Turso Database (السحابية)',
+            dualWrite: process.env.FEATURE_DUAL_WRITE !== 'false',
+            isCloud: true
+        });
     }
 });
 
