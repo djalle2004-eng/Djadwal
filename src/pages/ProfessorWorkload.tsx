@@ -1072,8 +1072,8 @@ export default function ProfessorWorkload() {
               ${printSettings.universityLogoUrl ? `<img src="${printSettings.universityLogoUrl}" alt="Logo" class="logo">` : ''}
               ${printSettings.facultyLogoUrl ? `<img src="${printSettings.facultyLogoUrl}" alt="Logo" class="faculty-logo">` : ''}
               <div class="header-text">
-                <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
                 <p>وزارة التعليم العالي و البحث العلمي</p>
+                <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
                 <p>${printSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'}</p>
                 <p>نيابة العمادة للدراسات والمسائل المرتبطة بالطلبة</p>
                 <p>مصلحة التدريس</p>
@@ -1370,8 +1370,8 @@ export default function ProfessorWorkload() {
               <div class="header">
                 ${printSettings.universityLogoUrl ? `<img src="${printSettings.universityLogoUrl}" alt="Logo" class="logo">` : ''}
                 <div class="header-text">
-                  <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
                   <p>وزارة التعليم العالي و البحث العلمي</p>
+                  <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
                   <p>${printSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'}</p>
                   <p>نيابة العمادة للدراسات والمسائل المرتبطة بالطلبة</p>
                   <p>مصلحة التدريس</p>
@@ -1593,8 +1593,8 @@ export default function ProfessorWorkload() {
           <div class="header">
             ${printSettings.universityLogoUrl ? `<img src="${printSettings.universityLogoUrl}" alt="Logo" class="logo">` : ''}
             <div class="header-text">
-              <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
               <p>وزارة التعليم العالي و البحث العلمي</p>
+              <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
               <p>${printSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'}</p>
               <p>نيابة العمادة للدراسات والمسائل المرتبطة بالطلبة</p>
             </div>
@@ -1752,8 +1752,8 @@ export default function ProfessorWorkload() {
           <div class="header">
             ${printSettings.universityLogoUrl ? `<img src="${printSettings.universityLogoUrl}" alt="Logo" class="logo">` : ''}
             <div class="header-text">
-              <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
               <p>وزارة التعليم العالي و البحث العلمي</p>
+              <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
               <p>${printSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'}</p>
               <p>نيابة العمادة للدراسات والمسائل المرتبطة بالطلبة</p>
             </div>
@@ -1982,8 +1982,8 @@ export default function ProfessorWorkload() {
             <div class="header">
               ${printSettings.universityLogoUrl ? `<img src="${printSettings.universityLogoUrl}" alt="Logo" class="logo">` : ''}
               <div class="header-text">
-                <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
                 <p>وزارة التعليم العالي و البحث العلمي</p>
+                <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
                 <p>${printSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'}</p>
                 <p>نيابة العمادة للدراسات والمسائل المرتبطة بالطلبة</p>
               </div>
@@ -2342,8 +2342,8 @@ export default function ProfessorWorkload() {
           <div class="header">
             ${printSettings.universityLogoUrl ? `<img src="${printSettings.universityLogoUrl}" alt="Logo" class="logo">` : ''}
             <div class="header-text">
-              <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
               <p>وزارة التعليم العالي و البحث العلمي</p>
+              <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
               <p>${printSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'}</p>
               <p>نيابة العمادة للدراسات والمسائل المرتبطة بالطلبة</p>
             </div>
@@ -2472,8 +2472,8 @@ export default function ProfessorWorkload() {
             <div class="header">
               ${printSettings.universityLogoUrl ? `<img src="${printSettings.universityLogoUrl}" alt="Logo" class="logo">` : ''}
               <div class="header-text">
-                <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
                 <p>وزارة التعليم العالي و البحث العلمي</p>
+                <p>${printSettings.universityName || 'جامعة الشهيد حمه لخضر - الوادي'}</p>
                 <p>${printSettings.facultyName || 'كلية العلوم الاقتصادية والتجارية وعلوم التسيير'}</p>
                 <p>نيابة العمادة للدراسات والمسائل المرتبطة بالطلبة</p>
               </div>
