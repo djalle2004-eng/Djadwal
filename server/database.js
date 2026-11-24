@@ -23,12 +23,14 @@ const dbConfig = {
 
 // Feature Flags (P6: Managed Migrations & Neon PostgreSQL Primary Engine)
 const FEATURE_READ_SOURCE = process.env.FEATURE_READ_SOURCE || 'postgres'; // 'postgres' | 'turso'
+const FEATURE_WRITE_SOURCE = process.env.FEATURE_WRITE_SOURCE || (FEATURE_READ_SOURCE === 'turso' ? 'turso' : 'postgres');
 const FEATURE_DUAL_WRITE = process.env.FEATURE_DUAL_WRITE !== 'false'; // default true
 
 logger.info({
     hasTurso: Boolean(dbConfig.tursoUrl && dbConfig.tursoAuthToken),
     hasPostgres: Boolean(dbConfig.postgresUrl),
     readSource: FEATURE_READ_SOURCE,
+    writeSource: FEATURE_WRITE_SOURCE,
     dualWrite: FEATURE_DUAL_WRITE
 }, 'Database configuration and feature flags initialized');
 
@@ -72,14 +74,30 @@ function toPostgresQuery(query) {
 }
 
 // Convert PostgreSQL placeholders ($1, $2, ...) to SQLite placeholders (?)
-function toSqliteQuery(query) {
+function toSqliteQuery(query, params = null) {
     let sqliteQuery = query;
+    let expandedParams = Array.isArray(params) ? [...params] : null;
+
     if (sqliteQuery.includes('$')) {
-        let index = 1;
-        while (sqliteQuery.includes(`$${index}`)) {
-            sqliteQuery = sqliteQuery.replace(new RegExp(`\\$${index}\\b`, 'g'), '?');
-            index++;
+        if (Array.isArray(params) && params.length > 0) {
+            const newParams = [];
+            sqliteQuery = sqliteQuery.replace(/\$(\d+)\b/g, (match, p1) => {
+                const idx = parseInt(p1, 10) - 1;
+                newParams.push(params[idx] !== undefined ? params[idx] : null);
+                return '?';
+            });
+            expandedParams = newParams;
+        } else {
+            let index = 1;
+            while (sqliteQuery.includes(`$${index}`)) {
+                sqliteQuery = sqliteQuery.replace(new RegExp(`\\$${index}\\b`, 'g'), '?');
+                index++;
+            }
         }
+    }
+
+    if (params !== null) {
+        return { sql: sqliteQuery, params: expandedParams };
     }
     return sqliteQuery;
 }
@@ -268,8 +286,10 @@ async function initDatabaseConnection() {
 
 // Execute query on Turso with automatic retry loop
 async function executeTursoQuery(query, params = [], maxRetries = 2) {
-    const sqliteSql = toSqliteQuery(query);
-    const cleanParams = params.map(p => (p === undefined ? null : p));
+    const cleanInputParams = params.map(p => (p === undefined ? null : p));
+    const converted = toSqliteQuery(query, cleanInputParams);
+    const sqliteSql = typeof converted === 'object' ? converted.sql : converted;
+    const cleanParams = typeof converted === 'object' ? converted.params : cleanInputParams;
 
     let lastError = null;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -331,7 +351,26 @@ async function executeQuery(query, params = [], maxRetries = 3) {
     }
 
     // --- CASE 2: WRITE OPERATIONS (INSERT, UPDATE, DELETE) ---
-    // Primary execution on Neon PostgreSQL
+    // Option A: If Turso is the configured write source (or auto-selected via FEATURE_READ_SOURCE=turso)
+    if (FEATURE_WRITE_SOURCE === 'turso' && dbConfig.tursoUrl && dbConfig.tursoAuthToken) {
+        const result = await executeTursoQuery(query, cleanParams, maxRetries);
+
+        // Optional secondary dual-write to Neon in background (Safety net - never blocks response)
+        if (FEATURE_DUAL_WRITE && pool) {
+            (async () => {
+                try {
+                    const pgSql = toPostgresQuery(query);
+                    await pool.query(pgSql, cleanParams);
+                } catch (pgErr) {
+                    logger.warn({ err: pgErr.message, query: query.substring(0, 100) }, 'Dual-write to Neon failed (non-blocking)');
+                }
+            })().catch(() => {});
+        }
+
+        return result;
+    }
+
+    // Option B: Primary execution on Neon PostgreSQL
     if (pool) {
         const pgSql = toPostgresQuery(query);
         let primaryResult;
@@ -341,6 +380,11 @@ async function executeQuery(query, params = [], maxRetries = 3) {
             primaryResult = res.rows;
         } catch (primaryErr) {
             logger.error({ err: primaryErr.message, query: query.substring(0, 100) }, 'Primary write on Neon failed');
+            // Emergency Fallback: If Neon write fails (e.g. quota exceeded or connection drop), write to Turso so users are never blocked
+            if (dbConfig.tursoUrl && dbConfig.tursoAuthToken) {
+                logger.warn('Emergency Fallback: Executing write query on Turso due to Neon failure...');
+                return await executeTursoQuery(query, cleanParams, maxRetries);
+            }
             throw primaryErr;
         }
 
